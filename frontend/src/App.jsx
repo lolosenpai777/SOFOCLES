@@ -1,26 +1,50 @@
-import { useState } from "react";
-import clienteAxios from "./api/clienteAxios";
+import { useEffect, useState } from 'react'
+import clienteAxios from './api/clienteAxios'
 
 function App() {
-  const [modalActivo, setModalActivo] = useState(null);
+  const [modalActivo, setModalActivo] = useState(null)
 
   // Estados para Login
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   // Estados para Registro (¡Nuevos!)
-  const [nombreUsuario, setNombreUsuario] = useState("");
-  const [emailRegistro, setEmailRegistro] = useState("");
-  const [passwordRegistro, setPasswordRegistro] = useState("");
+  const [nombreUsuario, setNombreUsuario] = useState('')
+  const [emailRegistro, setEmailRegistro] = useState('')
+  const [passwordRegistro, setPasswordRegistro] = useState('')
 
   // Estado para mensajes de error y éxito
-  const [errorMsg, setErrorMsg] = useState("");
-  const [mostrarExito, setMostrarExito] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('')
+  const [mostrarExito, setMostrarExito] = useState(false)
+  const [usuarioAutenticado, setUsuarioAutenticado] = useState(null)
+  const [cargandoSesion, setCargandoSesion] = useState(true)
+
+  useEffect(() => {
+    const tokenGuardado = localStorage.getItem('sofocles_token')
+
+    if (!tokenGuardado) {
+      setCargandoSesion(false)
+      return
+    }
+
+    const cargarSesion = async () => {
+      try {
+        const respuesta = await clienteAxios.get('/auth/me')
+        setUsuarioAutenticado(respuesta.data.usuario)
+      } catch {
+        localStorage.removeItem('sofocles_token')
+      } finally {
+        setCargandoSesion(false)
+      }
+    }
+
+    cargarSesion()
+  }, [])
 
   // Función de Login
   const login = async (e) => {
-    e.preventDefault();
-    setErrorMsg("");
+    e.preventDefault()
+    setErrorMsg('')
 
     try {
       const respuesta = await clienteAxios.post("/auth/login", {
@@ -28,20 +52,21 @@ function App() {
         password,
       });
 
-      console.log("¡Conexión exitosa al Olimpo!", respuesta.data);
-      setModalActivo(null);
+      localStorage.setItem('sofocles_token', respuesta.data.token)
+      setUsuarioAutenticado(respuesta.data.usuario)
+      setModalActivo(null)
     } catch (error) {
-      console.error("Error al conectar con el templo:", error);
+      console.error('Error al conectar con el templo:', error)
       setErrorMsg(
-        error.response?.data?.mensaje || "Error de conexión con el servidor",
-      );
+        error.response?.data?.mensaje || 'Error de conexión con el servidor',
+      )
     }
-  };
+  }
 
   // Función de Registro (¡Nueva!)
   const registro = async (e) => {
-    e.preventDefault();
-    setErrorMsg("");
+    e.preventDefault()
+    setErrorMsg('')
 
     try {
       const respuesta = await clienteAxios.post("/auth/registro", {
@@ -50,21 +75,34 @@ function App() {
         password: passwordRegistro,
       });
 
-      console.log("¡Usuario forjado en el Olimpo!", respuesta.data);
-
       // Limpiamos los campos del registro
-      setNombreUsuario("");
-      setEmailRegistro("");
-      setPasswordRegistro("");
+      setNombreUsuario('')
+      setEmailRegistro('')
+      setPasswordRegistro('')
 
       // Cerramos el modal de registro y abrimos la ventana de éxito
-      setModalActivo(null);
-      setMostrarExito(true);
+      setModalActivo(null)
+      setMostrarExito(true)
     } catch (error) {
-      console.error("Error al registrar en el templo:", error);
-      setErrorMsg(error.response?.data?.mensaje || "Error al crear la cuenta");
+      console.error('Error al registrar en el templo:', error)
+      setErrorMsg(error.response?.data?.mensaje || 'Error al crear la cuenta')
     }
-  };
+  }
+
+  const cerrarSesion = () => {
+    localStorage.removeItem('sofocles_token')
+    setUsuarioAutenticado(null)
+  }
+
+  if (cargandoSesion) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+        <div className="text-sm uppercase tracking-[0.35em] text-slate-400">
+          Cargando sesión...
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="Olimpo-Contenedor">
@@ -73,26 +111,41 @@ function App() {
       <div className="Red-Geometrica" />
 
       <header className="Banner-Olimpo">
-        <h1 className="Logo-Sofocles">Sófocles</h1>
+        <div>
+          <h1 className="Logo-Sofocles">Sófocles</h1>
+          {usuarioAutenticado && (
+            <p className="mt-2 text-xs uppercase tracking-[0.25em] text-cyan-300/80">
+              Sesión activa: {usuarioAutenticado.username}
+            </p>
+          )}
+        </div>
         <div className="Controles-Acceso">
-          <button
-            className="Btn-Secundario"
-            onClick={() => {
-              setErrorMsg("");
-              setModalActivo("login");
-            }}
-          >
-            Iniciar sesión
-          </button>
-          <button
-            className="Btn-Primario"
-            onClick={() => {
-              setErrorMsg("");
-              setModalActivo("registro");
-            }}
-          >
-            Registrar
-          </button>
+          {usuarioAutenticado ? (
+            <button className="Btn-Secundario" onClick={cerrarSesion}>
+              Cerrar sesión
+            </button>
+          ) : (
+            <>
+              <button
+                className="Btn-Secundario"
+                onClick={() => {
+                  setErrorMsg('')
+                  setModalActivo('login')
+                }}
+              >
+                Iniciar sesión
+              </button>
+              <button
+                className="Btn-Primario"
+                onClick={() => {
+                  setErrorMsg('')
+                  setModalActivo('registro')
+                }}
+              >
+                Registrar
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -171,8 +224,8 @@ function App() {
             <button
               className="Enlace-Simple border-none bg-none cursor-pointer"
               onClick={() => {
-                setErrorMsg("");
-                setModalActivo("registro");
+                setErrorMsg('')
+                setModalActivo('registro')
               }}
             >
               ¿No tienes una cuenta? Regístrate aquí
@@ -247,8 +300,8 @@ function App() {
             <button
               className="Enlace-Simple border-none bg-none cursor-pointer"
               onClick={() => {
-                setErrorMsg("");
-                setModalActivo("login");
+                setErrorMsg('')
+                setModalActivo('login')
               }}
             >
               ¿Ya tienes cuenta? Inicia sesión aquí
@@ -278,8 +331,8 @@ function App() {
 
             <button
               onClick={() => {
-                setMostrarExito(false);
-                setModalActivo("login"); // Lo manda directo a loguearse
+                setMostrarExito(false)
+                setModalActivo('login') // Lo manda directo a loguearse
               }}
               className="Btn-Primario w-full py-3 rounded-xl font-bold tracking-wider cursor-pointer transition-all active:scale-95 shadow-lg shadow-amber-500/10"
             >
