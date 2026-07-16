@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #030712;
+}
+
+.Olimpo-Contenedor {
+  @apply min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-6 md:p-12 overflow-x-hidden relative font-sans;
+}
+
+.Aura-Apolo-Cyan {
+  @apply absolute top-[-10%] left-[10%] w-[500px] h-[500px] bg-cyan-500/15 rounded-full blur-[130px] pointer-events-none z-0;
+}
+
+.Aura-Afrodita-Magenta {
+  @apply absolute bottom-[10%] right-[5%] w-[600px] h-[600px] bg-fuchsia-600/10 rounded-full blur-[150px] pointer-events-none z-0;
+}
+
+.Red-Geometrica {
+  content: "";
+  @apply absolute inset-0 opacity-5 pointer-events-none z-0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 100px 100px;
+  background-position: center;
+}
+
+.Banner-Olimpo {
+  @apply relative z-10 w-full max-w-7xl mx-auto backdrop-blur-xl bg-white/[0.02] border border-white/10 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-center gap-6 shadow-[0_8px_32px_rgba(0,0,0,0.37)];
+}
+
+.Logo-Sofocles {
+  @apply text-4xl md:text-5xl font-black tracking-[0.2em] uppercase bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-serif drop-shadow-[0_4px_12px_rgba(168,85,247,0.3)];
+}
+
+.Controles-Acceso {
+  @apply flex gap-4;
+}
+
+.Controles-Acceso button {
+  @apply px-6 py-2.5 rounded-xl font-bold tracking-wider text-xs uppercase transition-all duration-300 active:scale-95 cursor-pointer;
+}
+
+.Btn-Secundario {
+  @apply border border-blue-500/30 text-blue-300 bg-blue-500/5 hover:bg-blue-500/15 hover:border-blue-400 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)];
+}
+
+.Btn-Primario {
+  @apply bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-[0_4px_20px_rgba(168,85,247,0.4)] hover:brightness-110 hover:shadow-[0_4px_25px_rgba(168,85,247,0.6)];
+}
+
+.Seccion-Hero {
+  @apply relative z-10 w-full max-w-4xl mx-auto my-12 text-center flex flex-col items-center gap-8 px-4;
+}
+
+.Detalle-Corona {
+  @apply text-sm tracking-[0.5em] text-blue-400/60 uppercase font-bold;
+}
+
+.Eslogan-Olimpo {
+  @apply text-3xl sm:text-5xl md:text-6xl font-light tracking-wide leading-tight text-slate-100 max-w-3xl;
+}
+
+.Texto-Gradiente {
+  @apply font-serif italic font-normal bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_2px_15px_rgba(59,130,246,0.2)];
+}
+
+.Caja-Conectados {
+  @apply w-full max-w-2xl bg-white/[0.01] border-y border-white/5 py-5 backdrop-blur-md shadow-[inset_0_0_20px_rgba(255,255,255,0.02)] relative;
+}
+
+.Caja-Conectados::before,
+.Caja-Conectados::after {
+  content: "";
+  @apply absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/40 to-transparent;
+}
+
+.Caja-Conectados::before {
+  @apply top-0;
+}
+
+.Caja-Conectados::after {
+  @apply bottom-0;
+}
+
+.Texto-Conectados {
+  @apply block font-black tracking-[0.3em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-fuchsia-500 text-3xl sm:text-4xl md:text-5xl;
+}
+
+.Footer-Olimpo {
+  @apply relative z-10 w-full max-w-7xl mx-auto backdrop-blur-xl bg-slate-950/40 border-t border-white/5 rounded-t-3xl p-8 text-center shadow-[0_-15px_40px_rgba(0,0,0,0.5)];
+}
+
+.Footer-Olimpo h3 {
+  @apply text-xs tracking-[0.4em] uppercase bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent font-extrabold mb-3;
+}
+
+.Footer-Olimpo p {
+  @apply text-sm text-slate-400 max-w-2xl mx-auto font-light leading-relaxed;
+}
+
+.Overlay-Modal {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md;
+}
+
+.Card-Formulario {
+  @apply relative z-10 w-full max-w-[420px] bg-slate-900/90 border border-white/10 rounded-2xl p-8 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex flex-col gap-6;
+}
+
+.Modal-Animacion {
+  animation: modalEntrada 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalEntrada {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.Btn-Cerrar {
+  @apply absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-200 text-sm font-semibold cursor-pointer border-none;
+}
+
+.Form-Grupo {
+  @apply flex flex-col gap-1.5 text-left;
+}
+
+.Form-Grupo label {
+  @apply text-[10px] font-bold tracking-[0.15em] uppercase text-slate-400/90 pl-1;
+}
+
+.Input-Olimpo {
+  @apply w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-white/10 text-slate-100 text-sm placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300;
+}
+
+.Enlace-Simple {
+  @apply text-xs text-slate-400 hover:text-blue-400 transition-colors duration-200 text-center block mt-2 cursor-pointer bg-transparent border-none font-sans font-medium;
+}
