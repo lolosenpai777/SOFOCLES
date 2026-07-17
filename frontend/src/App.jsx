@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import clienteAxios from './api/clienteAxios'
+import FeedScreen from './styles/FeedScreen.jsx'
 
 function App() {
   const [modalActivo, setModalActivo] = useState(null)
@@ -102,6 +103,10 @@ function App() {
         </div>
       </div>
     )
+  }
+
+  if (usuarioAutenticado) {
+    return <FeedScreen usuarioAutenticado={usuarioAutenticado} cerrarSesion={cerrarSesion} />
   }
 
   return (
