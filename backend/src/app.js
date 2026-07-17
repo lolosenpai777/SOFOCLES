@@ -21,6 +21,11 @@ export function buildApp() {
   fastify.get('/health', async () => ({ ok: true }))
 
   fastify.register(authRoutes, { prefix: '/api' })
+  // register posts route via dynamic import to ensure module loads correctly
+  fastify.register(async function (instance) {
+    const mod = await import('./routes/post.routes.js')
+    await mod.postRoutes(instance)
+  }, { prefix: '/api' })
 
   fastify.setErrorHandler((error, request, reply) => {
     request.log.error(error)
