@@ -16,14 +16,32 @@ async function start() {
 
 start()
 
+async function gracefulShutdown(signal, exitCode = 0) {
+  try {
+    app.log.warn({ signal }, 'Apagado graceful del servidor')
+    await app.close()
+    await prisma.$disconnect()
+    process.exit(exitCode)
+  } catch (error) {
+    app.log.error({ err: error, signal }, 'Fallo durante apagado graceful')
+    process.exit(1)
+  }
+}
+
 process.on('SIGINT', async () => {
-  await app.close()
-  await prisma.$disconnect()
-  process.exit(0)
+  await gracefulShutdown('SIGINT')
 })
 
 process.on('SIGTERM', async () => {
-  await app.close()
-  await prisma.$disconnect()
-  process.exit(0)
+  await gracefulShutdown('SIGTERM')
+})
+
+process.on('unhandledRejection', async (reason) => {
+  app.log.error({ err: reason }, 'Promesa no manejada detectada')
+  await gracefulShutdown('unhandledRejection', 1)
+})
+
+process.on('uncaughtException', async (error) => {
+  app.log.fatal({ err: error }, 'Excepcion no capturada detectada')
+  await gracefulShutdown('uncaughtException', 1)
 })

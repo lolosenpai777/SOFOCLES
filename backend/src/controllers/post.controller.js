@@ -8,20 +8,16 @@ export async function createPostHandler(request, reply) {
     const authorId = request.userId
 
     if (!authorId) {
-      return reply.code(401).send({ mensaje: 'No autorizado' })
+      return reply.code(401).send({ error: 'No autenticado' })
     }
 
     const author = await prisma.user.findUnique({ where: { id: authorId } })
     if (!author) {
-      return reply.code(401).send({ mensaje: 'Usuario no autorizado' })
+      return reply.code(401).send({ error: 'Usuario no autorizado' })
     }
 
     if (!title || !String(title).trim()) {
-      return reply.code(400).send({ mensaje: 'El título es obligatorio' })
-    }
-
-    if (content == null || !String(content).trim()) {
-      return reply.code(400).send({ mensaje: 'El contenido es obligatorio' })
+      return reply.code(400).send({ error: 'El titulo es obligatorio' })
     }
 
     const post = await createPost({ title, content, authorId })
@@ -30,7 +26,8 @@ export async function createPostHandler(request, reply) {
   } catch (error) {
     request.log.error(error)
     const statusCode = error.statusCode ?? 500
-    return reply.code(statusCode).send({ mensaje: error.message || 'Error al crear post' })
+    const message = statusCode >= 500 ? 'Error al crear post' : error.message || 'Solicitud invalida'
+    return reply.code(statusCode).send({ error: message })
   }
 }
 
@@ -40,6 +37,7 @@ export async function listPostsHandler(request, reply) {
     return reply.send({ posts })
   } catch (error) {
     const statusCode = error.statusCode ?? 500
-    return reply.code(statusCode).send({ mensaje: error.message || 'Error al obtener posts' })
+    const message = statusCode >= 500 ? 'Error al obtener posts' : error.message || 'Solicitud invalida'
+    return reply.code(statusCode).send({ error: message })
   }
 }
