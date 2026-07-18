@@ -4,7 +4,10 @@ import './FeedScreen.css'
 
 function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const [posts, setPosts] = useState([])
-  const [nuevoPost, setNuevoPost] = useState('')
+  const [expandedPosts, setExpandedPosts] = useState({})
+  // Separamos el estado para manejar título y contenido
+  const [nuevoTitulo, setNuevoTitulo] = useState('')
+  const [nuevoContenido, setNuevoContenido] = useState('')
   const [cargandoFeed, setCargandoFeed] = useState(true)
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -12,7 +15,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const obtenerPosts = async () => {
     try {
       setErrorMsg('')
-      const respuesta = await clienteAxios.get('/posts') // Reemplaza por tu ruta real de posts
+      const respuesta = await clienteAxios.get('/posts')
       setPosts(respuesta.data.posts || respuesta.data)
     } catch (error) {
       console.error('Error al traer el feed:', error)
@@ -29,29 +32,40 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   // Crear una nueva publicación
   const manejarEnvioPost = async (e) => {
     e.preventDefault()
-    if (!nuevoPost.trim()) return
+    if (!nuevoTitulo.trim() || !nuevoContenido.trim()) return
 
     try {
-      const respuesta = await clienteAxios.post('/posts', { contenido: nuevoPost }) // Reemplaza por tu esquema real
-      
-      // Si el backend devuelve el post creado, lo agregamos al inicio
+      // Enviamos el objeto con 'title' y 'content' como lo espera tu backend
+      const respuesta = await clienteAxios.post('/posts', {
+        title: nuevoTitulo,
+        content: nuevoContenido,
+      })
+
       const postCreado = respuesta.data.post || respuesta.data
       setPosts([postCreado, ...posts])
-      setNuevoPost('')
+
+      // Limpiamos ambos campos tras un envío exitoso
+      setNuevoTitulo('')
+      setNuevoContenido('')
     } catch (error) {
       console.error('Error al publicar:', error)
       setErrorMsg('Tu pensamiento no pudo ser forjado en la red.')
     }
   }
 
+  const toggleExpandPost = (postId) => {
+    setExpandedPosts((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }))
+  }
+
   return (
     <div className="Olimpo-Contenedor">
-      {/* Elementos ambientales de diseño claro */}
       <div className="Aura-Apolo-Cyan" />
       <div className="Aura-Afrodita-Magenta" />
       <div className="Red-Geometrica" />
 
-      {/* Header idéntico en diseño */}
       <header className="Banner-Olimpo">
         <div>
           <h1 className="Logo-Sofocles">Sófocles</h1>
@@ -68,9 +82,8 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
         </div>
       </header>
 
-      {/* Distribución del Feed */}
       <main className="Cuerpo-Feed">
-        {/* Sección Izquierda/Superior: Crear Pensamiento */}
+        {/* Editor de Post con Título y Contenido */}
         <section className="Columna-Editor">
           <div className="Card-Formulario-Feed">
             <h2 className="Titulo-Seccion">¿Qué idea ronda tu mente hoy?</h2>
@@ -83,18 +96,27 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
 
             <form onSubmit={manejarEnvioPost} className="flex flex-col gap-4">
               <div className="Form-Grupo">
+                <input
+                  type="text"
+                  placeholder="Título de tu tesis o pensamiento..."
+                  className="Input-Olimpo-Feed mb-2"
+                  value={nuevoTitulo}
+                  onChange={(e) => setNuevoTitulo(e.target.value)}
+                  maxLength={50}
+                  required
+                />
                 <textarea
                   placeholder="Comparte tu filosofía, código o perspectiva con el nuevo orden..."
                   className="Textarea-Olimpo"
-                  value={nuevoPost}
-                  onChange={(e) => setNuevoPost(e.target.value)}
+                  value={nuevoContenido}
+                  onChange={(e) => setNuevoContenido(e.target.value)}
                   maxLength={280}
                   required
                 />
               </div>
               <div className="Fila-Editor-Acciones">
                 <span className="Contador-Caracteres">
-                  {280 - nuevoPost.length} caracteres restantes
+                  {280 - nuevoContenido.length} caracteres restantes
                 </span>
                 <button type="submit" className="Btn-Primario-Feed">
                   Publicar Idea
@@ -104,7 +126,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
           </div>
         </section>
 
-        {/* Sección Derecha/Inferior: Línea de Tiempo */}
+        {/* Línea de Tiempo */}
         <section className="Columna-Publicaciones">
           {cargandoFeed ? (
             <div className="Cargando-Contenedor">
@@ -118,30 +140,57 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
             </div>
           ) : (
             <div className="Lista-Posts">
-              {posts.map((post) => (
-                <article key={post._id || post.id} className="Card-Post Modal-Animacion">
-                  <header className="Header-Post">
-                    <div className="Avatar-Usuario">
-                      {(post.usuario?.username || post.username || 'U').substring(0, 2).toUpperCase()}
+              {posts.map((post) => {
+                const authorName =
+                  post.author?.username ||
+                  post.usuario?.username ||
+                  post.username ||
+                  'Filósofo Anónimo'
+                const content = post.content || post.contenido || ''
+                const isExpanded = expandedPosts[post.id]
+                const shouldTruncate = content.length > 180
+                const preview = shouldTruncate ? `${content.slice(0, 180).trimEnd()}...` : content
+
+                return (
+                  <article key={post._id || post.id} className="Card-Post Modal-Animacion">
+                    <header className="Header-Post">
+                      <div className="Avatar-Usuario">
+                        {authorName.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 className="Nombre-Usuario">{authorName}</h3>
+                        <span className="Fecha-Post">
+                          {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Hace instantes'}
+                        </span>
+                      </div>
+                    </header>
+
+                    {/* Renderizado de Título y Contenido en la tarjeta */}
+                    <div className="Cuerpo-Post-Contenido">
+                      <h4 className="Title-Post-Display">
+                        {post.title || 'Pensamiento sin título'}
+                      </h4>
+                      <p className="Contenido-Post">
+                        {isExpanded ? content : preview}
+                      </p>
+                      {shouldTruncate && (
+                        <button
+                          type="button"
+                          className="Btn-VerMas"
+                          onClick={() => toggleExpandPost(post.id)}
+                        >
+                          {isExpanded ? 'Ver menos' : 'Ver más'}
+                        </button>
+                      )}
                     </div>
-                    <div>
-                      <h3 className="Nombre-Usuario">
-                        {post.usuario?.username || post.username || 'Filósofo Anónimo'}
-                      </h3>
-                      <span className="Fecha-Post">
-                        {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Hace instantes'}
-                      </span>
-                    </div>
-                  </header>
-                  <p className="Contenido-Post">{post.contenido}</p>
-                </article>
-              ))}
+                  </article>
+                )
+              })}
             </div>
           )}
         </section>
       </main>
 
-      {/* Footer consistente */}
       <footer className="Footer-Olimpo mt-12">
         <h3>Un nuevo orden social</h3>
         <p>
