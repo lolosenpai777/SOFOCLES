@@ -10,6 +10,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const [nuevoContenido, setNuevoContenido] = useState('')
   const [cargandoFeed, setCargandoFeed] = useState(true)
   const [errorMsg, setErrorMsg] = useState('')
+  const [postAEliminar, setPostAEliminar] = useState(null)
 
   // Obtener las publicaciones del templo
   const obtenerPosts = async () => {
@@ -50,6 +51,29 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     } catch (error) {
       console.error('Error al publicar:', error)
       setErrorMsg('Tu pensamiento no pudo ser forjado en la red.')
+    }
+  }
+
+  const abrirModalEliminar = (postId) => {
+    setPostAEliminar(postId)
+  }
+
+  const cancelarEliminacion = () => {
+    setPostAEliminar(null)
+  }
+
+  const eliminarPost = async () => {
+    if (!postAEliminar) return
+
+    try {
+      await clienteAxios.delete(`/posts/${postAEliminar}`)
+      setPosts((postsActuales) =>
+        postsActuales.filter((post) => (post._id || post.id) !== postAEliminar)
+      )
+      setPostAEliminar(null)
+    } catch (error) {
+      console.error('Error al eliminar el post:', error)
+      setErrorMsg('No se pudo eliminar la publicación.')
     }
   }
 
@@ -162,6 +186,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                         <span className="Fecha-Post">
                           {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Hace instantes'}
                         </span>
+                        
                       </div>
                     </header>
 
@@ -181,6 +206,16 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                         >
                           {isExpanded ? 'Ver menos' : 'Ver más'}
                         </button>
+
+                      )}
+                      {usuarioAutenticado && (post.author?.id === usuarioAutenticado.id || post.usuario?.id === usuarioAutenticado.id) && (
+                        <button
+                          type="button"
+                          className="Btn-Eliminar-Post"
+                          onClick={() => abrirModalEliminar(post._id || post.id)}
+                        >
+                          🗑️
+                        </button>
                       )}
                     </div>
                   </article>
@@ -190,6 +225,27 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
           )}
         </section>
       </main>
+
+      {postAEliminar && (
+        <div className="Modal-Overlay" role="dialog" aria-modal="true" aria-labelledby="modal-eliminar-titulo">
+          <div className="Modal-Confirmacion">
+            <h3 id="modal-eliminar-titulo" className="Titulo-Modal">
+              Retirar pensamiento del ágora
+            </h3>
+            <p className="Texto-Modal">
+              ¿Estás seguro de que deseas eliminar esta publicación? Esta acción no se puede deshacer.
+            </p>
+            <div className="Acciones-Modal">
+              <button type="button" className="Btn-Modal-Cancelar" onClick={cancelarEliminacion}>
+                Cancelar
+              </button>
+              <button type="button" className="Btn-Modal-Confirmar" onClick={eliminarPost}>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="Footer-Olimpo mt-12">
         <h3>Un nuevo orden social</h3>
