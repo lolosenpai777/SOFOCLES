@@ -25,3 +25,22 @@ export async function getPosts() {
     },
   })
 }
+
+export async function deletePostByAuthor(postId, authorId) {
+  return prisma.post.deleteMany({
+    where: {
+      id: postId,
+      authorId,
+    },
+  })
+}
+
+export async function getPostById(postId) {
+  return prisma.post.findUnique({
+    where: { id: postId },
+    select: {
+      id: true,
+      authorId: true,
+    },
+  })
+}

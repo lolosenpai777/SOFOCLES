@@ -33,7 +33,9 @@ export async function requireAuth(request, reply) {
 
     // Expose a normalized userId from the JWT subject claim for downstream handlers.
     if (request.user && request.user.sub) {
-      request.userId = request.user.sub
+      const normalizedUserId = Number(request.user.sub)
+      request.userId = Number.isNaN(normalizedUserId) ? request.user.sub : normalizedUserId
+      request.user.id = request.userId
     }
   } catch (error) {
     request.log.warn({ err: error }, 'Fallo de autenticacion por token')

@@ -16,3 +16,12 @@ export const createPostSchema = z.object({
     .min(1, 'El contenido no puede estar vacío')
     .max(2000, 'El contenido no puede superar 2000 caracteres'),
 })
+
+export const deletePostParamsSchema = z.object({
+  id: z.coerce
+    .number({
+      error: 'El id del post debe ser un numero',
+    })
+    .int('El id del post debe ser un entero')
+    .positive('El id del post debe ser mayor que cero'),
+})

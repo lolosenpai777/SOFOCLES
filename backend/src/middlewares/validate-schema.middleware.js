@@ -1,6 +1,6 @@
-export function validateBody(schema) {
-  return async function validateBodyHandler(request, reply) {
-    const parsed = schema.safeParse(request.body ?? {})
+function validatePart(part, schema) {
+  return async function validatePartHandler(request, reply) {
+    const parsed = schema.safeParse(request[part] ?? {})
 
     if (!parsed.success) {
       const firstIssue = parsed.error.issues[0]
@@ -9,6 +9,14 @@ export function validateBody(schema) {
     }
 
     // Keep sanitized/trimmed values produced by Zod for downstream handlers.
-    request.body = parsed.data
+    request[part] = parsed.data
   }
+}
+
+export function validateBody(schema) {
+  return validatePart('body', schema)
+}
+
+export function validateParams(schema) {
+  return validatePart('params', schema)
 }

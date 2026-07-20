@@ -1,4 +1,4 @@
-import { createPost, getPosts } from '../services/post.service.js'
+import { createPost, deletePostByAuthor, getPostById, getPosts } from '../services/post.service.js'
 import { prisma } from '../config/prisma.js'
 
 export async function createPostHandler(request, reply) {
@@ -38,6 +38,38 @@ export async function listPostsHandler(request, reply) {
   } catch (error) {
     const statusCode = error.statusCode ?? 500
     const message = statusCode >= 500 ? 'Error al obtener posts' : error.message || 'Solicitud invalida'
+    return reply.code(statusCode).send({ error: message })
+  }
+}
+
+export async function deletePostHandler(request, reply) {
+  try {
+    const postId = request.params?.id
+    const userId = request.user?.id ?? request.userId
+
+    if (!userId) {
+      return reply.code(401).send({ error: 'No autenticado' })
+    }
+
+    const deleted = await deletePostByAuthor(postId, Number(userId))
+
+    if (deleted.count === 0) {
+      const post = await getPostById(postId)
+
+      if (!post) {
+        return reply.code(404).send({ error: 'Post no encontrado' })
+      }
+
+      if (post.authorId !== Number(userId)) {
+        return reply.code(403).send({ error: 'No puedes eliminar un post que no te pertenece' })
+      }
+    }
+
+    return reply.send({ mensaje: 'Post eliminado correctamente' })
+  } catch (error) {
+    request.log.error(error)
+    const statusCode = error.statusCode ?? 500
+    const message = statusCode >= 500 ? 'Error al eliminar post' : error.message || 'Solicitud invalida'
     return reply.code(statusCode).send({ error: message })
   }
 }
