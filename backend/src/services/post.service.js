@@ -1,17 +1,45 @@
 import { prisma } from '../config/prisma.js'
 
+function normalizePost(post) {
+  if (!post) {
+    return post
+  }
+
+  return {
+    ...post,
+    likes: (post.likes || []).map((user) => user.id),
+  }
+}
+
 export async function createPost({ title, content, authorId }) {
-  return prisma.post.create({
+  const post = await prisma.post.create({
     data: {
       title,
       content,
       authorId,
     },
+    include: {
+      author: {
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          createdAt: true,
+        },
+      },
+      likes: {
+        select: {
+          id: true,
+        },
+      },
+    },
   })
+
+  return normalizePost(post)
 }
 
 export async function getPosts() {
-  return prisma.post.findMany({
+  const posts = await prisma.post.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
       author: {
@@ -22,8 +50,15 @@ export async function getPosts() {
           createdAt: true,
         },
       },
+      likes: {
+        select: {
+          id: true,
+        },
+      },
     },
   })
+
+  return posts.map(normalizePost)
 }
 
 export async function deletePostByAuthor(postId, authorId) {
@@ -43,4 +78,68 @@ export async function getPostById(postId) {
       authorId: true,
     },
   })
+}
+
+export async function togglePostLike(postId, userId) {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: {
+      id: true,
+      authorId: true,
+      likes: {
+        select: {
+          id: true,
+        },
+      },
+      author: {
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          createdAt: true,
+        },
+      },
+    },
+  })
+
+  if (!post) {
+    const error = new Error('Post no encontrado')
+    error.statusCode = 404
+    throw error
+  }
+
+  const yaTieneLike = post.likes.some((like) => like.id === userId)
+
+  const updatedPost = await prisma.post.update({
+    where: { id: postId },
+    data: {
+      likes: yaTieneLike
+        ? {
+            disconnect: { id: userId },
+          }
+        : {
+            connect: { id: userId },
+          },
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          createdAt: true,
+        },
+      },
+      likes: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  })
+
+  return {
+    post: normalizePost(updatedPost),
+    liked: !yaTieneLike,
+  }
 }

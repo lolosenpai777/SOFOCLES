@@ -1,0 +1,10 @@
+CREATE TABLE "_PostLikes" (
+    "A" INTEGER NOT NULL,
+    "B" INTEGER NOT NULL
+);
+
+CREATE UNIQUE INDEX "_PostLikes_AB_unique" ON "_PostLikes"("A", "B");
+CREATE INDEX "_PostLikes_B_index" ON "_PostLikes"("B");
+
+ALTER TABLE "_PostLikes" ADD CONSTRAINT "_PostLikes_A_fkey" FOREIGN KEY ("A") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "_PostLikes" ADD CONSTRAINT "_PostLikes_B_fkey" FOREIGN KEY ("B") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

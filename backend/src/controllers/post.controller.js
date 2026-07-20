@@ -1,4 +1,10 @@
-import { createPost, deletePostByAuthor, getPostById, getPosts } from '../services/post.service.js'
+import {
+  createPost,
+  deletePostByAuthor,
+  getPostById,
+  getPosts,
+  togglePostLike,
+} from '../services/post.service.js'
 import { prisma } from '../config/prisma.js'
 
 export async function createPostHandler(request, reply) {
@@ -70,6 +76,26 @@ export async function deletePostHandler(request, reply) {
     request.log.error(error)
     const statusCode = error.statusCode ?? 500
     const message = statusCode >= 500 ? 'Error al eliminar post' : error.message || 'Solicitud invalida'
+    return reply.code(statusCode).send({ error: message })
+  }
+}
+
+export async function likePostHandler(request, reply) {
+  try {
+    const postId = request.params?.id
+    const userId = request.user?.id ?? request.userId
+
+    if (!userId) {
+      return reply.code(401).send({ error: 'No autenticado' })
+    }
+
+    const resultado = await togglePostLike(postId, Number(userId))
+
+    return reply.send(resultado)
+  } catch (error) {
+    request.log.error(error)
+    const statusCode = error.statusCode ?? 500
+    const message = statusCode >= 500 ? 'Error al dar like al post' : error.message || 'Solicitud invalida'
     return reply.code(statusCode).send({ error: message })
   }
 }

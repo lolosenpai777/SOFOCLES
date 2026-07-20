@@ -16,6 +16,7 @@ model User {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   posts        Post[]
+  likedPosts   Post[]   @relation("PostLikes")
 
   @@map("users")
 }
@@ -29,6 +30,8 @@ model Post {
 
   author   User @relation(fields: [authorId], references: [id])
   authorId Int  @map("author_id")
+
+  likes    User[] @relation("PostLikes")
 
   @@map("posts")
 }
