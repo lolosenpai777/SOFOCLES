@@ -130,6 +130,14 @@
   @apply scale-95;
 }
 
+.Btn-Like-Post {
+  @apply mt-2 inline-flex w-fit items-center rounded-full border border-emerald-600/20 bg-white/70 px-3 py-2 text-emerald-700 shadow-sm transition-all duration-200 hover:bg-emerald-50 hover:scale-105 active:scale-95;
+}
+
+.Icono-Like {
+  @apply h-4 w-4;
+}
+
 .Modal-Overlay {
   @apply fixed inset-0 z-[60] flex items-center justify-center bg-stone-950/50 px-4 py-6 backdrop-blur-sm;
 }
