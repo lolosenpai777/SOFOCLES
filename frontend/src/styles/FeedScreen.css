@@ -131,7 +131,35 @@
 }
 
 .Btn-Like-Post {
-  @apply mt-2 inline-flex w-fit items-center rounded-full border border-emerald-600/20 bg-white/70 px-3 py-2 text-emerald-700 shadow-sm transition-all duration-200 hover:bg-emerald-50 hover:scale-105 active:scale-95;
+  @apply mt-2 inline-flex items-center gap-2 w-fit rounded-full
+  border border-emerald-600/20
+  bg-white/70
+  px-3 py-2
+  text-stone-500
+  cursor-pointer
+  transition-all
+  duration-300;
+}
+
+.Btn-Like-Post:hover {
+  @apply bg-emerald-50 border-emerald-400 text-emerald-600;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16,185,129,.18);
+}
+
+.Btn-Like-Post.Activo {
+  @apply bg-emerald-50 border-emerald-400 text-emerald-600;
+
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16,185,129,.18);
+}
+
+.Btn-Like-Post.Activo:hover {
+  @apply bg-emerald-50 border-emerald-400 text-emerald-600;
+}
+
+.Contador-Likes {
+  @apply text-xs font-semibold;
 }
 
 .Icono-Like {
