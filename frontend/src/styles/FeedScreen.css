@@ -193,3 +193,43 @@
 .Btn-Modal-Confirmar {
   @apply rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800;
 }
+
+.Btn-Secundario {
+  @apply px-4 py-1.5 rounded-xl text-xs font-semibold tracking-wider uppercase
+  text-emerald-800 bg-white/70 border border-emerald-700/20
+  shadow-sm transition-all duration-300 cursor-pointer
+  hover:bg-emerald-50 hover:border-emerald-600/40 hover:text-emerald-900
+  active:scale-95;
+}
+
+/* Estado activo para cuando ya lo estás siguiendo */
+.Btn-Secundario.Siguiendo {
+  @apply bg-stone-200/60 border-stone-300 text-stone-500 hover:bg-red-50 hover:border-red-300 hover:text-red-600;
+}
+
+/* --- Mantener layout original y empujar solo el botón --- */
+.Header-Post {
+  @apply flex items-center gap-3.5;
+}
+
+/* --- Lista de Búsqueda de Usuarios --- */
+.Lista-Usuarios {
+  @apply w-full bg-white/50 border border-white/70 rounded-2xl p-4 flex flex-col gap-2.5 backdrop-blur-2xl;
+  box-shadow: 0 12px 28px rgba(135, 152, 126, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.Fila-Usuario {
+  @apply flex items-center justify-between p-2.5 rounded-xl bg-white/40 border border-white/60 transition-all duration-200;
+}
+
+.Fila-Usuario:hover {
+  @apply bg-white/70 border-emerald-600/20;
+}
+
+.Info-Usuario-Buscado {
+  @apply flex items-center gap-3;
+}
+
+.Texto-Username {
+  @apply text-sm font-semibold tracking-wide text-stone-800;
+}

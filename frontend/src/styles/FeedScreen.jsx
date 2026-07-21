@@ -3,20 +3,33 @@ import clienteAxios from "../api/clienteAxios";
 import "./FeedScreen.css";
 
 function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
+  // Revisa si el usuario autenticado trae su lista de seguidos
+  const [siguiendo, setSiguiendo] = useState(
+    usuarioAutenticado?.following || usuarioAutenticado?.siguiendo || [],
+  );
+
+  // Obtenemos tu ID una sola vez
+  const miId = usuarioAutenticado?._id || usuarioAutenticado?.id;
+  const [busqueda, setBusqueda] = useState("");
+  const [usuariosEncontrados, setUsuariosEncontrados] = useState([]);
   const [posts, setPosts] = useState([]);
   const [expandedPosts, setExpandedPosts] = useState({});
-  // Separamos el estado para manejar título y contenido
   const [nuevoTitulo, setNuevoTitulo] = useState("");
   const [nuevoContenido, setNuevoContenido] = useState("");
   const [cargandoFeed, setCargandoFeed] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [postAEliminar, setPostAEliminar] = useState(null);
+  const [filtroFeed, setFiltroFeed] = useState("todos"); // 'todos' o 'seguidos'
 
-  // Obtener las publicaciones del templo
-  const obtenerPosts = async () => {
+  // Obtener las publicaciones
+  const obtenerPosts = async (tipoFiltro = filtroFeed) => {
     try {
       setErrorMsg("");
-      const respuesta = await clienteAxios.get("/posts");
+      setCargandoFeed(true);
+
+      const url = tipoFiltro === "seguidos" ? "/posts?filter=following" : "/posts";
+
+      const respuesta = await clienteAxios.get(url);
       setPosts(respuesta.data.posts || respuesta.data);
     } catch (error) {
       console.error("Error al traer el feed:", error);
@@ -30,13 +43,55 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     obtenerPosts();
   }, []);
 
+  // Función de búsqueda
+  const buscar = async (texto) => {
+    setBusqueda(texto);
+
+    if (!texto.trim()) {
+      obtenerPosts();
+      setUsuariosEncontrados([]);
+      return;
+    }
+
+    try {
+      if (texto.startsWith("@")) {
+        const usuario = texto.slice(1);
+        const res = await clienteAxios.get(`/users/search?query=${usuario}`);
+        setUsuariosEncontrados(res.data);
+        setPosts([]);
+      } else {
+        const res = await clienteAxios.get(`/posts/search?query=${texto}`);
+        setPosts(res.data);
+        setUsuariosEncontrados([]);
+      }
+    } catch (error) {
+      console.error("Error en la búsqueda:", error);
+    }
+  };
+
+  const manejarSeguir = async (idUsuarioAAccionar) => {
+    if (!miId || idUsuarioAAccionar === miId) return;
+
+    try {
+      await clienteAxios.post(`/users/${idUsuarioAAccionar}/follow`);
+
+      setSiguiendo((prev) => {
+        const yaLoSigo = prev.includes(idUsuarioAAccionar);
+        return yaLoSigo
+          ? prev.filter((id) => id !== idUsuarioAAccionar)
+          : [...prev, idUsuarioAAccionar];
+      });
+    } catch (error) {
+      console.error("Error al intentar seguir al usuario:", error);
+    }
+  };
+
   // Crear una nueva publicación
   const manejarEnvioPost = async (e) => {
     e.preventDefault();
     if (!nuevoTitulo.trim() || !nuevoContenido.trim()) return;
 
     try {
-      // Enviamos el objeto con 'title' y 'content' como lo espera tu backend
       const respuesta = await clienteAxios.post("/posts", {
         title: nuevoTitulo,
         content: nuevoContenido,
@@ -45,7 +100,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
       const postCreado = respuesta.data.post || respuesta.data;
       setPosts([postCreado, ...posts]);
 
-      // Limpiamos ambos campos tras un envío exitoso
       setNuevoTitulo("");
       setNuevoContenido("");
     } catch (error) {
@@ -88,26 +142,19 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     if (!usuarioAutenticado) return;
 
     try {
-      // Petición asíncrona hacia el backend de Samu
       const respuesta = await clienteAxios.post(`/posts/${postId}/like`);
-
-      // El backend debe retornar el post actualizado o la nueva lista de likes
       const postActualizado = respuesta.data.post || respuesta.data;
 
-      // Actualizamos el contador y el estado en caliente
       setPosts((postsActuales) =>
         postsActuales.map((post) => {
           const idActual = post._id || post.id;
           if (idActual === postId) {
-            // Si el backend te devuelve el objeto completo modificado lo usamos,
-            // si no, alternamos el ID del usuario localmente en el array de likes
             if (
               postActualizado &&
               (postActualizado.likes || postActualizado.megustas)
             ) {
               return { ...post, ...postActualizado };
             } else {
-              const miId = usuarioAutenticado._id || usuarioAutenticado.id;
               const yaTieneLike = post.likes?.includes(miId);
               const nuevosLikes = yaTieneLike
                 ? post.likes.filter((id) => id !== miId)
@@ -121,9 +168,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     } catch (error) {
       console.error("Error al interactuar con el post:", error);
     }
-
-    // Aquí puedes implementar la lógica para manejar el "like" de un post
-    console.log("Like post", postId);
   };
 
   return (
@@ -149,7 +193,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
       </header>
 
       <main className="Cuerpo-Feed">
-        {/* Editor de Post con Título y Contenido */}
+        {/* Editor de Post */}
         <section className="Columna-Editor">
           <div className="Card-Formulario-Feed">
             <h2 className="Titulo-Seccion">¿Qué idea ronda tu mente hoy?</h2>
@@ -194,11 +238,84 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
 
         {/* Línea de Tiempo */}
         <section className="Columna-Publicaciones">
+          {/* Filtros de la Línea de Tiempo */}
+          <div className="flex gap-2 mb-4 border-b border-emerald-700/10 pb-2">
+            <button
+              type="button"
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                filtroFeed === "todos"
+                  ? "bg-emerald-700 text-white"
+                  : "text-stone-600 hover:bg-emerald-50"
+              }`}
+              onClick={() => {
+                setFiltroFeed("todos");
+                obtenerPosts("todos");
+              }}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                filtroFeed === "seguidos"
+                  ? "bg-emerald-700 text-white"
+                  : "text-stone-600 hover:bg-emerald-50"
+              }`}
+              onClick={() => {
+                setFiltroFeed("seguidos");
+                obtenerPosts("seguidos");
+              }}
+            >
+              Siguiendo
+            </button>
+          </div>
+
+          {/* Buscador */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Buscar publicaciones o @Usuarios..."
+              className="Input-Olimpo-Feed"
+              value={busqueda}
+              onChange={(e) => buscar(e.target.value)}
+            />
+          </div>
+
+          {/* Lista de Usuarios Encontrados */}
+          {usuariosEncontrados.length > 0 && (
+            <div className="Lista-Usuarios mb-4">
+              {usuariosEncontrados.map((usuario) => {
+                const uId = usuario._id || usuario.id;
+
+                if (uId === miId) return null; // No mostrarte a ti mismo
+
+                const loSigo = siguiendo.includes(uId);
+
+                return (
+                  <div
+                    key={uId}
+                    className="Fila-Usuario flex justify-between items-center p-2"
+                  >
+                    <span>@{usuario.username}</span>
+                    <button
+                      type="button"
+                      className={`Btn-Secundario ${loSigo ? "Siguiendo" : ""}`}
+                      onClick={() => manejarSeguir(uId)}
+                    >
+                      {loSigo ? "Siguiendo" : "+ Seguir"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Renderizado de Feed / Estados de carga */}
           {cargandoFeed ? (
             <div className="Cargando-Contenedor">
               <span className="Texto-Cargando">Invocando el feed...</span>
             </div>
-          ) : posts.length === 0 ? (
+          ) : posts.length === 0 && usuariosEncontrados.length === 0 ? (
             <div className="Cargando-Contenedor">
               <p className="text-stone-500 font-light italic">
                 El ágora está en silencio. Sé el primero en dejar una marca.
@@ -207,34 +324,29 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
           ) : (
             <div className="Lista-Posts">
               {posts.map((post) => {
+                const pId = post._id || post.id;
                 const authorName =
                   post.author?.username ||
                   post.usuario?.username ||
                   post.username ||
                   "Filósofo Anónimo";
                 const content = post.content || post.contenido || "";
-                const isExpanded = expandedPosts[post.id];
+                const isExpanded = expandedPosts[pId];
                 const shouldTruncate = content.length > 180;
                 const preview = shouldTruncate
                   ? `${content.slice(0, 180).trimEnd()}...`
                   : content;
-                const postId = post._id || post.id;
-
-                const miId = usuarioAutenticado?._id || usuarioAutenticado?.id;
 
                 const likes = post.likes || post.megustas || [];
-
                 const tieneLike = likes.some((like) => {
                   if (typeof like === "string") return like === miId;
                   return (like._id || like.id) === miId;
                 });
 
                 const cantidadLikes = likes.length;
+
                 return (
-                  <article
-                    key={post._id || post.id}
-                    className="Card-Post Modal-Animacion"
-                  >
+                  <article key={pId} className="Card-Post Modal-Animacion">
                     <header className="Header-Post">
                       <div className="Avatar-Usuario">
                         {authorName.substring(0, 2).toUpperCase()}
@@ -247,9 +359,45 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                             : "Hace instantes"}
                         </span>
                       </div>
+
+                      {usuarioAutenticado &&
+                        (post.author?._id ||
+                          post.author?.id ||
+                          post.usuario?._id ||
+                          post.usuario?.id) !== miId && (
+                          <button
+                            type="button"
+                            className={`Btn-Secundario ml-auto ${
+                              siguiendo.includes(
+                                post.author?._id ||
+                                  post.author?.id ||
+                                  post.usuario?._id ||
+                                  post.usuario?.id,
+                              )
+                                ? "Siguiendo"
+                                : ""
+                            }`}
+                            onClick={() =>
+                              manejarSeguir(
+                                post.author?._id ||
+                                  post.author?.id ||
+                                  post.usuario?._id ||
+                                  post.usuario?.id,
+                              )
+                            }
+                          >
+                            {siguiendo.includes(
+                              post.author?._id ||
+                                post.author?.id ||
+                                post.usuario?._id ||
+                                post.usuario?.id,
+                            )
+                              ? "Siguiendo"
+                              : "+ Seguir"}
+                          </button>
+                        )}
                     </header>
 
-                    {/* Renderizado de Título y Contenido en la tarjeta */}
                     <div className="Cuerpo-Post-Contenido">
                       <h4 className="Title-Post-Display">
                         {post.title || "Pensamiento sin título"}
@@ -257,24 +405,24 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                       <p className="Contenido-Post">
                         {isExpanded ? content : preview}
                       </p>
+
                       {shouldTruncate && (
                         <button
                           type="button"
                           className="Btn-VerMas"
-                          onClick={() => toggleExpandPost(post.id)}
+                          onClick={() => toggleExpandPost(pId)}
                         >
                           {isExpanded ? "Ver menos" : "Ver más"}
                         </button>
                       )}
+
                       {usuarioAutenticado &&
-                        (post.author?.id === usuarioAutenticado.id ||
-                          post.usuario?.id === usuarioAutenticado.id) && (
+                        ((post.author?._id || post.author?.id) === miId ||
+                          (post.usuario?._id || post.usuario?.id) === miId) && (
                           <button
                             type="button"
                             className="Btn-Eliminar-Post"
-                            onClick={() =>
-                              abrirModalEliminar(post._id || post.id)
-                            }
+                            onClick={() => abrirModalEliminar(pId)}
                           >
                             🗑️
                           </button>
@@ -283,7 +431,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                       <button
                         type="button"
                         className={`Btn-Like-Post ${tieneLike ? "Activo" : ""}`}
-                        onClick={() => manejarLikePost(postId)}
+                        onClick={() => manejarLikePost(pId)}
                         aria-label="Me gusta"
                       >
                         <svg
@@ -309,6 +457,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
         </section>
       </main>
 
+      {/* Modal Confirmación Eliminar */}
       {postAEliminar && (
         <div
           className="Modal-Overlay"
