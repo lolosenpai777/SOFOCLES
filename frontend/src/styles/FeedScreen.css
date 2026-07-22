@@ -73,8 +73,23 @@
 }
 
 .Avatar-Usuario {
-  @apply w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-sm;
+  @apply w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-sm transition-all duration-200 cursor-pointer overflow-hidden select-none;
+  border: 0;
 }
+
+.Avatar-Usuario:hover {
+  @apply opacity-80 scale-105 shadow-md;
+}
+
+.Avatar-Usuario:active {
+  @apply scale-95;
+}
+
+/* Para asegurarnos de que la imagen contenida no interfiera con los clics */
+.Avatar-Usuario img {
+  @apply w-full h-full object-cover pointer-events-none;
+}
+
 
 .Nombre-Usuario {
   @apply font-bold text-sm tracking-wide text-stone-800;
@@ -200,6 +215,14 @@
   shadow-sm transition-all duration-300 cursor-pointer
   hover:bg-emerald-50 hover:border-emerald-600/40 hover:text-emerald-900
   active:scale-95;
+}
+
+.Nombre-Usuario-Header {
+  @apply mt-2 text-xs uppercase tracking-[0.25em] text-emerald-700/80 cursor-pointer transition-all select-none;
+}
+
+.Nombre-Usuario-Header:hover {
+  @apply text-emerald-900 underline;
 }
 
 /* Estado activo para cuando ya lo estás siguiendo */

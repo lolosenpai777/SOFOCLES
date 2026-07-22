@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import clienteAxios from "../api/clienteAxios";
 import "./FeedScreen.css";
+import PerfilModal from "./PerfilModal";
 
 function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   // Revisa si el usuario autenticado trae su lista de seguidos
@@ -26,6 +27,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [postAEliminar, setPostAEliminar] = useState(null);
   const [filtroFeed, setFiltroFeed] = useState("todos"); // 'todos' o 'seguidos'
+  const [perfilSeleccionado, setPerfilSeleccionado] = useState(null);
 
   // Obtener las publicaciones
   const obtenerPosts = async (tipoFiltro = filtroFeed) => {
@@ -187,10 +189,16 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
         <div>
           <h1 className="Logo-Sofocles">Sófocles</h1>
           {usuarioAutenticado && (
-            <p className="mt-2 text-xs uppercase tracking-[0.25em] text-emerald-700/80">
-              Ágora de: {usuarioAutenticado.username}
-            </p>
-          )}
+  <p
+    className="mt-2 text-xs uppercase tracking-[0.25em] text-emerald-700/80 cursor-pointer hover:text-emerald-900 hover:underline transition-all select-none"
+    onClick={() =>
+      setPerfilSeleccionado({ id: miId, username: usuarioAutenticado.username })
+    }
+    title="Ver mi perfil"
+  >
+    Ágora de: {usuarioAutenticado.username}
+  </p>
+)}
         </div>
         <div className="Controles-Acceso">
           <button className="Btn-Secundario" onClick={cerrarSesion}>
@@ -355,9 +363,23 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                 return (
                   <article key={pId} className="Card-Post Modal-Animacion">
                     <header className="Header-Post">
-                      <div className="Avatar-Usuario">
+                      <button
+                        type="button"
+                        className="Avatar-Usuario"
+                        onClick={() =>
+                          setPerfilSeleccionado({
+                            id:
+                              post.author?._id ||
+                              post.author?.id ||
+                              post.usuario?._id ||
+                              post.usuario?.id,
+                            username: authorName,
+                          })
+                        }
+                        aria-label={`Ver perfil de ${authorName}`}
+                      >
                         {authorName.substring(0, 2).toUpperCase()}
-                      </div>
+                      </button>
                       <div>
                         <h3 className="Nombre-Usuario">{authorName}</h3>
                         <span className="Fecha-Post">
@@ -499,6 +521,17 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
           </div>
         </div>
       )}
+
+      {/* Modal Vista Perfil */}
+{perfilSeleccionado && (
+  <PerfilModal
+    usuario={perfilSeleccionado}
+    miId={miId}
+    siguiendo={siguiendo}
+    manejarSeguir={manejarSeguir}
+    cerrarModal={() => setPerfilSeleccionado(null)}
+  />
+)}
 
       <footer className="Footer-Olimpo mt-12">
         <h3>Un nuevo orden social</h3>
