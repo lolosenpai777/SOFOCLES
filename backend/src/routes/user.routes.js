@@ -1,4 +1,4 @@
-import { getUsersHandler, followUserHandler } from '../controllers/user.controller.js'
+import { getUsersHandler, followUserHandler, getProfileHandler, updateProfileHandler } from '../controllers/user.controller.js'
 import { requireAuth } from '../middlewares/auth.middleware.js'
 import { validateParams } from '../middlewares/validate-schema.middleware.js'
 import { deletePostParamsSchema } from '../schemas/post.schema.js'
@@ -23,5 +23,31 @@ export async function userRoutes(fastify) {
       },
     },
     followUserHandler,
+  )
+
+  fastify.get(
+    '/users/:id/profile',
+    {
+      preValidation: validateParams(deletePostParamsSchema),
+    },
+    getProfileHandler,
+  )
+
+  fastify.put(
+    '/users/profile',
+    {
+      preHandler: [requireAuth],
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '1 minute',
+          keyGenerator(request) {
+            const authHeader = request.headers?.authorization || 'anon'
+            return `${request.ip}:${authHeader}`
+          },
+        },
+      },
+    },
+    updateProfileHandler,
   )
 }

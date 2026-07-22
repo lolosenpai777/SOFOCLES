@@ -1,4 +1,4 @@
-import { searchUsersByUsername, toggleFollow } from '../services/user.service.js'
+import { searchUsersByUsername, toggleFollow, getUserProfile, updateUserProfile } from '../services/user.service.js'
 import { prisma } from '../config/prisma.js'
 
 export async function meHandler(request) {
@@ -40,4 +40,21 @@ export async function followUserHandler(request, reply) {
   const result = await toggleFollow(currentUserId, targetUserId)
 
   return reply.code(200).send({ success: true, ...result })
+}
+
+export async function getProfileHandler(request, reply) {
+  const userId = Number(request.params.id)
+  const profile = await getUserProfile(userId)
+  return reply.code(200).send(profile)
+}
+
+export async function updateProfileHandler(request, reply) {
+  const userId = request.userId
+  const { biography, avatarUrl } = request.body
+
+  const updated = await updateUserProfile(userId, { biography, avatarUrl })
+  return reply.code(200).send({
+    success: true,
+    user: updated,
+  })
 }
