@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import clienteAxios from "../api/clienteAxios";
+import AvatarDisplay from "../components/AvatarDisplay";
 import "./PerfilModal.css";
 
 function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
@@ -75,7 +76,7 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
       >
         {/* Header del modal */}
         <div className="flex items-start justify-between gap-4 sticky top-0 bg-white/95 pb-4">
-          <div className="Avatar-Usuario">{iniciales}</div>
+          <AvatarDisplay avatarUrl={perfilData?.avatarUrl} username={usuario.username} size="lg" />
           <button
             type="button"
             className="Btn-Modal-Cancelar"

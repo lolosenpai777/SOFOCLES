@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import clienteAxios from "../api/clienteAxios";
+import AvatarDisplay from "../components/AvatarDisplay";
 import "./FeedScreen.css";
 import PerfilModal from "./PerfilModal";
 
@@ -365,7 +366,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                     <header className="Header-Post">
                       <button
                         type="button"
-                        className="Avatar-Usuario"
+                        className="p-0"
                         onClick={() =>
                           setPerfilSeleccionado({
                             id:
@@ -378,7 +379,11 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                         }
                         aria-label={`Ver perfil de ${authorName}`}
                       >
-                        {authorName.substring(0, 2).toUpperCase()}
+                        <AvatarDisplay
+                          avatarUrl={post.author?.avatarUrl || post.usuario?.avatarUrl}
+                          username={authorName}
+                          size="md"
+                        />
                       </button>
                       <div>
                         <h3 className="Nombre-Usuario">{authorName}</h3>
