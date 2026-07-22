@@ -40,6 +40,12 @@ export function buildApp() {
     await mod.postRoutes(instance)
   }, { prefix: '/api' })
 
+  // register users route via dynamic import
+  fastify.register(async function (instance) {
+    const mod = await import('./routes/user.routes.js')
+    await mod.userRoutes(instance)
+  }, { prefix: '/api' })
+
   fastify.setErrorHandler((error, request, reply) => {
     request.log.error(error)
 

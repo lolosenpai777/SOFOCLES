@@ -3,6 +3,7 @@ import {
   deletePostByAuthor,
   getPostById,
   getPosts,
+  getPostsFollowing,
   togglePostLike,
 } from '../services/post.service.js'
 import { prisma } from '../config/prisma.js'
@@ -39,9 +40,31 @@ export async function createPostHandler(request, reply) {
 
 export async function listPostsHandler(request, reply) {
   try {
+    const filter = request.query?.filter
+
+    if (filter === 'following') {
+      // require authentication to fetch posts from followed users
+      try {
+        await request.jwtVerify()
+      } catch (err) {
+        return reply.code(401).send({ error: 'No autenticado' })
+      }
+
+      // Normalize user id from JWT payload if middleware didn't run
+      const userId = request.userId ?? (request.user && request.user.sub ? Number(request.user.sub) : undefined)
+
+      if (!userId || Number.isNaN(Number(userId))) {
+        return reply.code(401).send({ error: 'No autenticado' })
+      }
+
+      const posts = await getPostsFollowing(Number(userId))
+      return reply.send({ posts })
+    }
+
     const posts = await getPosts()
     return reply.send({ posts })
   } catch (error) {
+    request.log.error(error)
     const statusCode = error.statusCode ?? 500
     const message = statusCode >= 500 ? 'Error al obtener posts' : error.message || 'Solicitud invalida'
     return reply.code(statusCode).send({ error: message })

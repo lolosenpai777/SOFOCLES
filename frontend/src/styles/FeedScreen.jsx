@@ -4,9 +4,15 @@ import "./FeedScreen.css";
 
 function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   // Revisa si el usuario autenticado trae su lista de seguidos
-  const [siguiendo, setSiguiendo] = useState(
-    usuarioAutenticado?.following || usuarioAutenticado?.siguiendo || [],
-  );
+  const initialFollowing = (() => {
+    const f = usuarioAutenticado?.following || usuarioAutenticado?.siguiendo || []
+    if (!f) return []
+    // If backend returns array of objects, map to ids
+    if (f.length > 0 && typeof f[0] === 'object') return f.map((u) => u.id || u._id)
+    return f
+  })()
+
+  const [siguiendo, setSiguiendo] = useState(initialFollowing)
 
   // Obtenemos tu ID una sola vez
   const miId = usuarioAutenticado?._id || usuarioAutenticado?.id;
@@ -56,8 +62,9 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     try {
       if (texto.startsWith("@")) {
         const usuario = texto.slice(1);
-        const res = await clienteAxios.get(`/users/search?query=${usuario}`);
-        setUsuariosEncontrados(res.data);
+        const res = await clienteAxios.get(`/users?search=${usuario}`);
+        const data = res.data?.users || res.data
+        setUsuariosEncontrados(data);
         setPosts([]);
       } else {
         const res = await clienteAxios.get(`/posts/search?query=${texto}`);

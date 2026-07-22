@@ -17,6 +17,8 @@ model User {
 
   posts        Post[]
   likedPosts   Post[]   @relation("PostLikes")
+  followers    User[]   @relation("UserFollows")
+  following    User[]   @relation("UserFollows")
 
   @@map("users")
 }

@@ -61,6 +61,38 @@ export async function getPosts() {
   return posts.map(normalizePost)
 }
 
+export async function getPostsFollowing(userId) {
+  const posts = await prisma.post.findMany({
+    where: {
+      author: {
+        followers: {
+          some: {
+            id: userId,
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      author: {
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          createdAt: true,
+        },
+      },
+      likes: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  })
+
+  return posts.map(normalizePost)
+}
+
 export async function deletePostByAuthor(postId, authorId) {
   return prisma.post.deleteMany({
     where: {
