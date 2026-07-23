@@ -5,18 +5,18 @@ import "./FeedScreen.css";
 import PerfilModal from "./PerfilModal";
 
 function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
-  // Revisa si el usuario autenticado trae su lista de seguidos
+  // Inicialización de 'siguiendo'
   const initialFollowing = (() => {
-    const f = usuarioAutenticado?.following || usuarioAutenticado?.siguiendo || []
-    if (!f) return []
-    // If backend returns array of objects, map to ids
-    if (f.length > 0 && typeof f[0] === 'object') return f.map((u) => u.id || u._id)
-    return f
-  })()
+    const f =
+      usuarioAutenticado?.following || usuarioAutenticado?.siguiendo || [];
+    if (!f) return [];
+    if (f.length > 0 && typeof f[0] === "object")
+      return f.map((u) => u.id || u._id);
+    return f;
+  })();
 
-  const [siguiendo, setSiguiendo] = useState(initialFollowing)
+  const [siguiendo, setSiguiendo] = useState(initialFollowing);
 
-  // Obtenemos tu ID una sola vez
   const miId = usuarioAutenticado?._id || usuarioAutenticado?.id;
   const [busqueda, setBusqueda] = useState("");
   const [usuariosEncontrados, setUsuariosEncontrados] = useState([]);
@@ -25,7 +25,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const [nuevoTitulo, setNuevoTitulo] = useState("");
   const [nuevoContenido, setNuevoContenido] = useState("");
   const [nuevaImagen, setNuevaImagen] = useState(null);
-  const [archivoImagen, setArchivoImagen] = useState(null);
   const [modalImagenAbierto, setModalImagenAbierto] = useState(false);
   const [errorImagen, setErrorImagen] = useState("");
   const inputImagenRef = useRef(null);
@@ -35,14 +34,17 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const [filtroFeed, setFiltroFeed] = useState("todos"); // 'todos' o 'seguidos'
   const [perfilSeleccionado, setPerfilSeleccionado] = useState(null);
 
-  // Obtener las publicaciones
+  // Estado para el modal de detalle del post (al hacer clic en comentarios)
+  const [postDetalle, setPostDetalle] = useState(null);
+
+  // Obtener publicaciones
   const obtenerPosts = async (tipoFiltro = filtroFeed) => {
     try {
       setErrorMsg("");
       setCargandoFeed(true);
 
-      const url = tipoFiltro === "seguidos" ? "/posts?filter=following" : "/posts";
-
+      const url =
+        tipoFiltro === "seguidos" ? "/posts?filter=following" : "/posts";
       const respuesta = await clienteAxios.get(url);
       setPosts(respuesta.data.posts || respuesta.data);
     } catch (error) {
@@ -71,7 +73,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
       if (texto.startsWith("@")) {
         const usuario = texto.slice(1);
         const res = await clienteAxios.get(`/users?search=${usuario}`);
-        const data = res.data?.users || res.data
+        const data = res.data?.users || res.data;
         setUsuariosEncontrados(data);
         setPosts([]);
       } else {
@@ -84,6 +86,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     }
   };
 
+  // Seguir / Dejar de seguir
   const manejarSeguir = async (idUsuarioAAccionar) => {
     if (!miId || idUsuarioAAccionar === miId) return;
 
@@ -101,15 +104,12 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     }
   };
 
-
-
-  // Crear una nueva publicación
+  // Publicar post
   const manejarEnvioPost = async (e) => {
     e.preventDefault();
     if (!nuevoTitulo.trim() || !nuevoContenido.trim()) return;
 
     try {
-      // Send JSON. If `nuevaImagen` (data URL) exists, include it as `imageData`.
       const payload = {
         title: nuevoTitulo.trim(),
         content: nuevoContenido.trim(),
@@ -120,20 +120,19 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
       }
 
       const respuesta = await clienteAxios.post("/posts", payload);
-
       const postCreado = respuesta.data.post || respuesta.data;
-      setPosts([{ ...postCreado }, ...posts]);
 
+      setPosts((prevPosts) => [{ ...postCreado }, ...prevPosts]);
       setNuevoTitulo("");
       setNuevoContenido("");
       setNuevaImagen(null);
-      setArchivoImagen(null);
     } catch (error) {
       console.error("Error al publicar:", error);
       setErrorMsg("Tu pensamiento no pudo ser forjado en la red.");
     }
   };
 
+  // Procesar archivo de imagen desde el modal
   const seleccionarImagen = (event) => {
     const archivo = event.target.files?.[0];
     if (!archivo) return;
@@ -151,20 +150,15 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     const lector = new FileReader();
     lector.onload = () => {
       setNuevaImagen(lector.result);
-      setArchivoImagen(archivo);
       setErrorImagen("");
       setModalImagenAbierto(false);
     };
     lector.readAsDataURL(archivo);
   };
 
-  const abrirModalEliminar = (postId) => {
-    setPostAEliminar(postId);
-  };
-
-  const cancelarEliminacion = () => {
-    setPostAEliminar(null);
-  };
+  // Gestión de eliminación
+  const abrirModalEliminar = (postId) => setPostAEliminar(postId);
+  const cancelarEliminacion = () => setPostAEliminar(null);
 
   const eliminarPost = async () => {
     if (!postAEliminar) return;
@@ -181,6 +175,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     }
   };
 
+  // Expandir/colapsar texto
   const toggleExpandPost = (postId) => {
     setExpandedPosts((prev) => ({
       ...prev,
@@ -188,6 +183,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     }));
   };
 
+  // Dar/quitar Like
   const manejarLikePost = async (postId) => {
     if (!usuarioAutenticado) return;
 
@@ -215,22 +211,21 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
           return post;
         }),
       );
+
+      // Si el post abierto en el modal es al que le dimos Like, actualizamos también su estado local
+      if (postDetalle && (postDetalle._id || postDetalle.id) === postId) {
+        setPostDetalle((prev) => {
+          const yaTieneLike = prev.likes?.includes(miId);
+          const nuevosLikes = yaTieneLike
+            ? prev.likes.filter((id) => id !== miId)
+            : [...(prev.likes || []), miId];
+          return { ...prev, likes: nuevosLikes };
+        });
+      }
     } catch (error) {
       console.error("Error al interactuar con el post:", error);
     }
   };
-
-    const manejarImagenSeleccionada = (e) => {
-    const archivo = e.target.files[0];
-    if (archivo) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNuevaImagen(reader.result);
-      };
-      reader.readAsDataURL(archivo);
-    }
-    };
-
 
   return (
     <div className="Olimpo-Contenedor">
@@ -242,16 +237,19 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
         <div>
           <h1 className="Logo-Sofocles">Sófocles</h1>
           {usuarioAutenticado && (
-  <p
-    className="mt-2 text-xs uppercase tracking-[0.25em] text-emerald-700/80 cursor-pointer hover:text-emerald-900 hover:underline transition-all select-none"
-    onClick={() =>
-      setPerfilSeleccionado({ id: miId, username: usuarioAutenticado.username })
-    }
-    title="Ver mi perfil"
-  >
-    Ágora de: {usuarioAutenticado.username}
-  </p>
-)}
+            <p
+              className="mt-2 text-xs uppercase tracking-[0.25em] text-emerald-700/80 cursor-pointer hover:text-emerald-900 hover:underline transition-all select-none"
+              onClick={() =>
+                setPerfilSeleccionado({
+                  id: miId,
+                  username: usuarioAutenticado.username,
+                })
+              }
+              title="Ver mi perfil"
+            >
+              Ágora de: {usuarioAutenticado.username}
+            </p>
+          )}
         </div>
         <div className="Controles-Acceso">
           <button className="Btn-Secundario" onClick={cerrarSesion}>
@@ -312,8 +310,8 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                       className="Btn-Quitar-Imagen"
                       onClick={() => {
                         setNuevaImagen(null);
-                        setArchivoImagen(null);
-                        if (inputImagenRef.current) inputImagenRef.current.value = "";
+                        if (inputImagenRef.current)
+                          inputImagenRef.current.value = "";
                       }}
                       aria-label="Quitar imagen"
                     >
@@ -321,8 +319,8 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                     </button>
                   </div>
                 )}
-
               </div>
+
               <div className="Fila-Editor-Acciones">
                 <span className="Contador-Caracteres">
                   {280 - nuevoContenido.length} caracteres restantes
@@ -337,7 +335,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
 
         {/* Línea de Tiempo */}
         <section className="Columna-Publicaciones">
-          {/* Filtros de la Línea de Tiempo */}
+          {/* Filtros */}
           <div className="flex gap-2 mb-4 border-b border-emerald-700/10 pb-2">
             <button
               type="button"
@@ -380,13 +378,12 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
             />
           </div>
 
-          {/* Lista de Usuarios Encontrados */}
+          {/* Usuarios Encontrados */}
           {usuariosEncontrados.length > 0 && (
             <div className="Lista-Usuarios mb-4">
               {usuariosEncontrados.map((usuario) => {
                 const uId = usuario._id || usuario.id;
-
-                if (uId === miId) return null; // No mostrarte a ti mismo
+                if (uId === miId) return null;
 
                 const loSigo = siguiendo.includes(uId);
 
@@ -409,7 +406,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
             </div>
           )}
 
-          {/* Renderizado de Feed / Estados de carga */}
+          {/* Renderizado de Feed */}
           {cargandoFeed ? (
             <div className="Cargando-Contenedor">
               <span className="Texto-Cargando">Invocando el feed...</span>
@@ -424,6 +421,11 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
             <div className="Lista-Posts">
               {posts.map((post) => {
                 const pId = post._id || post.id;
+                const autorId =
+                  post.author?._id ||
+                  post.author?.id ||
+                  post.usuario?._id ||
+                  post.usuario?.id;
                 const authorName =
                   post.author?.username ||
                   post.usuario?.username ||
@@ -442,77 +444,54 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                   return (like._id || like.id) === miId;
                 });
 
+                const comentarios = post.comments || post.comentarios || [];
+                const cantidadComentarios = comentarios.length;
+
                 const cantidadLikes = likes.length;
+                const loSigo = siguiendo.includes(autorId);
 
                 return (
                   <article key={pId} className="Card-Post Modal-Animacion">
                     <header className="Header-Post">
-                      <button
-                        type="button"
-                        className="p-0"
-                        onClick={() =>
-                          setPerfilSeleccionado({
-                            id:
-                              post.author?._id ||
-                              post.author?.id ||
-                              post.usuario?._id ||
-                              post.usuario?.id,
-                            username: authorName,
-                          })
-                        }
-                        aria-label={`Ver perfil de ${authorName}`}
-                      >
-                        <AvatarDisplay
-                          avatarUrl={post.author?.avatarUrl || post.usuario?.avatarUrl}
-                          username={authorName}
-                          size="md"
-                        />
-                      </button>
-                      <div>
-                        <h3 className="Nombre-Usuario">{authorName}</h3>
-                        <span className="Fecha-Post">
-                          {post.createdAt
-                            ? new Date(post.createdAt).toLocaleDateString()
-                            : "Hace instantes"}
-                        </span>
-                      </div>
+                      <div className="Acciones-Post flex items-center w-full">
+                        <button
+                          type="button"
+                          className="p-0 border-none bg-transparent cursor-pointer"
+                          onClick={() =>
+                            setPerfilSeleccionado({
+                              id: autorId,
+                              username: authorName,
+                            })
+                          }
+                          aria-label={`Ver perfil de ${authorName}`}
+                        >
+                          <AvatarDisplay
+                            avatarUrl={
+                              post.author?.avatarUrl || post.usuario?.avatarUrl
+                            }
+                            username={authorName}
+                            size="md"
+                          />
+                        </button>
+                        <div className="ml-3">
+                          <h3 className="Nombre-Usuario">{authorName}</h3>
+                          <span className="Fecha-Post">
+                            {post.createdAt
+                              ? new Date(post.createdAt).toLocaleDateString()
+                              : "Hace instantes"}
+                          </span>
+                        </div>
 
-                      {usuarioAutenticado &&
-                        (post.author?._id ||
-                          post.author?.id ||
-                          post.usuario?._id ||
-                          post.usuario?.id) !== miId && (
+                        {usuarioAutenticado && autorId !== miId && (
                           <button
                             type="button"
-                            className={`Btn-Secundario ml-auto ${
-                              siguiendo.includes(
-                                post.author?._id ||
-                                  post.author?.id ||
-                                  post.usuario?._id ||
-                                  post.usuario?.id,
-                              )
-                                ? "Siguiendo"
-                                : ""
-                            }`}
-                            onClick={() =>
-                              manejarSeguir(
-                                post.author?._id ||
-                                  post.author?.id ||
-                                  post.usuario?._id ||
-                                  post.usuario?.id,
-                              )
-                            }
+                            className={`Btn-Secundario ml-auto ${loSigo ? "Siguiendo" : ""}`}
+                            onClick={() => manejarSeguir(autorId)}
                           >
-                            {siguiendo.includes(
-                              post.author?._id ||
-                                post.author?.id ||
-                                post.usuario?._id ||
-                                post.usuario?.id,
-                            )
-                              ? "Siguiendo"
-                              : "+ Seguir"}
+                            {loSigo ? "Siguiendo" : "+ Seguir"}
                           </button>
                         )}
+                      </div>
                     </header>
 
                     <div className="Cuerpo-Post-Contenido">
@@ -541,38 +520,64 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                         </button>
                       )}
 
-                      {usuarioAutenticado &&
-                        ((post.author?._id || post.author?.id) === miId ||
-                          (post.usuario?._id || post.usuario?.id) === miId) && (
+                      <div className="flex items-center gap-4 mt-3">
+                        <button
+                          type="button"
+                          className={`Btn-Like-Post ${tieneLike ? "Activo" : ""}`}
+                          onClick={() => manejarLikePost(pId)}
+                          aria-label="Me gusta"
+                        >
+                          <svg
+                            className="Icono-Like"
+                            viewBox="0 0 24 24"
+                            fill={tieneLike ? "currentColor" : "none"}
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M12 20s-6.5-4.35-8.2-8.03A4.82 4.82 0 0 1 7.8 4.7c1.47 0 2.76.74 3.5 1.93.74-1.19 2.03-1.93 3.5-1.93a4.82 4.82 0 0 1 3.99 7.97C18.5 15.65 12 20 12 20z" />
+                          </svg>
+                          <span className="Contador-Likes">
+                            {cantidadLikes}
+                          </span>
+                        </button>
+
+                        {/* Botón de Comentarios */}
+                        <button
+                          type="button"
+                          className="Btn-Comentario-Post"
+                          onClick={() => setPostDetalle(post)}
+                          aria-label="Comentarios"
+                          title="Ver publicación y comentarios"
+                        >
+                          {/* SVG Inline en lugar de <img /> */}
+                          <svg
+                            className="Icono-Like"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                          </svg>
+                          <span className="Contador-Likes">
+                            {cantidadComentarios}
+                          </span>
+                        </button>
+                        {usuarioAutenticado && autorId === miId && (
                           <button
                             type="button"
-                            className="Btn-Eliminar-Post"
+                            className="Btn-Eliminar-Post ml-auto"
                             onClick={() => abrirModalEliminar(pId)}
+                            title="Eliminar publicación"
                           >
                             🗑️
                           </button>
                         )}
-
-                      <button
-                        type="button"
-                        className={`Btn-Like-Post ${tieneLike ? "Activo" : ""}`}
-                        onClick={() => manejarLikePost(pId)}
-                        aria-label="Me gusta"
-                      >
-                        <svg
-                          className="Icono-Like"
-                          viewBox="0 0 24 24"
-                          fill={tieneLike ? "currentColor" : "none"}
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M12 20s-6.5-4.35-8.2-8.03A4.82 4.82 0 0 1 7.8 4.7c1.47 0 2.76.74 3.5 1.93.74-1.19 2.03-1.93 3.5-1.93a4.82 4.82 0 0 1 3.99 7.97C18.5 15.65 12 20 12 20z" />
-                        </svg>
-
-                        <span className="Contador-Likes">{cantidadLikes}</span>
-                      </button>
+                      </div>
                     </div>
                   </article>
                 );
@@ -581,6 +586,92 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
           )}
         </section>
       </main>
+
+      {/* Modal de Detalle de Publicación / Comentarios */}
+      {postDetalle && (
+        <div
+          className="Modal-Overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-post-titulo"
+          onMouseDown={() => setPostDetalle(null)}
+        >
+          <div
+            className="Modal-Confirmacion max-w-lg w-full max-h-[85vh] overflow-y-auto"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 id="modal-post-titulo" className="Titulo-Modal text-left">
+                Publicación de @
+                {postDetalle.author?.username ||
+                  postDetalle.usuario?.username ||
+                  "Anónimo"}
+              </h3>
+              <button
+                type="button"
+                className="Btn-Quitar-Imagen font-bold text-xl cursor-pointer"
+                onClick={() => setPostDetalle(null)}
+              >
+                X
+              </button>
+            </div>
+
+            <div className="text-left space-y-3 border-b border-emerald-700/10 pb-4">
+              <h4 className="font-bold text-lg text-emerald-950">
+                {postDetalle.title || "Pensamiento sin título"}
+              </h4>
+              <p className="text-stone-700 text-sm whitespace-pre-line">
+                {postDetalle.content || postDetalle.contenido}
+              </p>
+              {postDetalle.imageUrl && (
+                <img
+                  src={postDetalle.imageUrl}
+                  alt="Imagen del post"
+                  className="rounded-xl max-h-60 w-full object-cover mt-2"
+                />
+              )}
+            </div>
+
+            {/* Sección de Comentarios */}
+            <div className="mt-4 text-left">
+              <h5 className="font-semibold text-sm mb-2 text-stone-600">
+                Comentarios (
+                {(postDetalle.comments || postDetalle.comentarios || []).length}
+                )
+              </h5>
+
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {(postDetalle.comments || postDetalle.comentarios || [])
+                  .length === 0 ? (
+                  <p className="text-xs text-stone-400 italic">
+                    Aún no hay opiniones expresadas sobre esta idea.
+                  </p>
+                ) : (
+                  (postDetalle.comments || postDetalle.comentarios).map(
+                    (c, i) => (
+                      <div
+                        key={c._id || c.id || i}
+                        className="bg-stone-50 p-2.5 rounded-lg border border-stone-200/60 text-xs"
+                      >
+                        <span className="font-bold text-emerald-800 block">
+                          @
+                          {c.author?.username ||
+                            c.usuario?.username ||
+                            "Usuario"}
+                          :
+                        </span>
+                        <p className="text-stone-700 mt-1">
+                          {c.text || c.texto || c.contenido}
+                        </p>
+                      </div>
+                    ),
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Confirmación Eliminar */}
       {postAEliminar && (
@@ -620,15 +711,16 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
 
       {/* Modal Vista Perfil */}
       {perfilSeleccionado && (
-  <PerfilModal
-    usuario={perfilSeleccionado}
-    miId={miId}
-    siguiendo={siguiendo}
-    manejarSeguir={manejarSeguir}
-    cerrarModal={() => setPerfilSeleccionado(null)}
-  />
+        <PerfilModal
+          usuario={perfilSeleccionado}
+          miId={miId}
+          siguiendo={siguiendo}
+          manejarSeguir={manejarSeguir}
+          cerrarModal={() => setPerfilSeleccionado(null)}
+        />
       )}
 
+      {/* Modal Imagen */}
       {modalImagenAbierto && (
         <div
           className="Modal-Overlay"
