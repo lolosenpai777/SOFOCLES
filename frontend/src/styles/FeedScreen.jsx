@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import clienteAxios from "../api/clienteAxios";
 import AvatarDisplay from "../components/AvatarDisplay";
 import "./FeedScreen.css";
@@ -24,6 +24,11 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const [expandedPosts, setExpandedPosts] = useState({});
   const [nuevoTitulo, setNuevoTitulo] = useState("");
   const [nuevoContenido, setNuevoContenido] = useState("");
+  const [nuevaImagen, setNuevaImagen] = useState(null);
+  const [archivoImagen, setArchivoImagen] = useState(null);
+  const [modalImagenAbierto, setModalImagenAbierto] = useState(false);
+  const [errorImagen, setErrorImagen] = useState("");
+  const inputImagenRef = useRef(null);
   const [cargandoFeed, setCargandoFeed] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [postAEliminar, setPostAEliminar] = useState(null);
@@ -96,26 +101,62 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     }
   };
 
+
+
   // Crear una nueva publicación
   const manejarEnvioPost = async (e) => {
     e.preventDefault();
     if (!nuevoTitulo.trim() || !nuevoContenido.trim()) return;
 
     try {
-      const respuesta = await clienteAxios.post("/posts", {
-        title: nuevoTitulo,
-        content: nuevoContenido,
-      });
+      const datosPost = new FormData();
+      datosPost.append("title", nuevoTitulo.trim());
+      datosPost.append("content", nuevoContenido.trim());
+
+      if (archivoImagen) {
+        datosPost.append("image", archivoImagen);
+      }
+
+      const respuesta = await clienteAxios.post("/posts", datosPost);
 
       const postCreado = respuesta.data.post || respuesta.data;
-      setPosts([postCreado, ...posts]);
+      setPosts([
+        { ...postCreado, imageUrl: postCreado.imageUrl || nuevaImagen },
+        ...posts,
+      ]);
 
       setNuevoTitulo("");
       setNuevoContenido("");
+      setNuevaImagen(null);
+      setArchivoImagen(null);
     } catch (error) {
       console.error("Error al publicar:", error);
       setErrorMsg("Tu pensamiento no pudo ser forjado en la red.");
     }
+  };
+
+  const seleccionarImagen = (event) => {
+    const archivo = event.target.files?.[0];
+    if (!archivo) return;
+
+    if (!archivo.type.startsWith("image/")) {
+      setErrorImagen("Selecciona un archivo de imagen válido.");
+      return;
+    }
+
+    if (archivo.size > 5 * 1024 * 1024) {
+      setErrorImagen("La imagen no puede superar los 5 MB.");
+      return;
+    }
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      setNuevaImagen(lector.result);
+      setArchivoImagen(archivo);
+      setErrorImagen("");
+      setModalImagenAbierto(false);
+    };
+    lector.readAsDataURL(archivo);
   };
 
   const abrirModalEliminar = (postId) => {
@@ -180,6 +221,18 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     }
   };
 
+    const manejarImagenSeleccionada = (e) => {
+    const archivo = e.target.files[0];
+    if (archivo) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNuevaImagen(reader.result);
+      };
+      reader.readAsDataURL(archivo);
+    }
+    };
+
+
   return (
     <div className="Olimpo-Contenedor">
       <div className="Aura-Apolo-Cyan" />
@@ -232,13 +285,44 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                   required
                 />
                 <textarea
-                  placeholder="Comparte tu filosofía, código o perspectiva con el nuevo orden..."
+                  placeholder="Comparte tu filosofía, idea o perspectiva con el nuevo orden..."
                   className="Textarea-Olimpo"
                   value={nuevoContenido}
                   onChange={(e) => setNuevoContenido(e.target.value)}
                   maxLength={280}
                   required
                 />
+
+                <button
+                  type="button"
+                  className="Btn-Secundario mt-2"
+                  onClick={() => setModalImagenAbierto(true)}
+                >
+                  {nuevaImagen ? "Cambiar Imagen" : "Agregar Imagen"}
+                </button>
+
+                {nuevaImagen && (
+                  <div className="relative mt-3">
+                    <img
+                      src={nuevaImagen}
+                      alt="Vista previa de la publicación"
+                      className="Imagen-Preview-Editor"
+                    />
+                    <button
+                      type="button"
+                      className="Btn-Quitar-Imagen"
+                      onClick={() => {
+                        setNuevaImagen(null);
+                        setArchivoImagen(null);
+                        if (inputImagenRef.current) inputImagenRef.current.value = "";
+                      }}
+                      aria-label="Quitar imagen"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+
               </div>
               <div className="Fila-Editor-Acciones">
                 <span className="Contador-Caracteres">
@@ -440,6 +524,14 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                         {isExpanded ? content : preview}
                       </p>
 
+                      {post.imageUrl && (
+                        <img
+                          src={post.imageUrl}
+                          alt={`Imagen de la publicación de ${authorName}`}
+                          className="Imagen-Post"
+                        />
+                      )}
+
                       {shouldTruncate && (
                         <button
                           type="button"
@@ -528,7 +620,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
       )}
 
       {/* Modal Vista Perfil */}
-{perfilSeleccionado && (
+      {perfilSeleccionado && (
   <PerfilModal
     usuario={perfilSeleccionado}
     miId={miId}
@@ -536,7 +628,53 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     manejarSeguir={manejarSeguir}
     cerrarModal={() => setPerfilSeleccionado(null)}
   />
-)}
+      )}
+
+      {modalImagenAbierto && (
+        <div
+          className="Modal-Overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="imagen-modal-titulo"
+          onMouseDown={() => setModalImagenAbierto(false)}
+        >
+          <section
+            className="Modal-Confirmacion Modal-Imagen"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <h2 id="imagen-modal-titulo" className="Titulo-Modal">
+              Añadir imagen a la publicación
+            </h2>
+            <p className="Texto-Modal">
+              Elige una imagen de tu PC (JPG, PNG, WEBP o GIF; máximo 5 MB).
+            </p>
+            {errorImagen && <p className="Error-Imagen">{errorImagen}</p>}
+            <input
+              ref={inputImagenRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={seleccionarImagen}
+            />
+            <div className="Acciones-Modal">
+              <button
+                type="button"
+                className="Btn-Primario-Feed"
+                onClick={() => inputImagenRef.current?.click()}
+              >
+                Elegir imagen
+              </button>
+              <button
+                type="button"
+                className="Btn-Modal-Cancelar"
+                onClick={() => setModalImagenAbierto(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       <footer className="Footer-Olimpo mt-12">
         <h3>Un nuevo orden social</h3>

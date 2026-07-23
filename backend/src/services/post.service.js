@@ -23,6 +23,7 @@ export async function createPost({ title, content, authorId }) {
         select: {
           id: true,
           username: true,
+          avatarUrl: true,
           email: true,
           createdAt: true,
         },
@@ -46,6 +47,7 @@ export async function getPosts() {
         select: {
           id: true,
           username: true,
+          avatarUrl: true,
           email: true,
           createdAt: true,
         },
@@ -78,6 +80,7 @@ export async function getPostsFollowing(userId) {
         select: {
           id: true,
           username: true,
+          avatarUrl: true,
           email: true,
           createdAt: true,
         },
@@ -127,6 +130,7 @@ export async function togglePostLike(postId, userId) {
         select: {
           id: true,
           username: true,
+          avatarUrl: true,
           email: true,
           createdAt: true,
         },
@@ -158,6 +162,7 @@ export async function togglePostLike(postId, userId) {
         select: {
           id: true,
           username: true,
+          avatarUrl: true,
           email: true,
           createdAt: true,
         },
