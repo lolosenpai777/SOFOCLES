@@ -15,6 +15,18 @@ export const createPostSchema = z.object({
     .trim()
     .min(1, 'El contenido no puede estar vacío')
     .max(2000, 'El contenido no puede superar 2000 caracteres'),
+  imageUrl: z
+    .string({
+      error: 'La URL de la imagen debe ser texto',
+    })
+    .trim()
+    .max(1000, 'La URL es demasiado larga')
+    .optional(),
+  imageData: z
+    .string({
+      error: 'imageData debe ser texto en formato data URL',
+    })
+    .optional(),
 })
 
 export const deletePostParamsSchema = z.object({

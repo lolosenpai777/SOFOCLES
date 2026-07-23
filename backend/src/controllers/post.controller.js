@@ -11,7 +11,47 @@ import { prisma } from '../config/prisma.js'
 export async function createPostHandler(request, reply) {
   try {
     request.log.info({ body: request.body }, 'createPost request body')
-    const { title, content } = request.body
+
+    // Support both JSON and multipart/form-data (file upload)
+    let title = undefined
+    let content = undefined
+    let imageUrl = undefined
+
+    const isMultipart = String(request.headers['content-type'] || '').includes('multipart/form-data')
+
+    if (isMultipart && request.isMultipart) {
+      // multipart is not used in this environment; fall back to JSON handling below
+    } else {
+      const body = request.body || {}
+      title = body.title
+      content = body.content
+      imageUrl = body.imageUrl
+
+      // Support `imageData` field with a data URL (data:image/...;base64,AAAA...)
+      if (!imageUrl && body.imageData && typeof body.imageData === 'string') {
+        try {
+          const matches = body.imageData.match(/^data:(image\/\w+);base64,(.+)$/)
+          if (matches) {
+            const mime = matches[1]
+            const b64 = matches[2]
+
+            const ext = mime.split('/')[1] || 'png'
+            const fs = await import('fs')
+            const path = await import('node:path')
+            const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
+            await fs.promises.mkdir(uploadsDir, { recursive: true })
+
+            const safeName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+            const destPath = path.join(uploadsDir, safeName)
+            await fs.promises.writeFile(destPath, Buffer.from(b64, 'base64'))
+
+            imageUrl = `/uploads/${safeName}`
+          }
+        } catch (err) {
+          request.log.error({ err }, 'failed to save imageData')
+        }
+      }
+    }
     const authorId = request.userId
 
     if (!authorId) {
@@ -27,7 +67,16 @@ export async function createPostHandler(request, reply) {
       return reply.code(400).send({ error: 'El titulo es obligatorio' })
     }
 
-    const post = await createPost({ title, content, authorId })
+    // Ensure stored imageUrl is absolute (helps when frontend runs on different origin)
+    if (imageUrl && imageUrl.startsWith('/')) {
+      const proto = request.headers['x-forwarded-proto'] || request.protocol || 'http'
+      const host = request.headers.host
+      if (host) {
+        imageUrl = `${proto}://${host}${imageUrl}`
+      }
+    }
+
+    const post = await createPost({ title, content, imageUrl, authorId })
 
     return reply.code(201).send({ mensaje: 'Post creado', post })
   } catch (error) {

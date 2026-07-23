@@ -2,6 +2,7 @@ import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 import rateLimit from '@fastify/rate-limit'
 import Fastify from 'fastify'
+import path from 'node:path'
 import { env } from './config/env.js'
 import { authRoutes } from './routes/auth.routes.js'
 
@@ -15,8 +16,47 @@ export function buildApp() {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   })
 
+  // Note: file uploads are handled via JSON `imageData` (data URL) to avoid
+  // plugin version mismatches with @fastify/multipart in this environment.
+
   fastify.register(jwt, {
     secret: env.jwtSecret,
+  })
+
+  // Serve uploaded files from public/uploads without external plugins
+  fastify.get('/uploads/:file', async (request, reply) => {
+    try {
+      const file = request.params?.file
+      if (!file) return reply.code(400).send({ error: 'Archivo inválido' })
+
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
+      const filePath = path.join(uploadsDir, file)
+
+      // Prevent path traversal
+      if (!filePath.startsWith(uploadsDir)) {
+        return reply.code(400).send({ error: 'Ruta inválida' })
+      }
+
+      const fs = await import('fs')
+      await fs.promises.access(filePath)
+
+      const ext = path.extname(filePath).slice(1).toLowerCase()
+      const types = {
+        png: 'image/png',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        gif: 'image/gif',
+        webp: 'image/webp',
+        svg: 'image/svg+xml',
+      }
+
+      const mime = types[ext] || 'application/octet-stream'
+      reply.type(mime)
+      const stream = fs.createReadStream(filePath)
+      return reply.send(stream)
+    } catch (err) {
+      return reply.code(404).send({ error: 'No encontrado' })
+    }
   })
 
   fastify.register(rateLimit, {

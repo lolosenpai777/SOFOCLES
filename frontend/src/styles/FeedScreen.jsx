@@ -109,21 +109,20 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     if (!nuevoTitulo.trim() || !nuevoContenido.trim()) return;
 
     try {
-      const datosPost = new FormData();
-      datosPost.append("title", nuevoTitulo.trim());
-      datosPost.append("content", nuevoContenido.trim());
+      // Send JSON. If `nuevaImagen` (data URL) exists, include it as `imageData`.
+      const payload = {
+        title: nuevoTitulo.trim(),
+        content: nuevoContenido.trim(),
+      };
 
-      if (archivoImagen) {
-        datosPost.append("image", archivoImagen);
+      if (nuevaImagen) {
+        payload.imageData = nuevaImagen;
       }
 
-      const respuesta = await clienteAxios.post("/posts", datosPost);
+      const respuesta = await clienteAxios.post("/posts", payload);
 
       const postCreado = respuesta.data.post || respuesta.data;
-      setPosts([
-        { ...postCreado, imageUrl: postCreado.imageUrl || nuevaImagen },
-        ...posts,
-      ]);
+      setPosts([{ ...postCreado }, ...posts]);
 
       setNuevoTitulo("");
       setNuevoContenido("");

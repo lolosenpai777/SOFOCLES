@@ -7,15 +7,17 @@ function normalizePost(post) {
 
   return {
     ...post,
+    imageUrl: post.imageUrl || '',
     likes: (post.likes || []).map((user) => user.id),
   }
 }
 
-export async function createPost({ title, content, authorId }) {
+export async function createPost({ title, content, authorId, imageUrl }) {
   const post = await prisma.post.create({
     data: {
       title,
       content,
+      imageUrl: imageUrl || '',
       authorId,
     },
     include: {
