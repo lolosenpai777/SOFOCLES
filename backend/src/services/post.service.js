@@ -9,6 +9,13 @@ function normalizePost(post) {
     ...post,
     imageUrl: post.imageUrl || '',
     likes: (post.likes || []).map((user) => user.id),
+    comments: (post.comments || []).map((comment) => ({
+      id: comment.id,
+      text: comment.text,
+      gifUrl: comment.gifUrl,
+      createdAt: comment.createdAt,
+      author: comment.author,
+    })),
   }
 }
 
@@ -35,6 +42,18 @@ export async function createPost({ title, content, authorId, imageUrl }) {
           id: true,
         },
       },
+      comments: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      },
     },
   })
 
@@ -57,6 +76,18 @@ export async function getPosts() {
       likes: {
         select: {
           id: true,
+        },
+      },
+      comments: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
         },
       },
     },
@@ -90,6 +121,18 @@ export async function getPostsFollowing(userId) {
       likes: {
         select: {
           id: true,
+        },
+      },
+      comments: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
         },
       },
     },

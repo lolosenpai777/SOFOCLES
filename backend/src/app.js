@@ -80,6 +80,12 @@ export function buildApp() {
     await mod.postRoutes(instance)
   }, { prefix: '/api' })
 
+  // register comments route via dynamic import
+  fastify.register(async function (instance) {
+    const mod = await import('./routes/comment.routes.js')
+    await mod.commentRoutes(instance)
+  }, { prefix: '/api' })
+
   // register users route via dynamic import
   fastify.register(async function (instance) {
     const mod = await import('./routes/user.routes.js')

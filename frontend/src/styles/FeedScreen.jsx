@@ -36,6 +36,9 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
 
   // Estado para el modal de detalle del post (al hacer clic en comentarios)
   const [postDetalle, setPostDetalle] = useState(null);
+  const [nuevoComentario, setNuevoComentario] = useState("");
+  const [cargandoComentario, setCargandoComentario] = useState(false);
+  const [comentariosExpandido, setComentariosExpandido] = useState({}); // Para expandir/colapsar sección
 
   // Obtener publicaciones
   const obtenerPosts = async (tipoFiltro = filtroFeed) => {
@@ -224,6 +227,84 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
       }
     } catch (error) {
       console.error("Error al interactuar con el post:", error);
+    }
+  };
+
+  // Crear comentario
+  const manejarEnvioComentario = async (e, postId) => {
+    e.preventDefault();
+    if (!nuevoComentario.trim()) return;
+    if (!postDetalle) return;
+
+    setCargandoComentario(true);
+    try {
+      const payload = {
+        text: nuevoComentario.trim(),
+      };
+
+      const respuesta = await clienteAxios.post(`/posts/${postId}/comments`, payload);
+      const comentarioCreado = respuesta.data.comment;
+
+      // Actualizar postDetalle con el nuevo comentario
+      setPostDetalle((prev) => ({
+        ...prev,
+        comments: [comentarioCreado, ...(prev.comments || [])],
+      }));
+
+      // Actualizar el post en el feed también
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          const pId = post._id || post.id;
+          if (pId === postId) {
+            return {
+              ...post,
+              comments: [comentarioCreado, ...(post.comments || [])],
+            };
+          }
+          return post;
+        }),
+      );
+
+      setNuevoComentario("");
+    } catch (error) {
+      console.error("Error al crear comentario:", error);
+      setErrorMsg("No se pudo publicar el comentario.");
+    } finally {
+      setCargandoComentario(false);
+    }
+  };
+
+  // Eliminar comentario
+  const manejarEliminarComentario = async (postId, comentarioId) => {
+    try {
+      await clienteAxios.delete(`/posts/${postId}/comments/${comentarioId}`);
+
+      // Actualizar postDetalle
+      setPostDetalle((prev) => ({
+        ...prev,
+        comments: (prev.comments || []).filter(
+          (c) => (c._id || c.id) !== comentarioId,
+        ),
+      }));
+
+      // Actualizar el post en el feed también
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          const pId = post._id || post.id;
+          if (pId === postId) {
+            return {
+              ...post,
+              comments: (post.comments || []).filter(
+                (c) => (c._id || c.id) !== comentarioId,
+              ),
+            };
+          }
+          return post;
+        }),
+      );
+    } catch (error) {
+      console.error("Error al eliminar comentario:", error);
+      setErrorMsg("No se pudo eliminar el comentario.");
     }
   };
 
@@ -634,40 +715,136 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
 
             {/* Sección de Comentarios */}
             <div className="mt-4 text-left">
-              <h5 className="font-semibold text-sm mb-2 text-stone-600">
-                Comentarios (
-                {(postDetalle.comments || postDetalle.comentarios || []).length}
-                )
-              </h5>
-
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {(postDetalle.comments || postDetalle.comentarios || [])
-                  .length === 0 ? (
-                  <p className="text-xs text-stone-400 italic">
-                    Aún no hay opiniones expresadas sobre esta idea.
-                  </p>
-                ) : (
-                  (postDetalle.comments || postDetalle.comentarios).map(
-                    (c, i) => (
-                      <div
-                        key={c._id || c.id || i}
-                        className="bg-stone-50 p-2.5 rounded-lg border border-stone-200/60 text-xs"
-                      >
-                        <span className="font-bold text-emerald-800 block">
-                          @
-                          {c.author?.username ||
-                            c.usuario?.username ||
-                            "Usuario"}
-                          :
-                        </span>
-                        <p className="text-stone-700 mt-1">
-                          {c.text || c.texto || c.contenido}
-                        </p>
-                      </div>
-                    ),
+              <button
+                type="button"
+                className="w-full flex justify-between items-center font-semibold text-sm mb-2 text-stone-600 hover:text-emerald-700 transition-colors"
+                onClick={() =>
+                  setComentariosExpandido((prev) => ({
+                    ...prev,
+                    [postDetalle._id || postDetalle.id]: !prev[
+                      postDetalle._id || postDetalle.id
+                    ],
+                  }))
+                }
+              >
+                <span>
+                  Comentarios (
+                  {(postDetalle.comments || postDetalle.comentarios || []).length}
                   )
-                )}
-              </div>
+                </span>
+                <span className="text-lg">
+                  {comentariosExpandido[postDetalle._id || postDetalle.id]
+                    ? "▼"
+                    : "▶"}
+                </span>
+              </button>
+
+              {comentariosExpandido[postDetalle._id || postDetalle.id] && (
+                <>
+                  {/* Formulario para nuevo comentario */}
+                  {usuarioAutenticado && (
+                    <form
+                      onSubmit={(e) =>
+                        manejarEnvioComentario(
+                          e,
+                          postDetalle._id || postDetalle.id,
+                        )
+                      }
+                      className="mb-3 pb-3 border-b border-emerald-700/10"
+                    >
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Expresa tu opinión..."
+                          className="Input-Olimpo-Feed flex-1"
+                          value={nuevoComentario}
+                          onChange={(e) => setNuevoComentario(e.target.value)}
+                          maxLength={500}
+                          disabled={cargandoComentario}
+                        />
+                        <button
+                          type="submit"
+                          className="Btn-Primario-Feed px-3 py-1 text-xs"
+                          disabled={
+                            cargandoComentario ||
+                            !nuevoComentario.trim()
+                          }
+                        >
+                          {cargandoComentario ? "..." : "Enviar"}
+                        </button>
+                      </div>
+                      <span className="text-xs text-stone-400 mt-1 block">
+                        {500 - nuevoComentario.length} caracteres restantes
+                      </span>
+                    </form>
+                  )}
+
+                  {/* Lista de comentarios */}
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {(postDetalle.comments || postDetalle.comentarios || [])
+                      .length === 0 ? (
+                      <p className="text-xs text-stone-400 italic">
+                        Aún no hay opiniones expresadas sobre esta idea.
+                      </p>
+                    ) : (
+                      (postDetalle.comments || postDetalle.comentarios).map(
+                        (c, i) => {
+                          const cId = c._id || c.id;
+                          const cAuthorId =
+                            c.author?.id || c.author?._id || c.authorId;
+                          const cAuthorName = c.author?.username || "Usuario";
+                          const esMinioPost = cAuthorId === miId;
+
+                          return (
+                            <div
+                              key={cId || i}
+                              className="bg-stone-50 p-2.5 rounded-lg border border-stone-200/60 text-xs"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <span className="font-bold text-emerald-800 block">
+                                    @{cAuthorName}
+                                  </span>
+                                  <p className="text-stone-700 mt-1">
+                                    {c.text || c.texto || c.contenido}
+                                  </p>
+                                  {c.gifUrl && (
+                                    <img
+                                      src={c.gifUrl}
+                                      alt="GIF en comentario"
+                                      className="mt-2 rounded max-h-24 max-w-full"
+                                    />
+                                  )}
+                                  <span className="text-xs text-stone-400 block mt-1">
+                                    {c.createdAt
+                                      ? new Date(c.createdAt).toLocaleDateString()
+                                      : "Hace poco"}
+                                  </span>
+                                </div>
+                                {esMinioPost && (
+                                  <button
+                                    type="button"
+                                    className="ml-2 text-stone-400 hover:text-red-600 transition-colors"
+                                    onClick={() =>
+                                      manejarEliminarComentario(
+                                        postDetalle._id || postDetalle.id,
+                                        cId,
+                                      )
+                                    }
+                                    title="Eliminar comentario"
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        },
+                      )
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

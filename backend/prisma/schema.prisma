@@ -21,6 +21,7 @@ model User {
   likedPosts   Post[]   @relation("PostLikes")
   followers    User[]   @relation("UserFollows")
   following    User[]   @relation("UserFollows")
+  comments     Comment[]
 
   @@map("users")
 }
@@ -36,7 +37,23 @@ model Post {
   author   User @relation(fields: [authorId], references: [id])
   authorId Int  @map("author_id")
 
-  likes    User[] @relation("PostLikes")
+  likes     User[]     @relation("PostLikes")
+  comments  Comment[]
 
   @@map("posts")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  gifUrl    String?  @map("gif_url")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  author   User @relation(fields: [authorId], references: [id])
+  authorId Int  @map("author_id")
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId Int  @map("post_id")
+
+  @@map("comments")
 }
