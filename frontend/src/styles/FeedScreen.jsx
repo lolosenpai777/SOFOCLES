@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import clienteAxios from "../api/clienteAxios";
 import AvatarDisplay from "../components/AvatarDisplay";
+import GiphySearch from "../components/GiphySearch";
 import "./FeedScreen.css";
 import PerfilModal from "./PerfilModal";
 
@@ -39,6 +40,10 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [cargandoComentario, setCargandoComentario] = useState(false);
   const [comentariosExpandido, setComentariosExpandido] = useState({}); // Para expandir/colapsar sección
+
+  // Estados para Giphy
+  const [abrirBuscadorGif, setAbrirBuscadorGif] = useState(false);
+  const [gifSeleccionado, setGifSeleccionado] = useState(null);
 
   // Obtener publicaciones
   const obtenerPosts = async (tipoFiltro = filtroFeed) => {
@@ -93,17 +98,35 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const manejarSeguir = async (idUsuarioAAccionar) => {
     if (!miId || idUsuarioAAccionar === miId) return;
 
-    try {
-      await clienteAxios.post(`/users/${idUsuarioAAccionar}/follow`);
+    // Guardar estado anterior por si falla
+    const estabasSiguiendo = siguiendo.includes(idUsuarioAAccionar);
 
-      setSiguiendo((prev) => {
-        const yaLoSigo = prev.includes(idUsuarioAAccionar);
-        return yaLoSigo
-          ? prev.filter((id) => id !== idUsuarioAAccionar)
-          : [...prev, idUsuarioAAccionar];
-      });
+    // Actualizar UI inmediatamente (optimista)
+    setSiguiendo((prev) => {
+      const yaLoSigo = prev.includes(idUsuarioAAccionar);
+      return yaLoSigo
+        ? prev.filter((id) => id !== idUsuarioAAccionar)
+        : [...prev, idUsuarioAAccionar];
+    });
+
+    try {
+      const respuesta = await clienteAxios.post(`/users/${idUsuarioAAccionar}/follow`);
+      
+      // Sincronizar con la respuesta del servidor para garantizar consistencia
+      if (respuesta.data.siguiendo) {
+        setSiguiendo(respuesta.data.siguiendo);
+      } else if (respuesta.data.following) {
+        setSiguiendo(respuesta.data.following);
+      }
     } catch (error) {
       console.error("Error al intentar seguir al usuario:", error);
+      
+      // Revertir al estado anterior si hay error
+      setSiguiendo((prev) =>
+        estabasSiguiendo
+          ? [...prev, idUsuarioAAccionar]
+          : prev.filter((id) => id !== idUsuarioAAccionar)
+      );
     }
   };
 
@@ -233,7 +256,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   // Crear comentario
   const manejarEnvioComentario = async (e, postId) => {
     e.preventDefault();
-    if (!nuevoComentario.trim()) return;
+    if (!nuevoComentario.trim() && !gifSeleccionado) return;
     if (!postDetalle) return;
 
     setCargandoComentario(true);
@@ -241,6 +264,10 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
       const payload = {
         text: nuevoComentario.trim(),
       };
+
+      if (gifSeleccionado) {
+        payload.gifUrl = gifSeleccionado.originalUrl;
+      }
 
       const respuesta = await clienteAxios.post(`/posts/${postId}/comments`, payload);
       const comentarioCreado = respuesta.data.comment;
@@ -266,6 +293,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
       );
 
       setNuevoComentario("");
+      setGifSeleccionado(null);
     } catch (error) {
       console.error("Error al crear comentario:", error);
       setErrorMsg("No se pudo publicar el comentario.");
@@ -690,10 +718,23 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
               </h3>
               <button
                 type="button"
-                className="Btn-Quitar-Imagen font-bold text-xl cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-stone-100 transition-colors duration-200 text-stone-500 hover:text-stone-700"
                 onClick={() => setPostDetalle(null)}
+                title="Cerrar"
               >
-                X
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </button>
             </div>
 
@@ -717,7 +758,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
             <div className="mt-4 text-left">
               <button
                 type="button"
-                className="w-full flex justify-between items-center font-semibold text-sm mb-2 text-stone-600 hover:text-emerald-700 transition-colors"
+                className="w-full flex justify-between items-center font-semibold text-sm mb-2 text-stone-600 hover:text-emerald-700 transition-colors duration-200 group"
                 onClick={() =>
                   setComentariosExpandido((prev) => ({
                     ...prev,
@@ -732,11 +773,23 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                   {(postDetalle.comments || postDetalle.comentarios || []).length}
                   )
                 </span>
-                <span className="text-lg">
-                  {comentariosExpandido[postDetalle._id || postDetalle.id]
-                    ? "▼"
-                    : "▶"}
-                </span>
+                <svg
+                  className={`w-5 h-5 transition-transform duration-300 group-hover:text-emerald-700 ${
+                    comentariosExpandido[postDetalle._id || postDetalle.id]
+                      ? "rotate-180"
+                      : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                  />
+                </svg>
               </button>
 
               {comentariosExpandido[postDetalle._id || postDetalle.id] && (
@@ -752,7 +805,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                       }
                       className="mb-3 pb-3 border-b border-emerald-700/10"
                     >
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mb-2">
                         <input
                           type="text"
                           placeholder="Expresa tu opinión..."
@@ -763,16 +816,57 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                           disabled={cargandoComentario}
                         />
                         <button
+                          type="button"
+                          className="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors duration-200 disabled:opacity-50"
+                          onClick={() => setAbrirBuscadorGif(true)}
+                          title="Añadir GIF"
+                          disabled={cargandoComentario}
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M14.828 14.828a4 4 0 01-5.656 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                        </button>
+                        <button
                           type="submit"
                           className="Btn-Primario-Feed px-3 py-1 text-xs"
                           disabled={
                             cargandoComentario ||
-                            !nuevoComentario.trim()
+                            (!nuevoComentario.trim() && !gifSeleccionado)
                           }
                         >
                           {cargandoComentario ? "..." : "Enviar"}
                         </button>
                       </div>
+
+                      {/* GIF Seleccionado */}
+                      {gifSeleccionado && (
+                        <div className="relative mb-2 inline-block">
+                          <img
+                            src={gifSeleccionado.url}
+                            alt={gifSeleccionado.title}
+                            className="rounded-lg max-h-32 max-w-full"
+                          />
+                          <button
+                            type="button"
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold hover:bg-red-600 transition-colors"
+                            onClick={() => setGifSeleccionado(null)}
+                            title="Quitar GIF"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )}
+
                       <span className="text-xs text-stone-400 mt-1 block">
                         {500 - nuevoComentario.length} caracteres restantes
                       </span>
@@ -781,8 +875,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
 
                   {/* Lista de comentarios */}
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    {(postDetalle.comments || postDetalle.comentarios || [])
-                      .length === 0 ? (
+                    {(postDetalle.comments || postDetalle.comentarios || []).length === 0 ? (
                       <p className="text-xs text-stone-400 italic">
                         Aún no hay opiniones expresadas sobre esta idea.
                       </p>
@@ -824,7 +917,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                                 {esMinioPost && (
                                   <button
                                     type="button"
-                                    className="ml-2 text-stone-400 hover:text-red-600 transition-colors"
+                                    className="ml-2 p-1 rounded hover:bg-red-100 transition-colors duration-200 text-stone-400 hover:text-red-600"
                                     onClick={() =>
                                       manejarEliminarComentario(
                                         postDetalle._id || postDetalle.id,
@@ -833,7 +926,19 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                                     }
                                     title="Eliminar comentario"
                                   >
-                                    🗑️
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3H4v2h16V7h-3z"
+                                      />
+                                    </svg>
                                   </button>
                                 )}
                               </div>
@@ -942,6 +1047,14 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
             </div>
           </section>
         </div>
+      )}
+
+      {/* Modal Búsqueda GIFs */}
+      {abrirBuscadorGif && (
+        <GiphySearch
+          onSelectGif={setGifSeleccionado}
+          onClose={() => setAbrirBuscadorGif(false)}
+        />
       )}
 
       <footer className="Footer-Olimpo mt-12">

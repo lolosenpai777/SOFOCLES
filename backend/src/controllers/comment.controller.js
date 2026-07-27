@@ -10,8 +10,8 @@ export async function createCommentHandler(request, reply) {
       return reply.code(401).send({ error: 'No autenticado' })
     }
 
-    if (!text || !String(text).trim()) {
-      return reply.code(400).send({ error: 'El comentario no puede estar vacío' })
+    if (!text?.trim() && !gifUrl) {
+      return reply.code(400).send({ error: 'El comentario debe tener texto o un GIF' })
     }
 
     // Verify post exists
@@ -26,7 +26,7 @@ export async function createCommentHandler(request, reply) {
     // Create comment
     const comment = await prisma.comment.create({
       data: {
-        text,
+        text: text?.trim() || '',
         gifUrl: gifUrl || null,
         authorId: userId,
         postId: parseInt(postId),

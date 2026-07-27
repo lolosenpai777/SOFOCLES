@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+/* --- Overlay del Modal --- */
+.Giphy-Modal-Overlay {
+  @apply fixed inset-0 bg-stone-950/60 backdrop-blur-md flex items-center justify-center z-[70] p-4 transition-all duration-300;
+}
+
+/* --- Contenedor Principal (Efecto Glassmorphism Elevado) --- */
+.Giphy-Modal-Contenedor {
+  @apply bg-white/90 border border-white/80 rounded-3xl w-full max-w-2xl flex flex-col max-h-[85vh] overflow-hidden shadow-2xl backdrop-blur-xl transition-all duration-300;
+  box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+/* --- Encabezado --- */
+.Giphy-Modal-Header {
+  @apply flex justify-between items-center px-6 py-4 border-b border-stone-200/60 bg-white/40;
+}
+
+.Giphy-Modal-Titulo {
+  @apply text-lg font-bold text-stone-800 tracking-tight font-serif flex items-center gap-2;
+}
+
+.Giphy-Modal-Cerrar {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-200/60 active:scale-95 transition-all duration-200 cursor-pointer;
+}
+
+/* --- Buscador --- */
+.Giphy-Buscador-Contenedor {
+  @apply relative px-6 py-4 bg-white/30 border-b border-stone-100;
+}
+
+.Giphy-Input-Busqueda {
+  @apply w-full pl-4 pr-10 py-3 rounded-2xl bg-stone-100/80 border border-stone-200/80 text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all duration-300 font-sans shadow-inner;
+}
+
+.Giphy-Btn-Limpiar {
+  @apply absolute right-9 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors p-1.5 rounded-full hover:bg-stone-200/50 cursor-pointer;
+}
+
+/* --- Alertas y Estados --- */
+.Giphy-Error {
+  @apply mx-6 mt-4 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-700 text-xs font-medium flex items-center gap-2;
+}
+
+.Giphy-Cargando {
+  @apply flex flex-col items-center justify-center py-16 text-stone-500 text-xs font-semibold tracking-wider uppercase;
+}
+
+.Giphy-Spinner {
+  @apply w-9 h-9 border-3 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3 shadow-sm;
+}
+
+/* --- Grid de GIFs --- */
+.Giphy-Grid {
+  @apply w-full overflow-y-auto px-6 py-4 grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 1rem;
+  align-items: start;
+  max-height: 550px;
+}
+
+/* Personalización del Scrollbar */
+.Giphy-Grid::-webkit-scrollbar {
+  @apply w-2;
+}
+
+.Giphy-Grid::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.Giphy-Grid::-webkit-scrollbar-thumb {
+  @apply bg-emerald-600/40 rounded-full hover:bg-emerald-600/70 transition-colors;
+}
+
+/* --- Tarjeta / Item de GIF --- */
+.Giphy-Item {
+  @apply relative w-full aspect-square rounded-2xl overflow-hidden cursor-pointer bg-stone-200 border border-stone-300/50 shadow-md transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/20 hover:-translate-y-2 block;
+}
+
+.Giphy-Item img {
+  @apply w-full h-full object-cover transition-transform duration-500 hover:scale-110 block;
+}
+
+.Giphy-Item-Overlay {
+  @apply absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent flex items-end justify-center p-3 opacity-0 hover:opacity-100 transition-all duration-300;
+}
+
+.Giphy-Item-Overlay span {
+  @apply text-white text-xs font-bold tracking-wider uppercase bg-emerald-600 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-lg;
+}
+
+
+/* --- Estado Vacío --- */
+.Giphy-Vacio {
+  @apply col-span-full text-center text-stone-400 py-12 text-xs font-medium uppercase tracking-widest;
+}
+
+/* --- Pie de Modal --- */
+.Giphy-Footer {
+  @apply px-6 py-3 border-t border-stone-200/60 bg-white/40 text-center text-[11px] font-semibold tracking-wider text-stone-400 uppercase;
+}
+
+/* --- Ajustes Responsive --- */
+@media (max-width: 640px) {
+  .Giphy-Modal-Contenedor {
+    @apply max-h-[90vh] rounded-2xl mx-2;
+  }
+
+  .Giphy-Buscador-Contenedor,
+  .Giphy-Modal-Header {
+    @apply px-4;
+  }
+
+  .Giphy-Grid {
+    @apply px-4;
+    grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+    gap: 0.75rem;
+    max-height: 500px;
+  }
+}

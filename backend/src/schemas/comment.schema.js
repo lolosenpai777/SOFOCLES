@@ -6,8 +6,9 @@ export const createCommentSchema = z.object({
       error: 'El texto del comentario debe ser texto',
     })
     .trim()
-    .min(1, 'El comentario no puede estar vacío')
-    .max(500, 'El comentario no puede superar 500 caracteres'),
+    .max(500, 'El comentario no puede superar 500 caracteres')
+    .optional()
+    .nullable(),
   gifUrl: z
     .string({
       error: 'La URL del GIF debe ser texto',
@@ -16,7 +17,12 @@ export const createCommentSchema = z.object({
     .max(1000, 'La URL es demasiado larga')
     .optional()
     .nullable(),
-})
+}).refine(
+  (data) => data.text?.trim() || data.gifUrl,
+  {
+    message: 'El comentario debe tener texto o un GIF',
+  }
+)
 
 export const deleteCommentParamsSchema = z.object({
   id: z.coerce
