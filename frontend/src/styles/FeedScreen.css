@@ -1,6 +1,180 @@
 @import "tailwindcss";
 
 /* --- Distribución y Grid del Feed --- */
+.Olimpo-Contenedor {
+  min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.Olimpo-Contenedor.modo-oscuro {
+  background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.14), transparent 28%), linear-gradient(135deg, #020617 0%, #0f172a 45%, #111827 100%);
+  color: #f8fafc;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Banner-Olimpo,
+.Olimpo-Contenedor.modo-oscuro .Card-Formulario-Feed,
+.Olimpo-Contenedor.modo-oscuro .Card-Post,
+.Olimpo-Contenedor.modo-oscuro .Lista-Usuarios,
+.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion,
+.Olimpo-Contenedor.modo-oscuro .comentarios-composer,
+.Olimpo-Contenedor.modo-oscuro .comentarios-lista__item,
+.Olimpo-Contenedor.modo-oscuro .Cargando-Contenedor,
+.Olimpo-Contenedor.modo-oscuro .Modal-Imagen {
+  background: rgba(15, 23, 42, 0.86);
+  border-color: rgba(255, 255, 255, 0.13);
+  color: #f8fafc;
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.35);
+}
+
+.Olimpo-Contenedor.modo-oscuro .Titulo-Seccion,
+.Olimpo-Contenedor.modo-oscuro .Nombre-Usuario,
+.Olimpo-Contenedor.modo-oscuro .Title-Post-Display,
+.Olimpo-Contenedor.modo-oscuro .Texto-Cargando,
+.Olimpo-Contenedor.modo-oscuro .Texto-Modal,
+.Olimpo-Contenedor.modo-oscuro .Contenido-Post,
+.Olimpo-Contenedor.modo-oscuro .Fecha-Post,
+.Olimpo-Contenedor.modo-oscuro .Text-Post,
+.Olimpo-Contenedor.modo-oscuro .Texto-Username,
+.Olimpo-Contenedor.modo-oscuro .comentarios-lista__text,
+.Olimpo-Contenedor.modo-oscuro .comentarios-lista__author,
+.Olimpo-Contenedor.modo-oscuro .Titulo-Modal {
+  color: #f8fafc;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Input-Olimpo-Feed,
+.Olimpo-Contenedor.modo-oscuro .Textarea-Olimpo,
+.Olimpo-Contenedor.modo-oscuro .comentarios-composer__input {
+  background: rgba(30, 41, 59, 0.92);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.Olimpo-Contenedor.modo-oscuro .Input-Olimpo-Feed::placeholder,
+.Olimpo-Contenedor.modo-oscuro .Textarea-Olimpo::placeholder,
+.Olimpo-Contenedor.modo-oscuro .comentarios-composer__input::placeholder {
+  color: #94a3b8;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Secundario,
+.Olimpo-Contenedor.modo-oscuro .Btn-Accion-Post,
+.Olimpo-Contenedor.modo-oscuro .Btn-Modal-Cancelar {
+  background: rgba(15, 23, 42, 0.9);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Secundario:hover,
+.Olimpo-Contenedor.modo-oscuro .Btn-Accion-Post:hover,
+.Olimpo-Contenedor.modo-oscuro .Btn-Modal-Cancelar:hover {
+  background: rgba(30, 41, 59, 0.95);
+  color: #ffffff;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Secundario img,
+.Olimpo-Contenedor.modo-oscuro .Btn-Accion-Post img,
+.Olimpo-Contenedor.modo-oscuro .Btn-Nav-Item img {
+  filter: brightness(0) invert(1);
+  opacity: 0.95;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Nav-Item {
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Nav-Item:hover,
+.Olimpo-Contenedor.modo-oscuro .Btn-Nav-Item.Activo {
+  color: #f8fafc;
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.Olimpo-Contenedor.modo-oscuro .text-stone-800,
+.Olimpo-Contenedor.modo-oscuro .text-stone-700,
+.Olimpo-Contenedor.modo-oscuro .text-stone-600,
+.Olimpo-Contenedor.modo-oscuro .text-stone-500,
+.Olimpo-Contenedor.modo-oscuro .text-stone-400 {
+  color: #f8fafc !important;
+}
+
+.Olimpo-Contenedor.modo-oscuro .text-emerald-700,
+.Olimpo-Contenedor.modo-oscuro .text-emerald-800,
+.Olimpo-Contenedor.modo-oscuro .text-emerald-900 {
+  color: #6ee7b7 !important;
+}
+
+.Olimpo-Contenedor.modo-oscuro .bg-white\/90,
+.Olimpo-Contenedor.modo-oscuro .bg-white\/80,
+.Olimpo-Contenedor.modo-oscuro .bg-white\/70,
+.Olimpo-Contenedor.modo-oscuro .bg-white\/60,
+.Olimpo-Contenedor.modo-oscuro .bg-white\/50,
+.Olimpo-Contenedor.modo-oscuro .bg-white\/40,
+.Olimpo-Contenedor.modo-oscuro .bg-white\/30 {
+  background-color: rgba(15, 23, 42, 0.92) !important;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Mensaje-Error-Feed {
+  color: #fef3c7;
+  background: rgba(6, 78, 59, 0.42);
+  border-color: rgba(52, 211, 153, 0.28);
+}
+
+.Olimpo-Contenedor.modo-oscuro .Texto-Header-Agora {
+  color: #e2e8f0;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Hashtag-Menu {
+  background: rgba(15, 23, 42, 0.97);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.42);
+}
+
+.Olimpo-Contenedor.modo-oscuro .Hashtag-Opcion {
+  color: #e2e8f0;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Hashtag-Opcion:hover,
+.Olimpo-Contenedor.modo-oscuro .Hashtag-Opcion.Activo {
+  background: rgba(16, 185, 129, 0.24);
+  color: #f0fdf4;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Filtro-Feed img,
+.Olimpo-Contenedor.modo-oscuro .Btn-Filtro-Notificaciones img,
+.Olimpo-Contenedor.modo-oscuro .Btn-Filtro-Icono {
+  filter: brightness(0) invert(1);
+  opacity: 0.96;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Filtro-Feed-Boton,
+.Olimpo-Contenedor.modo-oscuro .Btn-Filtro-Feed,
+.Olimpo-Contenedor.modo-oscuro .Btn-Filtro-Notificaciones,
+.Olimpo-Contenedor.modo-oscuro .Hashtag-Trigger {
+  color: #e2e8f0 !important;
+  border-color: rgba(255, 255, 255, 0.13) !important;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Filtro-Feed-Boton:hover,
+.Olimpo-Contenedor.modo-oscuro .Btn-Filtro-Feed:hover,
+.Olimpo-Contenedor.modo-oscuro .Btn-Filtro-Notificaciones:hover,
+.Olimpo-Contenedor.modo-oscuro .Hashtag-Trigger:hover,
+.Olimpo-Contenedor.modo-oscuro .Filtro-Feed-Boton.Activo,
+.Olimpo-Contenedor.modo-oscuro .Btn-Filtro-Feed.Activo,
+.Olimpo-Contenedor.modo-oscuro .Btn-Filtro-Notificaciones.Activo,
+.Olimpo-Contenedor.modo-oscuro .Hashtag-Trigger.Activo {
+  background: rgba(16, 185, 129, 0.24) !important;
+  color: #f0fdf4 !important;
+  border-color: rgba(52, 211, 153, 0.32) !important;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Primary-Feed,
+.Olimpo-Contenedor.modo-oscuro .Btn-Primario-Feed {
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.25);
+}
+
 .Cuerpo-Feed {
   @apply relative z-10 w-full max-w-7xl mx-auto my-12 px-4 grid grid-cols-1 gap-8 items-start;
 }
@@ -107,6 +281,96 @@
   @apply mt-2 text-xs font-semibold text-emerald-700 uppercase tracking-[0.24em] hover:text-emerald-900 transition-colors;
 }
 
+.comentarios-composer {
+  @apply rounded-3xl border border-emerald-700/10 bg-gradient-to-br from-white/90 to-emerald-50/70 p-4 shadow-[0_12px_30px_rgba(16,185,129,0.08)] backdrop-blur-xl;
+}
+
+.comentarios-composer__row {
+  @apply flex flex-col gap-3 md:flex-row md:items-center;
+}
+
+.comentarios-composer__input {
+  @apply min-h-14 px-4 py-3 rounded-2xl bg-white/80 border border-emerald-700/10 text-stone-900 placeholder-stone-400 shadow-inner;
+}
+
+.comentarios-composer__gif-btn {
+  @apply inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-700/10 bg-white/90 text-emerald-700 shadow-sm transition-all duration-200 hover:bg-emerald-100 hover:scale-105 active:scale-95 disabled:opacity-50;
+}
+
+.comentarios-composer__gif-icon {
+  @apply h-6 w-6 object-contain;
+}
+
+.comentarios-composer__submit {
+  @apply px-5 py-3 text-sm rounded-2xl md:ml-auto;
+}
+
+.comentarios-composer__gif-preview {
+  @apply relative mt-4 inline-flex max-w-full overflow-hidden rounded-3xl border border-emerald-700/10 bg-white shadow-md;
+}
+
+.comentarios-composer__gif-image {
+  @apply block max-h-64 w-full max-w-[22rem] object-cover;
+}
+
+.comentarios-composer__gif-remove {
+  @apply absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold shadow-lg transition-all hover:bg-red-600 active:scale-95;
+}
+
+.comentarios-composer__counter {
+  @apply mt-3 block text-xs font-medium text-stone-400;
+}
+
+.comentarios-lista {
+  @apply flex-1 space-y-3 overflow-y-auto pr-1 my-2;
+  
+  /* Permite touch / slide suave en móviles y trackpads */
+  -webkit-overflow-scrolling: touch;
+  
+  /* Ocultar barra de scroll en Firefox, IE y Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Ocultar barra de scroll en Chrome, Safari, Opera y Brave */
+.comentarios-lista::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.comentarios-lista__empty {
+  @apply rounded-2xl border border-dashed border-emerald-700/10 bg-white/50 px-4 py-5 text-sm italic text-stone-400;
+}
+
+.comentarios-lista__item {
+  @apply rounded-3xl border border-stone-200/70 bg-white/85 p-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)];
+}
+
+.comentarios-lista__content {
+  @apply flex items-start justify-between gap-3;
+}
+
+.comentarios-lista__author {
+  @apply block text-sm font-bold text-emerald-800;
+}
+
+.comentarios-lista__text {
+  @apply mt-1 text-sm leading-relaxed text-stone-700 whitespace-pre-wrap break-words;
+}
+
+.comentarios-lista__gif {
+  @apply mt-3 w-full max-w-[24rem] rounded-2xl border border-stone-200 object-cover shadow-sm;
+}
+
+.comentarios-lista__date {
+  @apply mt-2 block text-[11px] text-stone-400;
+}
+
+.comentarios-lista__delete {
+  @apply shrink-0 rounded-full p-2 text-stone-400 transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:scale-105 active:scale-95;
+}
+
 /* --- Estados de Carga --- */
 .Cargando-Contenedor {
   @apply w-full bg-white/20 border border-white/40 rounded-2xl p-12 text-center backdrop-blur-md;
@@ -163,13 +427,40 @@
 }
 
 /* --- Botones de Interacción (Likes y Comentarios Copia Exacta) --- */
+.Btn-Accion-Post {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(255, 255, 255, 0.75);
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.Btn-Accion-Post:hover {
+  background: #ecfdf5;
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #047857;
+  transform: translateY(-2px);
+}
+
+.Btn-Accion-Post.Eliminar:hover {
+  background: #fef2f2;
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #dc2626;
+}
+
 .Btn-Like-Post,
 .Btn-Comentario-Post {
   @apply mt-2 inline-flex items-center gap-2 w-fit rounded-full
   border border-emerald-600/20
-  bg-white/70
+  bg-emerald-50/80
   px-3 py-2
-  text-stone-500
+  text-emerald-700
   cursor-pointer
   transition-all
   duration-300;
@@ -177,19 +468,35 @@
 
 .Btn-Like-Post:hover,
 .Btn-Comentario-Post:hover {
-  @apply bg-emerald-50 border-emerald-400 text-emerald-600;
+  @apply bg-emerald-100 border-emerald-400 text-emerald-800;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(16, 185, 129, .18);
 }
 
 .Btn-Like-Post.Activo {
-  @apply bg-emerald-50 border-emerald-400 text-emerald-600;
+  @apply bg-emerald-600 border-emerald-500 text-white;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(16, 185, 129, .18);
+  box-shadow: 0 10px 24px rgba(16, 185, 129, .28);
 }
 
 .Btn-Like-Post.Activo:hover {
-  @apply bg-emerald-50 border-emerald-400 text-emerald-600;
+  @apply bg-emerald-700 border-emerald-500 text-white;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Like-Post,
+.Olimpo-Contenedor.modo-oscuro .Btn-Comentario-Post {
+  background: rgba(6, 78, 59, 0.46);
+  border-color: rgba(52, 211, 153, 0.32);
+  color: #ecfdf5;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Like-Post:hover,
+.Olimpo-Contenedor.modo-oscuro .Btn-Comentario-Post:hover,
+.Olimpo-Contenedor.modo-oscuro .Btn-Like-Post.Activo,
+.Olimpo-Contenedor.modo-oscuro .Btn-Like-Post.Activo:hover {
+  background: rgba(5, 150, 105, 0.38);
+  border-color: rgba(110, 231, 183, 0.45);
+  color: #f0fdf4;
 }
 
 .Contador-Likes {
@@ -203,11 +510,28 @@
 
 /* --- Modales y Secundarios --- */
 .Modal-Overlay {
-  @apply fixed inset-0 z-[60] flex items-center justify-center bg-stone-950/50 px-4 py-6 backdrop-blur-sm;
+  @apply fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-stone-950/50 px-4 py-6 backdrop-blur-sm;
 }
 
+/* --- Modal de Comentarios (Amplio + Flexbox Controlado) --- */
 .Modal-Confirmacion {
-  @apply w-full max-w-md rounded-3xl border border-white/70 bg-white/90 p-6 shadow-2xl backdrop-blur-xl;
+  @apply w-full max-w-5xl h-[88vh] max-h-[860px] flex flex-col rounded-3xl border border-white/70 bg-white/90 p-6 shadow-2xl backdrop-blur-xl overflow-hidden transition-all duration-300;
+}
+
+.Modal-Contenido-Scroll {
+  @apply flex-1 min-h-0 overflow-y-auto pr-1 -mr-1;
+}
+
+.Modal-Contenido-Scroll::-webkit-scrollbar {
+  @apply w-2;
+}
+
+.Modal-Contenido-Scroll::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.Modal-Contenido-Scroll::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-emerald-600/40 hover:bg-emerald-600/70;
 }
 
 .Titulo-Modal {
@@ -250,6 +574,33 @@
   @apply bg-stone-200/60 border-stone-300 text-stone-500 hover:bg-red-50 hover:border-red-300 hover:text-red-600;
 }
 
+.Olimpo-Contenedor.modo-oscuro .Btn-Secundario.Siguiendo {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(52, 211, 153, 0.3);
+  color: #d1fae5;
+  box-shadow: none;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Secundario.Siguiendo:hover {
+  background: rgba(15, 23, 42, 0.95);
+  color: #f0fdf4;
+  border-color: rgba(110, 231, 183, 0.4);
+}
+
+.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion .Input-Olimpo-Feed,
+.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion textarea,
+.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion .Textarea-Olimpo {
+  background: rgba(30, 41, 59, 0.92);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion .Input-Olimpo-Feed::placeholder,
+.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion textarea::placeholder,
+.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion .Textarea-Olimpo::placeholder {
+  color: #94a3b8;
+}
+
 /* --- Lista de Búsqueda de Usuarios --- */
 .Lista-Usuarios {
   @apply w-full bg-white/50 border border-white/70 rounded-2xl p-4 flex flex-col gap-2.5 backdrop-blur-2xl;
@@ -270,4 +621,59 @@
 
 .Texto-Username {
   @apply text-sm font-semibold tracking-wide text-stone-800;
+}
+
+.Acciones-Modal {
+  @apply mt-6 flex justify-end gap-3;
+}
+
+.Acciones-Modal .Btn-Modal-Cancelar {
+  @apply rounded-xl border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100;
+}
+
+.Acciones-Modal .Btn-Modal-Confirmar {
+  @apply rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800;
+}
+
+.Acciones-Modal .Btn-Secundario {
+  @apply px-4 py-1.5 rounded-xl text-xs font-semibold tracking-wider uppercase
+  text-emerald-800 bg-white/70 border border-emerald-700/20
+  shadow-sm transition-all duration-300 cursor-pointer
+  hover:bg-emerald-50 hover:border-emerald-600/40 hover:text-emerald-900
+  active:scale-95;
+}
+
+.Acciones-Modal .Nombre-Usuario-Header {
+  @apply mt-2 text-xs uppercase tracking-[0.25em] text-emerald-700/80 cursor-pointer transition-all select-none;
+}
+
+/* --- Barra de Navegación Inferior (Estilo Olimpo / Ágora) --- */
+.Nav-Inferior-Olimpo {
+  @apply fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around p-2.5 md:hidden;
+  @apply bg-white/70 border-t border-white/80 backdrop-blur-2xl transition-all duration-300;
+  box-shadow: 0 -8px 25px rgba(135, 152, 126, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.Btn-Nav-Item {
+  @apply flex flex-col items-center gap-1 px-4 py-1.5 rounded-2xl text-stone-500 font-medium text-[11px] transition-all duration-200 cursor-pointer;
+}
+
+.Btn-Nav-Item:hover {
+  @apply text-emerald-800 bg-white/50;
+}
+
+.Btn-Nav-Item.Activo {
+  @apply text-emerald-700 font-bold bg-white/90 border border-emerald-700/10 shadow-sm scale-105;
+}
+
+.Btn-Nav-Item svg {
+  @apply transition-transform duration-200;
+}
+
+.Btn-Nav-Item:active svg {
+  @apply scale-90;
+}
+
+.Insignia-Notificacion {
+  @apply absolute top-1 right-3 w-2 h-2 rounded-full bg-emerald-600 animate-pulse;
 }

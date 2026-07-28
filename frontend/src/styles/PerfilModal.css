@@ -57,3 +57,17 @@
 .Btn-Secundario.Siguiendo {
   @apply bg-stone-200 text-stone-700 hover:bg-stone-300 shadow-none;
 }
+
+.Modal-Confirmacion .Btn-Secundario.Siguiendo,
+.Modal-Confirmacion .Btn-Secundario.Siguiendo:hover,
+.Modal-Confirmacion .Btn-Seguir-Perfil.Siguiendo,
+.Modal-Confirmacion .Btn-Seguir-Perfil.Siguiendo:hover {
+  background: rgba(30, 41, 59, 0.95);
+  color: #d1fae5;
+  border-color: rgba(52, 211, 153, 0.3);
+  box-shadow: none;
+}
+
+.Modal-Confirmacion .Btn-Seguir-Perfil {
+  border-color: rgba(16, 185, 129, 0.35);
+}

@@ -7,6 +7,7 @@ function GiphySearch({ onSelectGif, onClose }) {
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
+  const [gifEnHover, setGifEnHover] = useState(null);
   const timeoutRef = useRef(null);
 
   // Cargar GIFs trending al abrir
@@ -74,6 +75,9 @@ function GiphySearch({ onSelectGif, onClose }) {
     onSelectGif(gif);
     onClose();
   };
+
+  const getGifPreview = (gif) => gif.previewUrl || gif.url;
+  const getGifActive = (gif) => gif.url || gif.previewUrl;
 
   return (
     <div className="Giphy-Modal-Overlay" onClick={onClose}>
@@ -153,16 +157,16 @@ function GiphySearch({ onSelectGif, onClose }) {
                   key={gif.id}
                   className="Giphy-Item"
                   onClick={() => handleSelectGif(gif)}
+                  onMouseEnter={() => setGifEnHover(gif.id)}
+                  onMouseLeave={() => setGifEnHover(null)}
                   title={gif.title}
                 >
                   <img
-                    src={gif.url}
+                    src={gifEnHover === gif.id ? getGifActive(gif) : getGifPreview(gif)}
                     alt={gif.title}
                     loading="lazy"
                   />
-                  <div className="Giphy-Item-Overlay">
-                    <span>Seleccionar</span>
-                  </div>
+                  
                 </div>
               ))
             )}

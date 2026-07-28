@@ -201,10 +201,10 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
                     {!esMiPerfil && usuario.id && (
                       <button
                         type="button"
-                        className={`w-full py-2 rounded-xl text-xs font-semibold transition-all ${
+                        className={`Btn-Seguir-Perfil w-full py-2 rounded-xl text-xs font-semibold transition-all border ${
                           loSigo
-                            ? "bg-stone-200 text-stone-600 hover:bg-stone-300"
-                            : "bg-emerald-700 text-white hover:bg-emerald-800 shadow-sm shadow-emerald-700/20"
+                            ? "Siguiendo"
+                            : "bg-emerald-700 text-white hover:bg-emerald-800 shadow-sm shadow-emerald-700/20 border-emerald-700"
                         }`}
                         onClick={() => manejarSeguir(usuario.id)}
                       >
