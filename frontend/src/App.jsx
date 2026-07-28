@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import clienteAxios from './api/clienteAxios'
 import FeedScreen from './styles/FeedScreen.jsx'
+import AdminReports from './components/AdminReports.jsx'
 
 function App() {
   const [modalActivo, setModalActivo] = useState(null)
@@ -19,6 +20,20 @@ function App() {
   const [mostrarExito, setMostrarExito] = useState(false)
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(null)
   const [cargandoSesion, setCargandoSesion] = useState(true)
+  const [verAdmin, setVerAdmin] = useState(false)
+  const query = new URLSearchParams(window.location.search)
+  const resetToken = query.get('token')
+  const isReset = window.location.pathname.includes('restablecer-contrasena') && resetToken
+  const isVerification = window.location.pathname.includes('verificar-correo') && resetToken
+  const [newPassword, setNewPassword] = useState('')
+  const [authNotice, setAuthNotice] = useState('')
+
+  useEffect(() => {
+    if (!isVerification) return
+    clienteAxios.post('/auth/verificar-correo', { token: resetToken })
+      .then(() => setAuthNotice('Correo verificado. Ya puedes iniciar sesión.'))
+      .catch(() => setAuthNotice('El enlace de verificación no es válido o expiró.'))
+  }, [isVerification, resetToken])
 
   useEffect(() => {
     const tokenGuardado = localStorage.getItem('sofocles_token')
@@ -95,6 +110,19 @@ function App() {
     setUsuarioAutenticado(null)
   }
 
+  const solicitarRecuperacion = async () => {
+    const recoveryEmail = window.prompt('Escribe tu correo para recibir el enlace de recuperación:')
+    if (!recoveryEmail) return
+    try { await clienteAxios.post('/auth/recuperar-contrasena', { email: recoveryEmail }); setErrorMsg('Revisa tu correo si la cuenta existe.') }
+    catch { setErrorMsg('No se pudo solicitar la recuperación.') }
+  }
+
+  const restablecerContrasena = async (event) => {
+    event.preventDefault()
+    try { await clienteAxios.post('/auth/restablecer-contrasena', { token: resetToken, password: newPassword }); setAuthNotice('Contraseña actualizada. Ya puedes iniciar sesión.') }
+    catch (error) { setAuthNotice(error.response?.data?.error || 'No fue posible actualizar la contraseña.') }
+  }
+
   if (cargandoSesion) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
@@ -106,8 +134,13 @@ function App() {
   }
 
   if (usuarioAutenticado) {
+    if (verAdmin && usuarioAutenticado.role === 'ADMIN') return <AdminReports onClose={() => setVerAdmin(false)} />
+    if (usuarioAutenticado.role === 'ADMIN') return <><div className="fixed right-4 top-4 z-50"><button className="Btn-Secundario" onClick={() => setVerAdmin(true)}>Moderación</button></div><FeedScreen usuarioAutenticado={usuarioAutenticado} cerrarSesion={cerrarSesion} /></>
     return <FeedScreen usuarioAutenticado={usuarioAutenticado} cerrarSesion={cerrarSesion} />
   }
+
+  if (isReset) return <div className="Olimpo-Contenedor min-h-screen flex items-center justify-center"><form className="Card-Formulario flex flex-col gap-4" onSubmit={restablecerContrasena}><h1 className="Logo-Sofocles !text-3xl">Nueva contraseña</h1><input className="Input-Olimpo" type="password" minLength="8" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 8 caracteres"/><button className="Btn-Primario" type="submit">Actualizar contraseña</button>{authNotice && <p>{authNotice}</p>}</form></div>
+  if (isVerification) return <div className="Olimpo-Contenedor min-h-screen flex items-center justify-center"><div className="Card-Formulario text-center"><h1 className="Logo-Sofocles !text-3xl">Verificación</h1><p>{authNotice || 'Verificando correo…'}</p></div></div>
 
   return (
     <div className="Olimpo-Contenedor">
@@ -301,6 +334,8 @@ function App() {
                 Crear Cuenta
               </button>
             </form>
+
+            <button className="Enlace-Simple border-none bg-none cursor-pointer" type="button" onClick={solicitarRecuperacion}>¿Olvidaste tu contraseña?</button>
 
             <button
               className="Enlace-Simple border-none bg-none cursor-pointer"

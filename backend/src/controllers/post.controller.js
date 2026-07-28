@@ -7,11 +7,10 @@ import {
   togglePostLike,
 } from '../services/post.service.js'
 import { prisma } from '../config/prisma.js'
+import { storeImage } from '../services/storage.service.js'
 
 export async function createPostHandler(request, reply) {
   try {
-    request.log.info({ body: request.body }, 'createPost request body')
-
     // Support both JSON and multipart/form-data (file upload)
     let title = undefined
     let content = undefined
@@ -27,30 +26,7 @@ export async function createPostHandler(request, reply) {
       content = body.content
       imageUrl = body.imageUrl
 
-      // Support `imageData` field with a data URL (data:image/...;base64,AAAA...)
-      if (!imageUrl && body.imageData && typeof body.imageData === 'string') {
-        try {
-          const matches = body.imageData.match(/^data:(image\/\w+);base64,(.+)$/)
-          if (matches) {
-            const mime = matches[1]
-            const b64 = matches[2]
-
-            const ext = mime.split('/')[1] || 'png'
-            const fs = await import('fs')
-            const path = await import('node:path')
-            const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-            await fs.promises.mkdir(uploadsDir, { recursive: true })
-
-            const safeName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
-            const destPath = path.join(uploadsDir, safeName)
-            await fs.promises.writeFile(destPath, Buffer.from(b64, 'base64'))
-
-            imageUrl = `/uploads/${safeName}`
-          }
-        } catch (err) {
-          request.log.error({ err }, 'failed to save imageData')
-        }
-      }
+      if (!imageUrl && body.imageData) imageUrl = await storeImage(body.imageData, 'post')
     }
     const authorId = request.userId
 
@@ -106,12 +82,12 @@ export async function listPostsHandler(request, reply) {
         return reply.code(401).send({ error: 'No autenticado' })
       }
 
-      const posts = await getPostsFollowing(Number(userId))
-      return reply.send({ posts })
+      const result = await getPostsFollowing(Number(userId), request.query)
+      return reply.send({ posts: result.items, nextCursor: result.nextCursor })
     }
 
-    const posts = await getPosts()
-    return reply.send({ posts })
+    const result = await getPosts(request.query)
+    return reply.send({ posts: result.items, nextCursor: result.nextCursor })
   } catch (error) {
     request.log.error(error)
     const statusCode = error.statusCode ?? 500

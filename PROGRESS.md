@@ -1,3 +1,41 @@
+# Actualización — 28 de Julio, 2026
+
+## Seguridad, autenticación y almacenamiento
+
+- JWT obligatorio, sin secreto por defecto, y CORS limitado a `CORS_ORIGINS`.
+- `.env` retirado del índice de Git; plantillas seguras: `.env.example` y `backend/.env.example`.
+- Registro con verificación por correo, recuperación y cambio de contraseña.
+- En desarrollo los enlaces de correo se escriben en la consola; para entrega real se requieren variables SMTP.
+- Imágenes validadas (tipo/tamaño máximo de 8 MB), comprimidas a WebP y guardadas con nombres seguros.
+- Endpoints autenticados: `POST /api/uploads/avatar` y `POST /api/uploads/posts`.
+- Con credenciales `CLOUDINARY_*` las imágenes se almacenan en Cloudinary; sin ellas se usa almacenamiento local de desarrollo.
+
+## Moderación
+
+- Migración `20260727220000_security_moderation` aplicada: roles, reportes, bloqueos, silencios y tokens de seguridad.
+- Reportes: `POST /api/reports`; bloqueo/silencio: `POST /api/users/:id/block` y `POST /api/users/:id/mute`.
+- Administración: `GET /api/admin/reports` y `PATCH /api/admin/reports/:id`, con resolución y retiro de publicaciones.
+- Panel de moderación para rol `ADMIN`; la cuenta `santiagosampayo66@gmail.com` es ADMIN en la base local.
+- El feed incluye el icono ⚑ para reportar publicaciones; los perfiles permiten reportar, silenciar y bloquear.
+
+## Rendimiento, interfaz y calidad
+
+- Paginación por cursor en feeds, publicaciones seguidas, comentarios y búsqueda de usuarios; el feed tiene **Cargar más**.
+- Índices de BD para fechas, autores, comentarios, reportes, relaciones de moderación y tokens.
+- Subida de avatar desde perfil y pantallas para verificar correo, solicitar recuperación y restablecer contraseña.
+- Pruebas de API con `node --test`: salud, rutas protegidas e imágenes inválidas.
+- Verificado con `npm test` (3/3), `npx prisma validate`, `npm run build` y `npm run lint`.
+
+## Puesta en marcha
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:5000/health`
+- Inicio: `docker compose up -d` y `cd frontend && npm run dev`.
+
+> Nota: las credenciales SMTP y Cloudinary no se incluyen en el repositorio; deben añadirse al `.env` local.
+
+---
+
 # 📋 SOFOCLES - Progreso de Desarrollo
 
 ## Sesión Actual (22 de Julio, 2026)

@@ -1,5 +1,13 @@
 import { prisma } from '../config/prisma.js'
 
+export async function listCommentsHandler(request) {
+  const take = Math.min(Math.max(Number(request.query?.limit) || 20, 1), 50)
+  const rows = await prisma.comment.findMany({ where: { postId: Number(request.params.id) }, take: take + 1, ...(request.query?.cursor ? { cursor: { id: Number(request.query.cursor) }, skip: 1 } : {}), orderBy: { id: 'desc' }, include: { author: { select: { id: true, username: true, avatarUrl: true } } } })
+  const hasMore = rows.length > take
+  const comments = hasMore ? rows.slice(0, take) : rows
+  return { comments, nextCursor: hasMore ? comments.at(-1).id : null }
+}
+
 export async function createCommentHandler(request, reply) {
   try {
     const { id: postId } = request.params

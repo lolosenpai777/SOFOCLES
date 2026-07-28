@@ -1,6 +1,6 @@
 import { prisma } from '../config/prisma.js'
 
-export async function searchUsersByUsername(q) {
+export async function searchUsersByUsername(q, { cursor, limit = 20 } = {}) {
   const where = q
     ? {
         username: {
@@ -16,10 +16,14 @@ export async function searchUsersByUsername(q) {
       id: true,
       username: true,
     },
-    take: 50,
+    take: Math.min(Math.max(Number(limit) || 20, 1), 50) + 1,
+    ...(cursor ? { cursor: { id: Number(cursor) }, skip: 1 } : {}),
+    orderBy: { id: 'desc' },
   })
-
-  return users
+  const take = Math.min(Math.max(Number(limit) || 20, 1), 50)
+  const hasMore = users.length > take
+  const items = hasMore ? users.slice(0, take) : users
+  return { items, nextCursor: hasMore ? items.at(-1).id : null }
 }
 
 export async function toggleFollow(currentUserId, targetUserId) {

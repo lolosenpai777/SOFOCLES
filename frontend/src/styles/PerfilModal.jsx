@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import clienteAxios from "../api/clienteAxios";
 import AvatarDisplay from "../components/AvatarDisplay";
 import "./PerfilModal.css";
@@ -11,6 +11,7 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [expandedPosts, setExpandedPosts] = useState({});
+  const avatarInputRef = useRef(null);
 
   const esMiPerfil = usuario?.id === miId;
 
@@ -62,6 +63,34 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
       ...prev,
       [postId]: !prev[postId],
     }));
+  };
+
+  const subirAvatar = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const { data } = await clienteAxios.post("/uploads/avatar", { imageData: reader.result });
+        setAvatarUrl(data.url);
+        setPerfilData((prev) => ({ ...prev, avatarUrl: data.url }));
+      } catch { window.alert("No se pudo subir el avatar. Usa PNG, JPEG o WebP de hasta 8 MB."); }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const accionModeracion = async (action) => {
+    try {
+      if (action === "report") {
+        const reason = window.prompt("Motivo del reporte", "Comportamiento inapropiado");
+        if (!reason?.trim()) return;
+        await clienteAxios.post("/reports", { userId: usuario.id, reason: reason.trim() });
+        window.alert("Reporte enviado.");
+      } else {
+        const { data } = await clienteAxios.post(`/users/${usuario.id}/${action}`);
+        window.alert(data[action === "block" ? "blocked" : "muted"] ? "Acción aplicada." : "Acción deshecha.");
+      }
+    } catch { window.alert("No se pudo completar la acción."); }
   };
 
   if (!usuario) return null;
@@ -132,6 +161,10 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
                       {160 - bio.length} caracteres restantes
                     </p>
                   </div>
+                  <div>
+                    <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={subirAvatar} />
+                    <button type="button" className="Btn-Secundario" onClick={() => avatarInputRef.current?.click()}>Subir avatar</button>
+                  </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-stone-700 mb-1">
@@ -199,6 +232,7 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
                   {/* Botones de acción */}
                   <div className="flex gap-2">
                     {!esMiPerfil && usuario.id && (
+                      <>
                       <button
                         type="button"
                         className={`Btn-Seguir-Perfil w-full py-2 rounded-xl text-xs font-semibold transition-all border ${
@@ -210,6 +244,10 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
                       >
                         {loSigo ? "SIGUIENDO" : "+ SEGUIR"}
                       </button>
+                      <button type="button" className="Btn-Secundario" onClick={() => accionModeracion("report")} title="Reportar usuario">⚑</button>
+                      <button type="button" className="Btn-Secundario" onClick={() => accionModeracion("mute")} title="Silenciar usuario">🔇</button>
+                      <button type="button" className="Btn-Secundario" onClick={() => accionModeracion("block")} title="Bloquear usuario">⛔</button>
+                      </>
                     )}
 
                     {esMiPerfil && (

@@ -1,10 +1,11 @@
-import { createCommentHandler, deleteCommentHandler } from '../controllers/comment.controller.js'
+import { createCommentHandler, deleteCommentHandler, listCommentsHandler } from '../controllers/comment.controller.js'
 import { requireAuth } from '../middlewares/auth.middleware.js'
 import { validateBody } from '../middlewares/validate-schema.middleware.js'
 import { validateParams } from '../middlewares/validate-schema.middleware.js'
 import { createCommentSchema, deleteCommentParamsSchema } from '../schemas/comment.schema.js'
 
 export async function commentRoutes(fastify) {
+  fastify.get('/posts/:id/comments', { preValidation: validateParams(deleteCommentParamsSchema.pick({ id: true })) }, listCommentsHandler)
   fastify.post(
     '/posts/:id/comments',
     {

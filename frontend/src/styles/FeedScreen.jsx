@@ -35,6 +35,8 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const [busqueda, setBusqueda] = useState("");
   const [usuariosEncontrados, setUsuariosEncontrados] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [cargandoMas, setCargandoMas] = useState(false);
   const [expandedPosts, setExpandedPosts] = useState({});
   const [nuevoTitulo, setNuevoTitulo] = useState("");
   const [nuevoContenido, setNuevoContenido] = useState("");
@@ -261,6 +263,7 @@ const inputEdicionRef = useRef(null);
 
       const listaFiltrada = aplicarFiltroLocal(listaPosts, tipoFiltro);
       setPosts(listaFiltrada);
+      setNextCursor(respuesta.data?.nextCursor ?? null);
       actualizarHashtagsDesdePosts(listaFiltrada);
     } catch (error) {
       console.error("Error al traer el feed:", error);
@@ -429,6 +432,31 @@ const inputEdicionRef = useRef(null);
     } catch (error) {
       console.error("Error al eliminar el post:", error);
       setErrorMsg("No se pudo eliminar la publicación.");
+    }
+  };
+
+  const cargarMasPosts = async () => {
+    if (!nextCursor || cargandoMas) return;
+    try {
+      setCargandoMas(true);
+      const base = filtroFeed === "seguidos" ? "/posts?filter=following" : "/posts?";
+      const separador = base.includes("?") && !base.endsWith("?") ? "&" : "";
+      const { data } = await clienteAxios.get(`${base}${separador}cursor=${nextCursor}`);
+      const nuevos = Array.isArray(data.posts) ? data.posts : [];
+      setPosts((prev) => [...prev, ...nuevos]);
+      setNextCursor(data.nextCursor ?? null);
+    } catch { setErrorMsg("No se pudieron cargar más publicaciones."); }
+    finally { setCargandoMas(false); }
+  };
+
+  const reportarPost = async (postId) => {
+    const reason = window.prompt("¿Por qué quieres reportar esta publicación?", "Contenido inapropiado");
+    if (!reason?.trim()) return;
+    try {
+      await clienteAxios.post("/reports", { postId, reason: reason.trim() });
+      window.alert("Gracias. El reporte fue enviado al equipo de moderación.");
+    } catch (error) {
+      setErrorMsg(error.response?.data?.error || "No se pudo enviar el reporte.");
     }
   };
 
@@ -1308,6 +1336,18 @@ const inputEdicionRef = useRef(null);
                 </span>
               </button>
 
+              {usuarioAutenticado && autorId !== miId && (
+                <button
+                  type="button"
+                  className="Btn-Accion-Post ml-auto"
+                  onClick={() => reportarPost(pId)}
+                  title="Reportar publicación"
+                  aria-label="Reportar publicación"
+                >
+                  ⚑
+                </button>
+              )}
+
               {/* Acciones de Autor (Editar y Eliminar) */}
               {usuarioAutenticado && autorId === miId && (
                 <div className="ml-auto flex items-center gap-2">
@@ -1358,6 +1398,7 @@ const inputEdicionRef = useRef(null);
         </article>
       );
     })}
+    {nextCursor && <button type="button" className="Btn-Secundario w-full mt-4" onClick={cargarMasPosts} disabled={cargandoMas}>{cargandoMas ? "Cargando…" : "Cargar más"}</button>}
   </div>
 )}
 </section>

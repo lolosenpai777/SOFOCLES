@@ -60,9 +60,13 @@ export async function createPost({ title, content, authorId, imageUrl }) {
   return normalizePost(post)
 }
 
-export async function getPosts() {
+async function pagedPosts(where, { cursor, limit = 20 } = {}) {
+  const take = Math.min(Math.max(Number(limit) || 20, 1), 50)
   const posts = await prisma.post.findMany({
-    orderBy: { createdAt: 'desc' },
+    where: { ...where, hiddenAt: null },
+    take: take + 1,
+    ...(cursor ? { cursor: { id: Number(cursor) }, skip: 1 } : {}),
+    orderBy: { id: 'desc' },
     include: {
       author: {
         select: {
@@ -92,13 +96,17 @@ export async function getPosts() {
       },
     },
   })
-
-  return posts.map(normalizePost)
+  const hasMore = posts.length > take
+  const items = (hasMore ? posts.slice(0, take) : posts).map(normalizePost)
+  return { items, nextCursor: hasMore ? items.at(-1).id : null }
 }
 
-export async function getPostsFollowing(userId) {
-  const posts = await prisma.post.findMany({
-    where: {
+export async function getPosts(options) {
+  return pagedPosts({}, options)
+}
+
+export async function getPostsFollowing(userId, options) {
+  return pagedPosts({
       author: {
         followers: {
           some: {
@@ -106,39 +114,7 @@ export async function getPostsFollowing(userId) {
           },
         },
       },
-    },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      author: {
-        select: {
-          id: true,
-          username: true,
-          avatarUrl: true,
-          email: true,
-          createdAt: true,
-        },
-      },
-      likes: {
-        select: {
-          id: true,
-        },
-      },
-      comments: {
-        orderBy: { createdAt: 'desc' },
-        include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              avatarUrl: true,
-            },
-          },
-        },
-      },
-    },
-  })
-
-  return posts.map(normalizePost)
+    }, options)
 }
 
 export async function deletePostByAuthor(postId, authorId) {

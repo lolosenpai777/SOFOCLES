@@ -10,6 +10,7 @@ export async function meHandler(request) {
       id: true,
       username: true,
       email: true,
+      role: true,
       following: {
         select: { id: true },
       },
@@ -22,6 +23,7 @@ export async function meHandler(request) {
       id: user.id,
       username: user.username,
       email: user.email,
+      role: user.role,
       following: (user.following || []).map((u) => u.id),
     },
   }
@@ -29,8 +31,8 @@ export async function meHandler(request) {
 
 export async function getUsersHandler(request, reply) {
   const q = request.query?.search || ''
-  const users = await searchUsersByUsername(q)
-  return { users }
+  const result = await searchUsersByUsername(q, request.query)
+  return { users: result.items, nextCursor: result.nextCursor }
 }
 
 export async function followUserHandler(request, reply) {

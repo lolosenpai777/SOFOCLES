@@ -14,6 +14,8 @@ model User {
   passwordHash String   @map("password_hash")
   biography    String?  @default("")
   avatarUrl    String?  @map("avatar_url")
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  role         UserRole @default(USER)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -22,7 +24,16 @@ model User {
   followers    User[]   @relation("UserFollows")
   following    User[]   @relation("UserFollows")
   comments     Comment[]
+  reportsMade  Report[] @relation("ReportsMade")
+  reportsReceived Report[] @relation("ReportsReceived")
+  blocksMade   UserBlock[] @relation("BlocksMade")
+  blocksReceived UserBlock[] @relation("BlocksReceived")
+  mutesMade    UserMute[] @relation("MutesMade")
+  mutesReceived UserMute[] @relation("MutesReceived")
+  passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 
+  @@index([createdAt])
   @@map("users")
 }
 
@@ -33,13 +44,17 @@ model Post {
   imageUrl  String?  @map("image_url") @default("")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  hiddenAt  DateTime? @map("hidden_at")
 
   author   User @relation(fields: [authorId], references: [id])
   authorId Int  @map("author_id")
 
   likes     User[]     @relation("PostLikes")
   comments  Comment[]
+  reports   Report[]
 
+  @@index([createdAt])
+  @@index([authorId, createdAt])
   @@map("posts")
 }
 
@@ -55,5 +70,84 @@ model Comment {
   post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId Int  @map("post_id")
 
+  @@index([postId, createdAt])
+  @@index([authorId, createdAt])
   @@map("comments")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model Report {
+  id             Int          @id @default(autoincrement())
+  reason         String
+  details        String?
+  status         ReportStatus @default(OPEN)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  reviewedAt     DateTime?    @map("reviewed_at")
+  reporterId     Int          @map("reporter_id")
+  reportedUserId Int?         @map("reported_user_id")
+  postId         Int?         @map("post_id")
+  reporter       User         @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser   User?        @relation("ReportsReceived", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  post           Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([reporterId, createdAt])
+  @@map("reports")
+}
+
+model UserBlock {
+  blockerId Int @map("blocker_id")
+  blockedId Int @map("blocked_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  blocker User @relation("BlocksMade", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("user_blocks")
+}
+
+model UserMute {
+  muterId Int @map("muter_id")
+  mutedId Int @map("muted_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  muter User @relation("MutesMade", fields: [muterId], references: [id], onDelete: Cascade)
+  muted User @relation("MutesReceived", fields: [mutedId], references: [id], onDelete: Cascade)
+
+  @@id([muterId, mutedId])
+  @@index([mutedId])
+  @@map("user_mutes")
+}
+
+model PasswordResetToken {
+  id Int @id @default(autoincrement())
+  tokenHash String @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  usedAt DateTime? @map("used_at")
+  userId Int @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id Int @id @default(autoincrement())
+  tokenHash String @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  usedAt DateTime? @map("used_at")
+  userId Int @map("user_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
+  @@map("email_verification_tokens")
 }

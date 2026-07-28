@@ -12,7 +12,12 @@ export function buildApp() {
   })
 
   fastify.register(cors, {
-    origin: true,
+    origin(origin, callback) {
+      // Requests without Origin are server-to-server/health checks, not browsers.
+      if (!origin || env.corsOrigins.includes(origin)) return callback(null, true)
+      callback(new Error('Origen no permitido por CORS'), false)
+    },
+    credentials: false,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   })
 
@@ -21,6 +26,7 @@ export function buildApp() {
 
   fastify.register(jwt, {
     secret: env.jwtSecret,
+    sign: { expiresIn: env.jwtExpiresIn },
   })
 
   // Serve uploaded files from public/uploads without external plugins
@@ -78,6 +84,16 @@ export function buildApp() {
   fastify.register(async function (instance) {
     const mod = await import('./routes/post.routes.js')
     await mod.postRoutes(instance)
+  }, { prefix: '/api' })
+
+  fastify.register(async function (instance) {
+    const mod = await import('./routes/moderation.routes.js')
+    await mod.moderationRoutes(instance)
+  }, { prefix: '/api' })
+
+  fastify.register(async function (instance) {
+    const mod = await import('./routes/upload.routes.js')
+    await mod.uploadRoutes(instance)
   }, { prefix: '/api' })
 
   // register comments route via dynamic import

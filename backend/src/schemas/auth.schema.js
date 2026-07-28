@@ -24,3 +24,11 @@ export const registerSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
 })
+
+export const tokenSchema = z.object({
+  token: z.string().trim().min(20, 'Token inválido').max(200),
+})
+
+export const forgotPasswordSchema = z.object({ email: emailSchema })
+export const resetPasswordSchema = z.object({ token: z.string().trim().min(20).max(200), password: passwordSchema.min(8) })
+export const changePasswordSchema = z.object({ currentPassword: z.string().min(1), newPassword: passwordSchema.min(8) })
