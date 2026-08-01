@@ -24,6 +24,8 @@ model User {
   followers    User[]   @relation("UserFollows")
   following    User[]   @relation("UserFollows")
   comments     Comment[]
+  notifications Notification[] @relation("NotificationRecipient")
+  notificationsActed Notification[] @relation("NotificationActor")
   reportsMade  Report[] @relation("ReportsMade")
   reportsReceived Report[] @relation("ReportsReceived")
   blocksMade   UserBlock[] @relation("BlocksMade")
@@ -150,4 +152,22 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, expiresAt])
   @@map("email_verification_tokens")
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  actorId Int? @map("actor_id")
+  type String
+  content String?
+  read Boolean @default(false)
+  postId Int? @map("post_id")
+  commentId Int? @map("comment_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+  @@map("notifications")
 }

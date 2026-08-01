@@ -1,13 +1,82 @@
 @import "tailwindcss";
 
-/* --- Distribución y Grid del Feed --- */
-.Olimpo-Contenedor {
-  min-height: 100vh;
-  transition: background 0.3s ease, color 0.3s ease;
+/* ==========================================================================
+   1. SISTEMA DE FUENTES SAN FRANCISCO (iOS / APPLE SYSTEM)
+   ========================================================================== */
+@supports (font-family: -apple-system) {
+  :root {
+    --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
 }
 
+:root {
+  /* Paleta Ágora / Olimpo Expandida */
+  --emerald-vibrant: #10b981;
+  --emerald-strong: #059669;
+  --teal-accent: #14b8a6;
+  --cyan-glow: rgba(6, 182, 212, 0.18);
+  --mint-light: #ecfdf5;
+
+  /* Glassmorphism Pro Tokens */
+  --glass-bg-light: linear-gradient(135deg, rgba(255, 255, 255, 0.76) 0%, rgba(255, 255, 255, 0.48) 100%);
+  --glass-border-light: rgba(255, 255, 255, 0.88);
+  --glass-specular: inset 0 1px 1px 0 rgba(255, 255, 255, 0.9), 0 16px 36px -8px rgba(15, 23, 42, 0.08);
+}
+
+body, button, input, textarea, select {
+  font-family: var(--font-apple, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.012em;
+}
+
+/* ==========================================================================
+   2. DISTRIBUCIÓN Y CONTENEDOR GENERAL
+   ========================================================================== */
+.Olimpo-Contenedor {
+  min-height: 100vh;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Card-Post {
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.Olimpo-Contenedor .Banner-Olimpo,
+.Olimpo-Contenedor .Card-Formulario-Feed,
+.Olimpo-Contenedor .Card-Post,
+.Olimpo-Contenedor .Lista-Usuarios,
+.Olimpo-Contenedor .Modal-Confirmacion,
+.Olimpo-Contenedor .comentarios-composer,
+.Olimpo-Contenedor .comentarios-lista__item,
+.Olimpo-Contenedor .Cargando-Contenedor,
+.Olimpo-Contenedor .Modal-Imagen {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border-light);
+  color: var(--text-primary);
+  box-shadow: var(--glass-specular);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border-radius: 28px;
+}
+
+/* Adaptación para modo oscuro */
+.Olimpo-Contenedor.modo-oscuro .Header-Action-Button {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Header-Action-Button img {
+  filter: brightness(0) invert(1) !important;
+}
+
+/* --- Modo Oscuro iOS Glass --- */
 .Olimpo-Contenedor.modo-oscuro {
-  background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.14), transparent 28%), linear-gradient(135deg, #020617 0%, #0f172a 45%, #111827 100%);
+  background: radial-gradient(circle at 15% 15%, rgba(20, 184, 166, 0.15), transparent 35%),
+              radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.12), transparent 40%),
+              linear-gradient(135deg, #020617 0%, #0f172a 50%, #090d16 100%);
   color: #f8fafc;
 }
 
@@ -20,10 +89,10 @@
 .Olimpo-Contenedor.modo-oscuro .comentarios-lista__item,
 .Olimpo-Contenedor.modo-oscuro .Cargando-Contenedor,
 .Olimpo-Contenedor.modo-oscuro .Modal-Imagen {
-  background: rgba(15, 23, 42, 0.86);
-  border-color: rgba(255, 255, 255, 0.13);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.78) 0%, rgba(30, 41, 59, 0.62) 100%);
+  border-color: rgba(255, 255, 255, 0.14);
   color: #f8fafc;
-  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.35);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12), 0 20px 40px rgba(0, 0, 0, 0.45);
 }
 
 .Olimpo-Contenedor.modo-oscuro .Titulo-Seccion,
@@ -41,24 +110,14 @@
   color: #f8fafc;
 }
 
-.Olimpo-Contenedor.modo-oscuro .Input-Olimpo-Feed,
-.Olimpo-Contenedor.modo-oscuro .Textarea-Olimpo,
-.Olimpo-Contenedor.modo-oscuro .comentarios-composer__input {
-  background: rgba(30, 41, 59, 0.92);
+.Olimpo-Contenedor.modo-oscuro .Lista-Posts .Card-Post:first-child .Title-Post-Display {
   color: #f8fafc;
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-.Olimpo-Contenedor.modo-oscuro .Input-Olimpo-Feed::placeholder,
-.Olimpo-Contenedor.modo-oscuro .Textarea-Olimpo::placeholder,
-.Olimpo-Contenedor.modo-oscuro .comentarios-composer__input::placeholder {
-  color: #94a3b8;
 }
 
 .Olimpo-Contenedor.modo-oscuro .Btn-Secundario,
 .Olimpo-Contenedor.modo-oscuro .Btn-Accion-Post,
 .Olimpo-Contenedor.modo-oscuro .Btn-Modal-Cancelar {
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(15, 23, 42, 0.85);
   color: #e2e8f0;
   border-color: rgba(255, 255, 255, 0.14);
 }
@@ -175,6 +234,7 @@
   box-shadow: 0 10px 24px rgba(16, 185, 129, 0.25);
 }
 
+/* --- Layout Grid --- */
 .Cuerpo-Feed {
   @apply relative z-10 w-full max-w-7xl mx-auto my-12 px-4 grid grid-cols-1 gap-8 items-start;
 }
@@ -191,28 +251,58 @@
   .Cuerpo-Feed {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }
-
   .Columna-Editor {
     grid-column: span 5 / span 5;
   }
-
   .Columna-Publicaciones {
     grid-column: span 7 / span 7;
   }
 }
 
-/* --- Caja del Editor de Post --- */
+/* ==========================================================================
+   3. EDITOR DE POSTS & FORMULARIOS GLASS
+   ========================================================================== */
 .Card-Formulario-Feed {
-  @apply w-full bg-white/50 border border-white/70 rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-3xl;
-  box-shadow: 0 16px 32px rgba(135, 152, 126, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  @apply w-full p-6 flex flex-col gap-4;
 }
 
 .Titulo-Seccion {
-  @apply text-lg font-bold tracking-wide text-stone-800 border-b border-emerald-700/10 pb-2 font-serif;
+  @apply text-xs font-bold tracking-[0.22em] uppercase border-b pb-2.5;
+  color: var(--text-primary);
+  border-color: rgba(16, 185, 129, 0.18);
 }
 
-.Textarea-Olimpo {
-  @apply w-full h-32 px-4 py-3 rounded-xl bg-white/60 border border-white/80 text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all duration-300 resize-none font-sans;
+.Textarea-Olimpo,
+.Input-Olimpo-Feed,
+.comentarios-composer__input {
+  @apply w-full px-4 py-3 text-sm transition-all duration-300 resize-none;
+  background: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
+  border-radius: 20px !important;
+  color: var(--text-primary);
+  box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.03) !important;
+}
+
+.Textarea-Olimpo:focus,
+.Input-Olimpo-Feed:focus,
+.comentarios-composer__input:focus {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: var(--emerald-vibrant) !important;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.16) !important;
+  outline: none;
+}
+
+html.theme-dark .Textarea-Olimpo,
+html.theme-dark .Input-Olimpo-Feed,
+html.theme-dark .comentarios-composer__input {
+  background: rgba(16, 24, 39, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.Textarea-Olimpo::placeholder,
+.Input-Olimpo-Feed::placeholder {
+  color: var(--text-muted);
 }
 
 .Fila-Editor-Acciones {
@@ -224,22 +314,33 @@
 }
 
 .Btn-Primario-Feed {
-  @apply px-5 py-2.5 rounded-xl font-bold tracking-wider text-xs uppercase text-white bg-gradient-to-r from-emerald-700 to-emerald-600 shadow-[0_4px_15px_rgba(16,185,129,0.15)] hover:brightness-105 transition-all duration-300 active:scale-95 cursor-pointer;
+  @apply px-6 py-2.5 rounded-2xl font-bold tracking-[0.18em] text-xs uppercase text-white transition-all duration-300 active:scale-95 cursor-pointer;
+  background: linear-gradient(135deg, var(--emerald-vibrant) 0%, var(--emerald-strong) 100%);
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.28);
 }
 
-/* --- Tarjetas de Posts / Mensajes --- */
+.Btn-Primario-Feed:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1.5px);
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.38);
+}
+
+/* ==========================================================================
+   4. TARJETAS DE POSTS Y CONTENIDO
+   ========================================================================== */
 .Lista-Posts {
   @apply flex flex-col gap-4;
 }
 
 .Card-Post {
-  @apply relative w-full bg-white/40 border border-white/60 rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-xl transition-all duration-300;
-  box-shadow: 0 8px 24px rgba(135, 152, 126, 0.03);
+  @apply relative w-full p-6 flex flex-col gap-4 transition-all duration-300;
 }
 
 .Card-Post:hover {
-  @apply border-emerald-600/20 bg-white/50;
-  box-shadow: 0 12px 28px rgba(135, 152, 126, 0.06);
+  border-color: rgba(52, 211, 153, 0.45) !important;
+  transform: translateY(-4px) scale(1.002);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 1),
+              0 20px 40px -12px rgba(16, 185, 129, 0.16) !important;
 }
 
 .Header-Post {
@@ -247,12 +348,12 @@
 }
 
 .Avatar-Usuario {
-  @apply w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-sm transition-all duration-200 cursor-pointer overflow-hidden select-none;
-  border: 0;
+  @apply w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-600 to-emerald-700 text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-sm transition-all duration-200 cursor-pointer overflow-hidden select-none;
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .Avatar-Usuario:hover {
-  @apply opacity-80 scale-105 shadow-md;
+  @apply opacity-90 scale-105 shadow-md;
 }
 
 .Avatar-Usuario:active {
@@ -264,37 +365,44 @@
 }
 
 .Nombre-Usuario {
-  @apply font-bold text-sm tracking-wide text-stone-800;
+  @apply font-semibold text-sm tracking-tight;
+  color: var(--text-primary);
 }
 
 .Fecha-Post {
-  @apply text-[11px] text-stone-400 block font-light mt-0.5;
+  @apply text-[11px] block font-light mt-0.5;
+  color: var(--text-muted);
 }
 
 .Contenido-Post {
-  @apply text-sm text-stone-700 leading-relaxed font-light whitespace-pre-wrap break-words pl-1;
+  @apply text-sm leading-relaxed font-normal whitespace-pre-wrap break-words pl-1;
+  color: var(--text-secondary);
   max-height: 18rem;
   overflow: hidden;
 }
 
 .Btn-VerMas {
-  @apply mt-2 text-xs font-semibold text-emerald-700 uppercase tracking-[0.24em] hover:text-emerald-900 transition-colors;
+  @apply mt-2 text-xs font-semibold uppercase tracking-[0.2em] transition-colors;
+  color: var(--emerald-strong);
 }
 
+.Btn-VerMas:hover {
+  color: var(--emerald-vibrant);
+}
+
+/* ==========================================================================
+   5. SISTEMA DE COMENTARIOS GLASS
+   ========================================================================== */
 .comentarios-composer {
-  @apply rounded-3xl border border-emerald-700/10 bg-gradient-to-br from-white/90 to-emerald-50/70 p-4 shadow-[0_12px_30px_rgba(16,185,129,0.08)] backdrop-blur-xl;
+  @apply p-4 rounded-3xl;
 }
 
 .comentarios-composer__row {
   @apply flex flex-col gap-3 md:flex-row md:items-center;
 }
 
-.comentarios-composer__input {
-  @apply min-h-14 px-4 py-3 rounded-2xl bg-white/80 border border-emerald-700/10 text-stone-900 placeholder-stone-400 shadow-inner;
-}
-
 .comentarios-composer__gif-btn {
-  @apply inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-700/10 bg-white/90 text-emerald-700 shadow-sm transition-all duration-200 hover:bg-emerald-100 hover:scale-105 active:scale-95 disabled:opacity-50;
+  @apply inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/20 bg-white/70 text-emerald-700 shadow-sm transition-all duration-200 hover:bg-emerald-100/60 hover:scale-105 active:scale-95 disabled:opacity-50;
 }
 
 .comentarios-composer__gif-icon {
@@ -306,7 +414,7 @@
 }
 
 .comentarios-composer__gif-preview {
-  @apply relative mt-4 inline-flex max-w-full overflow-hidden rounded-3xl border border-emerald-700/10 bg-white shadow-md;
+  @apply relative mt-4 inline-flex max-w-full overflow-hidden rounded-3xl border border-emerald-500/20 bg-white shadow-md;
 }
 
 .comentarios-composer__gif-image {
@@ -323,16 +431,11 @@
 
 .comentarios-lista {
   @apply flex-1 space-y-3 overflow-y-auto pr-1 my-2;
-  
-  /* Permite touch / slide suave en móviles y trackpads */
   -webkit-overflow-scrolling: touch;
-  
-  /* Ocultar barra de scroll en Firefox, IE y Edge */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-/* Ocultar barra de scroll en Chrome, Safari, Opera y Brave */
 .comentarios-lista::-webkit-scrollbar {
   display: none;
   width: 0;
@@ -340,11 +443,12 @@
 }
 
 .comentarios-lista__empty {
-  @apply rounded-2xl border border-dashed border-emerald-700/10 bg-white/50 px-4 py-5 text-sm italic text-stone-400;
+  @apply rounded-2xl border border-dashed border-emerald-700/20 bg-white/40 px-4 py-5 text-sm italic text-stone-400;
 }
 
 .comentarios-lista__item {
-  @apply rounded-3xl border border-stone-200/70 bg-white/85 p-4 shadow-[0_8px_20px_rgba(15,23,42,0.04)];
+  @apply p-4 shadow-[0_8px_20px_rgba(15,23,42,0.03)];
+  border-radius: 22px !important;
 }
 
 .comentarios-lista__content {
@@ -371,62 +475,17 @@
   @apply shrink-0 rounded-full p-2 text-stone-400 transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:scale-105 active:scale-95;
 }
 
-/* --- Estados de Carga --- */
-.Cargando-Contenedor {
-  @apply w-full bg-white/20 border border-white/40 rounded-2xl p-12 text-center backdrop-blur-md;
+/* ==========================================================================
+   6. BOTONES DE INTERACCIÓN CON PULSO DE CORAZÓN 💚
+   ========================================================================== */
+@keyframes heartPulse {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.28) rotate(-6deg); }
+  50% { transform: scale(0.92) rotate(3deg); }
+  75% { transform: scale(1.1) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 
-.Texto-Cargando {
-  @apply text-xs uppercase tracking-[0.3em] text-emerald-800/70 font-bold;
-}
-
-.Input-Olimpo-Feed {
-  @apply w-full px-4 py-2.5 rounded-xl bg-white/60 border border-white/80 text-stone-900 text-sm font-medium placeholder-stone-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all duration-300 font-sans;
-}
-
-.Cuerpo-Post-Contenido {
-  @apply flex flex-col gap-1.5 pl-1;
-}
-
-.Imagen-Preview-Editor,
-.Imagen-Post {
-  @apply w-full rounded-xl border border-emerald-900/10 object-cover;
-  max-height: 24rem;
-}
-
-.Imagen-Preview-Editor {
-  max-height: 12rem;
-}
-
-.Btn-Quitar-Imagen {
-  @apply absolute top-2 right-2 w-7 h-7 rounded-full bg-stone-950/70 text-white text-lg leading-none cursor-pointer hover:bg-red-700 transition-colors;
-}
-
-.Modal-Imagen {
-  @apply w-full max-w-md p-6 bg-stone-50/95 rounded-2xl border border-white/80 shadow-2xl;
-}
-
-.Error-Imagen {
-  @apply mt-3 text-xs text-red-700 bg-red-100 rounded-lg p-2;
-}
-
-.Title-Post-Display {
-  @apply text-base font-bold tracking-tight text-stone-800 font-serif;
-}
-
-.Btn-Eliminar-Post {
-  @apply absolute top-1 right-1 p-2 rounded-full text-base opacity-40 transition-all duration-200 ease-in-out;
-}
-
-.Btn-Eliminar-Post:hover {
-  @apply opacity-100 bg-red-500/10 scale-105;
-}
-
-.Btn-Eliminar-Post:active {
-  @apply scale-95;
-}
-
-/* --- Botones de Interacción (Likes y Comentarios Copia Exacta) --- */
 .Btn-Accion-Post {
   display: inline-flex;
   align-items: center;
@@ -434,53 +493,55 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 9999px;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(255, 255, 255, 0.7);
   color: #6b7280;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .Btn-Accion-Post:hover {
-  background: #ecfdf5;
-  border-color: rgba(16, 185, 129, 0.4);
+  background: var(--mint-light);
+  border-color: rgba(16, 185, 129, 0.5);
   color: #047857;
   transform: translateY(-2px);
 }
 
 .Btn-Accion-Post.Eliminar:hover {
   background: #fef2f2;
-  border-color: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.3);
   color: #dc2626;
 }
 
 .Btn-Like-Post,
 .Btn-Comentario-Post {
-  @apply mt-2 inline-flex items-center gap-2 w-fit rounded-full
-  border border-emerald-600/20
-  bg-emerald-50/80
-  px-3 py-2
-  text-emerald-700
-  cursor-pointer
-  transition-all
-  duration-300;
+  @apply mt-2 inline-flex items-center gap-2 w-fit rounded-full px-3.5 py-2 cursor-pointer transition-all duration-300;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--text-secondary);
 }
 
 .Btn-Like-Post:hover,
 .Btn-Comentario-Post:hover {
-  @apply bg-emerald-100 border-emerald-400 text-emerald-800;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: var(--emerald-strong);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(16, 185, 129, .18);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
 }
 
 .Btn-Like-Post.Activo {
-  @apply bg-emerald-600 border-emerald-500 text-white;
+  background: linear-gradient(135deg, var(--emerald-vibrant) 0%, var(--emerald-strong) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(16, 185, 129, .28);
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.35) !important;
 }
 
-.Btn-Like-Post.Activo:hover {
-  @apply bg-emerald-700 border-emerald-500 text-white;
+.Btn-Like-Post.Activo .Icono-Like,
+.Btn-Like-Post.Activo svg {
+  animation: heartPulse 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.28) both;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
 }
 
 .Olimpo-Contenedor.modo-oscuro .Btn-Like-Post,
@@ -491,9 +552,7 @@
 }
 
 .Olimpo-Contenedor.modo-oscuro .Btn-Like-Post:hover,
-.Olimpo-Contenedor.modo-oscuro .Btn-Comentario-Post:hover,
-.Olimpo-Contenedor.modo-oscuro .Btn-Like-Post.Activo,
-.Olimpo-Contenedor.modo-oscuro .Btn-Like-Post.Activo:hover {
+.Olimpo-Contenedor.modo-oscuro .Btn-Comentario-Post:hover {
   background: rgba(5, 150, 105, 0.38);
   border-color: rgba(110, 231, 183, 0.45);
   color: #f0fdf4;
@@ -508,14 +567,95 @@
   @apply h-4 w-4 object-contain;
 }
 
-/* --- Modales y Secundarios --- */
+/* ==========================================================================
+   7. MODALES, OVERLAYS Y POPOVERS
+   ========================================================================== */
 .Modal-Overlay {
-  @apply fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-stone-950/50 px-4 py-6 backdrop-blur-sm;
+  @apply fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-stone-950/40 px-4 py-6 backdrop-blur-md;
 }
 
-/* --- Modal de Comentarios (Amplio + Flexbox Controlado) --- */
+.Noti-Modal {
+  @apply w-full max-w-2xl max-h-[82vh] overflow-hidden p-6 md:p-7;
+}
+
+.Noti-Modal__header {
+  @apply flex flex-col gap-3 md:flex-row md:items-start md:justify-between;
+}
+
+.Noti-Modal__actions {
+  @apply mt-4 flex items-center justify-between gap-3;
+}
+
+.Noti-List {
+  max-height: 56vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.Noti-Empty {
+  @apply rounded-3xl border border-dashed border-emerald-700/15 px-4 py-6 text-sm text-stone-500;
+}
+
+.Noti-Item {
+  @apply w-full text-left p-4 rounded-3xl border mb-2 transition-all duration-200;
+  background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(255,255,255,0.52));
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.Noti-Item:hover {
+  @apply scale-[1.01];
+  background: rgba(255,255,255,0.86);
+}
+
+.Noti-Unread {
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.22);
+}
+
+.Admin-Modal {
+  @apply w-full max-w-3xl max-h-[86vh] overflow-hidden p-6 md:p-7;
+}
+
+.Admin-Modal__header {
+  @apply flex items-start justify-between gap-4 mb-4;
+}
+
+.Admin-Modal__body {
+  @apply text-sm space-y-3;
+}
+
+.Admin-Card {
+  @apply rounded-3xl border p-4 transition-all duration-200;
+  background: linear-gradient(135deg, rgba(255,255,255,0.72), rgba(255,255,255,0.54));
+  border-color: rgba(255,255,255,0.72);
+}
+
+.Admin-Card:hover {
+  @apply -translate-y-0.5;
+}
+
+.Admin-Card__actions {
+  @apply flex flex-col gap-2 shrink-0;
+}
+
+html.theme-dark .Noti-Item,
+html.theme-dark .Admin-Card {
+  background: linear-gradient(135deg, rgba(15, 24, 42, 0.84), rgba(30, 41, 59, 0.7));
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+html.theme-dark .Noti-Item:hover,
+html.theme-dark .Admin-Card:hover {
+  background: rgba(30, 41, 59, 0.92);
+}
+
+html.theme-dark .Noti-Empty {
+  color: #cbd5e1;
+  border-color: rgba(255,255,255,0.12);
+}
+
 .Modal-Confirmacion {
-  @apply w-full max-w-5xl h-[88vh] max-h-[860px] flex flex-col rounded-3xl border border-white/70 bg-white/90 p-6 shadow-2xl backdrop-blur-xl overflow-hidden transition-all duration-300;
+  @apply w-full max-w-5xl h-[88vh] max-h-[860px] flex flex-col p-6 overflow-hidden transition-all duration-300;
 }
 
 .Modal-Contenido-Scroll {
@@ -523,23 +663,21 @@
 }
 
 .Modal-Contenido-Scroll::-webkit-scrollbar {
-  @apply w-2;
-}
-
-.Modal-Contenido-Scroll::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  @apply w-1.5;
 }
 
 .Modal-Contenido-Scroll::-webkit-scrollbar-thumb {
-  @apply rounded-full bg-emerald-600/40 hover:bg-emerald-600/70;
+  @apply rounded-full bg-emerald-500/40 hover:bg-emerald-600/70;
 }
 
 .Titulo-Modal {
-  @apply text-lg font-semibold text-stone-800 font-serif;
+  @apply text-lg font-bold tracking-tight;
+  color: var(--text-primary);
 }
 
 .Texto-Modal {
-  @apply mt-3 text-sm leading-relaxed text-stone-600;
+  @apply mt-3 text-sm leading-relaxed;
+  color: var(--text-secondary);
 }
 
 .Acciones-Modal {
@@ -547,19 +685,46 @@
 }
 
 .Btn-Modal-Cancelar {
-  @apply rounded-xl border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100;
+  @apply rounded-2xl border px-4 py-2 text-sm font-medium transition hover:bg-stone-100;
+  border-color: var(--border);
+  color: var(--text-primary);
 }
 
 .Btn-Modal-Confirmar {
-  @apply rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800;
+  @apply rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700;
 }
 
+/* Normalización de tamaños para botones generales */
+.Btn-Secundario,
+.Btn-Primario-Feed {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 40px !important; /* Altura idéntica garantizada */
+  padding: 0 18px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  border-radius: 14px !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
+
+
 .Btn-Secundario {
-  @apply px-4 py-1.5 rounded-xl text-xs font-semibold tracking-wider uppercase
-  text-emerald-800 bg-white/70 border border-emerald-700/20
+  @apply px-4 py-1.5 rounded-2xl text-xs font-semibold tracking-wider uppercase
   shadow-sm transition-all duration-300 cursor-pointer
-  hover:bg-emerald-50 hover:border-emerald-600/40 hover:text-emerald-900
   active:scale-95;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, rgba(255,255,255,0.72), rgba(255,255,255,0.48));
+  border: 1px solid var(--border);
+}
+
+.Btn-Secundario:hover {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border-color: rgba(61, 107, 86, 0.25);
 }
 
 .Nombre-Usuario-Header {
@@ -571,48 +736,23 @@
 }
 
 .Btn-Secundario.Siguiendo {
-  @apply bg-stone-200/60 border-stone-300 text-stone-500 hover:bg-red-50 hover:border-red-300 hover:text-red-600;
+  @apply hover:bg-red-50 hover:border-red-300 hover:text-red-600;
+  color: var(--text-secondary);
 }
 
-.Olimpo-Contenedor.modo-oscuro .Btn-Secundario.Siguiendo {
-  background: rgba(30, 41, 59, 0.95);
-  border-color: rgba(52, 211, 153, 0.3);
-  color: #d1fae5;
-  box-shadow: none;
-}
-
-.Olimpo-Contenedor.modo-oscuro .Btn-Secundario.Siguiendo:hover {
-  background: rgba(15, 23, 42, 0.95);
-  color: #f0fdf4;
-  border-color: rgba(110, 231, 183, 0.4);
-}
-
-.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion .Input-Olimpo-Feed,
-.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion textarea,
-.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion .Textarea-Olimpo {
-  background: rgba(30, 41, 59, 0.92);
-  color: #f8fafc;
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
-.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion .Input-Olimpo-Feed::placeholder,
-.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion textarea::placeholder,
-.Olimpo-Contenedor.modo-oscuro .Modal-Confirmacion .Textarea-Olimpo::placeholder {
-  color: #94a3b8;
-}
-
-/* --- Lista de Búsqueda de Usuarios --- */
+/* ==========================================================================
+   8. BUSCADOR & LISTA DE USUARIOS
+   ========================================================================== */
 .Lista-Usuarios {
-  @apply w-full bg-white/50 border border-white/70 rounded-2xl p-4 flex flex-col gap-2.5 backdrop-blur-2xl;
-  box-shadow: 0 12px 28px rgba(135, 152, 126, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  @apply w-full p-4 flex flex-col gap-2.5;
 }
 
 .Fila-Usuario {
-  @apply flex items-center justify-between p-2.5 rounded-xl bg-white/40 border border-white/60 transition-all duration-200;
+  @apply flex items-center justify-between p-2.5 rounded-2xl bg-white/40 border border-white/60 transition-all duration-200;
 }
 
 .Fila-Usuario:hover {
-  @apply bg-white/70 border-emerald-600/20;
+  @apply bg-white/75 border-emerald-500/30;
 }
 
 .Info-Usuario-Buscado {
@@ -620,38 +760,17 @@
 }
 
 .Texto-Username {
-  @apply text-sm font-semibold tracking-wide text-stone-800;
+  @apply text-sm font-semibold tracking-tight text-stone-800;
 }
 
-.Acciones-Modal {
-  @apply mt-6 flex justify-end gap-3;
-}
-
-.Acciones-Modal .Btn-Modal-Cancelar {
-  @apply rounded-xl border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100;
-}
-
-.Acciones-Modal .Btn-Modal-Confirmar {
-  @apply rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-800;
-}
-
-.Acciones-Modal .Btn-Secundario {
-  @apply px-4 py-1.5 rounded-xl text-xs font-semibold tracking-wider uppercase
-  text-emerald-800 bg-white/70 border border-emerald-700/20
-  shadow-sm transition-all duration-300 cursor-pointer
-  hover:bg-emerald-50 hover:border-emerald-600/40 hover:text-emerald-900
-  active:scale-95;
-}
-
-.Acciones-Modal .Nombre-Usuario-Header {
-  @apply mt-2 text-xs uppercase tracking-[0.25em] text-emerald-700/80 cursor-pointer transition-all select-none;
-}
-
-/* --- Barra de Navegación Inferior (Estilo Olimpo / Ágora) --- */
+/* ==========================================================================
+   9. NAVEGACIÓN INFERIOR ESTILO DOCK iOS
+   ========================================================================== */
 .Nav-Inferior-Olimpo {
-  @apply fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around p-2.5 md:hidden;
-  @apply bg-white/70 border-t border-white/80 backdrop-blur-2xl transition-all duration-300;
-  box-shadow: 0 -8px 25px rgba(135, 152, 126, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  @apply fixed bottom-3 left-4 right-4 z-40 flex items-center justify-around p-2 md:hidden;
+  @apply bg-white/70 border border-white/80 backdrop-blur-2xl transition-all duration-300;
+  border-radius: 26px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .Btn-Nav-Item {
@@ -663,7 +782,7 @@
 }
 
 .Btn-Nav-Item.Activo {
-  @apply text-emerald-700 font-bold bg-white/90 border border-emerald-700/10 shadow-sm scale-105;
+  @apply text-emerald-700 font-bold bg-white/90 border border-emerald-600/20 shadow-sm scale-105;
 }
 
 .Btn-Nav-Item svg {
@@ -675,5 +794,209 @@
 }
 
 .Insignia-Notificacion {
-  @apply absolute top-1 right-3 w-2 h-2 rounded-full bg-emerald-600 animate-pulse;
+  @apply absolute top-1 right-3 w-2 h-2 rounded-full bg-emerald-500 animate-pulse;
+}
+
+/* ==========================================================================
+   10. HERO CARD / DETALLES DE ANIMACIONES
+   ========================================================================== */
+@keyframes postEntrance {
+  from { opacity: 0; transform: translateY(12px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.Card-Post {
+  will-change: transform, opacity;
+  animation: postEntrance 450ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.Lista-Posts .Card-Post:first-child {
+  /* Mantiene la misma transparencia y estilo cristal que las demás */
+  background: inherit !important;
+  border: inherit !important;
+  box-shadow: inherit !important;
+}
+
+.Lista-Posts .Card-Post:first-child .Title-Post-Display {
+  @apply text-2xl md:text-3xl font-extrabold tracking-tight text-stone-900;
+  letter-spacing: -0.025em;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Lista-Posts .Card-Post:first-child .Imagen-Post {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.Imagen-Post,
+.Imagen-Preview-Editor {
+  @apply w-full rounded-2xl border border-emerald-900/10 object-cover;
+  transition: transform 420ms cubic-bezier(.16, 1, .3, 1), box-shadow 300ms ease;
+  max-height: 24rem;
+}
+
+.Imagen-Post:hover {
+  transform: scale(1.02) translateY(-2px);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+}
+
+.Cargando-Contenedor {
+  @apply w-full p-12 text-center;
+}
+
+.Texto-Cargando {
+  @apply text-xs uppercase tracking-[0.3em] text-emerald-800/80 font-bold;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .Card-Post,
+  .Modal-Overlay .Modal-Confirmacion,
+  .Btn-Like-Post.Activo .Icono-Like {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   Efecto Polvo / Luces Flotantes Orgánicas en el Fondo
+   ========================================================================== */
+
+/* Asegura espacio aislado para las luces detrás del contenido */
+.Olimpo-Contenedor {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Luces de Fondo (Partículas / Polvo suave) */
+.Olimpo-Contenedor::before,
+.Olimpo-Contenedor::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px); /* Difumina la luz para dar el aspecto de polvo/gas */
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform, opacity;
+}
+
+/* Orbe 1: Esmeralda y Menta */
+.Olimpo-Contenedor::before {
+  width: 45vw;
+  height: 45vw;
+  top: -10vw;
+  left: -10vw;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.45) 0%, rgba(20, 184, 166, 0.2) 60%, transparent 80%);
+  animation: polvoFlotante1 18s ease-in-out infinite alternate;
+}
+
+/* Orbe 2: Cian y Turquesa */
+.Olimpo-Contenedor::after {
+  width: 50vw;
+  height: 50vw;
+  bottom: -15vw;
+  right: -10vw;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.35) 0%, rgba(16, 185, 129, 0.15) 55%, transparent 75%);
+  animation: polvoFlotante2 22s ease-in-out infinite alternate;
+}
+
+/* Animaciones de movimiento suave tipo deriva */
+@keyframes polvoFlotante1 {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(15vw, 20vh) scale(1.25) rotate(90deg);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(25vw, -10vh) scale(0.9) rotate(180deg);
+    opacity: 0.35;
+  }
+}
+
+@keyframes polvoFlotante2 {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate(-20vw, -18vh) scale(1.3) rotate(-120deg);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate(-10vw, 15vh) scale(0.95) rotate(-240deg);
+    opacity: 0.4;
+  }
+}
+
+/* ==========================================================================
+   Tipografía Frutiger Aero / Marshmallow 3D
+   ========================================================================== */
+
+.sofocles-logo {
+  font-family: 'Fredoka', 'Quicksand', 'Nunito', sans-serif; /* Fuentes redonditas y amigables */
+  font-weight: 800;
+  font-size: 2.2rem;
+  letter-spacing: 0.5px;
+  
+  /* Gradiente pastel/brillante estilo Frutiger Aero */
+  background: linear-gradient(
+    180deg, 
+    #ffffff 0%, 
+    #a7f3d0 40%, 
+    #10b981 75%, 
+    #047857 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  /* El secreto del efecto pachoncito (Gummy / Marshmallow 3D): 
+     sombras internas y externas que simulan volumen inflado */
+  filter: drop-shadow(0px 4px 0px #064e3b) 
+          drop-shadow(0px 7px 10px rgba(0, 0, 0, 0.5))
+          drop-shadow(0px 0px 12px rgba(16, 185, 129, 0.6));
+  
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* Efecto al pasar el mouse: se "infla" como un gomita */
+.sofocles-logo:hover {
+  transform: scale(1.08) translateY(-2px);
+  filter: drop-shadow(0px 6px 0px #064e3b) 
+          drop-shadow(0px 10px 15px rgba(0, 0, 0, 0.6))
+          drop-shadow(0px 0px 20px rgba(52, 211, 153, 0.9));
+}
+
+/* Contenedor del logo */
+/* Contenedor del logo: pegado arriba y empujando el banner */
+.Banner-Olimpo__mark {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 30 !important;
+  
+  /* --- AQUI QUITAMOS EL HUECO ARRIBA --- */
+  margin-top: 0.5rem !important; /* Poca distancia con el techo */
+  margin-bottom: -3.5rem !important; /* Solapa el banner sin dejar espacio vacío */
+}
+
+/* Logo un toque más pequeño y compacto */
+.Banner-Olimpo__mark img {
+  width: 100% !important;
+  max-width: 280px !important; /* Un poco más pequeño y elegante */
+  height: auto !important;
+  display: block !important;
+  
+  filter: drop-shadow(0 10px 20px rgba(2, 6, 23, 0.4)) 
+          drop-shadow(0px 0px 14px rgba(16, 185, 129, 0.35)) !important;
+  
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.Banner-Olimpo__mark img:hover {
+  transform: scale(1.05) !important;
 }

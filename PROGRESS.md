@@ -114,11 +114,11 @@ Script de datos de prueba que **NO borra la base de datos**.
 **5 Usuarios de Prueba:**
 | Usuario | Email | Contraseña | Bio |
 |---------|-------|-----------|-----|
-| **platon** | platon@sofocles.com | password123 | El filósofo de las ideas inmutables |
-| **aristoteles** | aristoteles@sofocles.com | password123 | Lógico y observador de la naturaleza |
-| **descartes** | descartes@sofocles.com | password123 | Dudo, luego existo |
-| **kant** | kant@sofocles.com | password123 | Crítica de la razón pura |
-| **nietzsche** | nietzsche@sofocles.com | password123 | Más allá del bien y del mal |
+| **Platon** | platon@sofocles.com | password123 | El filósofo de las ideas inmutables |
+| **Aristoteles** | aristoteles@sofocles.com | password123 | Lógico y observador de la naturaleza |
+| **Descartes** | descartes@sofocles.com | password123 | Dudo, luego existo |
+| **Kant** | kant@sofocles.com | password123 | Crítica de la razón pura |
+| **Nietzsche** | nietzsche@sofocles.com | password123 | Más allá del bien y del mal |
 
 **Posts:** 2 posts por usuario (10 total con contenido temático)
 

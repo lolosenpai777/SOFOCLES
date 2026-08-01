@@ -4,6 +4,7 @@ import AvatarDisplay from "../components/AvatarDisplay";
 import GiphySearch from "../components/GiphySearch";
 import "./FeedScreen.css";
 import PerfilModal from "./PerfilModal";
+import AdminReports from "../components/AdminReports";
 
 function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   // Inicialización de 'siguiendo'
@@ -29,8 +30,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
     localStorage.setItem("sofocles-theme", modoOscuro ? "dark" : "light");
   }, [modoOscuro]);
 
-
-
   const miId = usuarioAutenticado?._id || usuarioAutenticado?.id;
   const [busqueda, setBusqueda] = useState("");
   const [usuariosEncontrados, setUsuariosEncontrados] = useState([]);
@@ -53,85 +52,76 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const [filtroFeed, setFiltroFeed] = useState("todos"); // 'todos' o 'seguidos'
   const [perfilSeleccionado, setPerfilSeleccionado] = useState(null);
 
-  // Estado para el modal de detalle del post (al hacer clic en comentarios)
+  // Estado para el modal de detalle del post
   const [postDetalle, setPostDetalle] = useState(null);
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [mencionesComentarioSeleccionadas, setMencionesComentarioSeleccionadas] = useState([]);
   const comentarioInputRef = useRef(null);
   const [cargandoComentario, setCargandoComentario] = useState(false);
-  const [comentariosExpandido, setComentariosExpandido] = useState({}); // Para expandir/colapsar sección
+  const [comentariosExpandido, setComentariosExpandido] = useState({});
 
   // Estados para Giphy
   const [abrirBuscadorGif, setAbrirBuscadorGif] = useState(false);
   const [gifSeleccionado, setGifSeleccionado] = useState(null);
 
-
   const [notificaciones, setNotificaciones] = useState([]);
+  const [mostrarPanelModeracion, setMostrarPanelModeracion] = useState(false);
+  const [mostrarNotificacionesPanel, setMostrarNotificacionesPanel] = useState(false);
 
-// Función para obtener las notificaciones. Si el endpoint aún no existe,
-// usa un fallback local para dejar la UI lista para conectar luego.
-const obtenerNotificaciones = async () => {
-  try {
-    const respuesta = await clienteAxios
-      .get("/notifications")
-      .catch(() => clienteAxios.get("/notificaciones"))
-      .catch(() => null);
+  // Función para obtener las notificaciones
+  const obtenerNotificaciones = async () => {
+    try {
+      const respuesta = await clienteAxios.get('/notifications');
+      const data = respuesta?.data?.items || respuesta?.data || [];
+      setNotificaciones(Array.isArray(data) ? data : []);
+      localStorage.setItem('sofocles_notifications', JSON.stringify(data));
+      return;
+    } catch (error) {
+      console.error('Error al obtener notificaciones:', error);
+    }
 
-    if (respuesta?.data) {
-      const data = Array.isArray(respuesta.data)
-        ? respuesta.data
-        : respuesta.data.notifications || respuesta.data.notificaciones || [];
-      setNotificaciones(data);
-      localStorage.setItem("sofocles_notifications", JSON.stringify(data));
+    const fallback = JSON.parse(localStorage.getItem('sofocles_notifications') || 'null');
+    if (fallback && Array.isArray(fallback)) {
+      setNotificaciones(fallback);
       return;
     }
-  } catch (error) {
-    console.error("Error al obtener notificaciones:", error);
-  }
 
-  const fallback = JSON.parse(
-    localStorage.getItem("sofocles_notifications") || "null",
-  );
+    setNotificaciones([]);
+  };
 
-  if (fallback && Array.isArray(fallback)) {
-    setNotificaciones(fallback);
-    return;
-  }
+  const marcarNotificacionLeida = async (id) => {
+    try {
+      await clienteAxios.patch(`/notifications/${id}/read`);
+      setNotificaciones((prev) => prev.map((n) => (n.id === id || n._id === id ? { ...n, read: true, leida: true } : n)));
+    } catch (err) {
+      console.error('No se pudo marcar notificación como leída', err);
+    }
+  };
 
-  setNotificaciones([
-    {
-      id: "demo-1",
-      usuario: "marco",
-      mensaje: "te mencionó en una publicación",
-      leida: false,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "demo-2",
-      usuario: "claudia",
-      mensaje: "respondió a tu idea",
-      leida: true,
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-  ]);
-};
+  const marcarTodasLeidas = async () => {
+    try {
+      await clienteAxios.post('/notifications/mark-all-read');
+      setNotificaciones((prev) => prev.map((n) => ({ ...n, read: true, leida: true })));
+    } catch (err) {
+      console.error('No se pudieron marcar todas como leídas', err);
+    }
+  };
 
-const [postAEditar, setPostAEditar] = useState(null);
-const [formularioEdicion, setFormularioEdicion] = useState({
-  title: "",
-  content: "",
-  imagePreview: null,
-  imageData: null,
-  removeImage: false,
-});
-const inputEdicionRef = useRef(null);
+  const [postAEditar, setPostAEditar] = useState(null);
+  const [formularioEdicion, setFormularioEdicion] = useState({
+    title: "",
+    content: "",
+    imagePreview: null,
+    imageData: null,
+    removeImage: false,
+  });
+  const inputEdicionRef = useRef(null);
 
   // Hashtags
   const [hashtags, setHashtags] = useState([]);
   const [hashtagsCargando, setHashtagsCargando] = useState(true);
   const [hashtagsError, setHashtagsError] = useState("");
-  const [mostrarCategoriasHashtags, setMostrarCategoriasHashtags] =
-    useState(false);
+  const [mostrarCategoriasHashtags, setMostrarCategoriasHashtags] = useState(false);
 
   const normalizarHashtag = (valor = "") =>
     valor.trim().toLowerCase().replace(/^#/, "");
@@ -277,7 +267,7 @@ const inputEdicionRef = useRef(null);
     obtenerPosts();
   }, []);
 
-  // Función de búsqueda
+  // Búsqueda
   const buscar = async (texto) => {
     setBusqueda(texto);
 
@@ -313,10 +303,8 @@ const inputEdicionRef = useRef(null);
   const manejarSeguir = async (idUsuarioAAccionar) => {
     if (!miId || idUsuarioAAccionar === miId) return;
 
-    // Guardar estado anterior por si falla
     const estabasSiguiendo = siguiendo.includes(idUsuarioAAccionar);
 
-    // Actualizar UI inmediatamente (optimista)
     setSiguiendo((prev) => {
       const yaLoSigo = prev.includes(idUsuarioAAccionar);
       return yaLoSigo
@@ -329,7 +317,6 @@ const inputEdicionRef = useRef(null);
         `/users/${idUsuarioAAccionar}/follow`,
       );
 
-      // Sincronizar con la respuesta del servidor para garantizar consistencia
       if (respuesta.data.siguiendo) {
         setSiguiendo(respuesta.data.siguiendo);
       } else if (respuesta.data.following) {
@@ -337,14 +324,13 @@ const inputEdicionRef = useRef(null);
       }
     } catch (error) {
       console.error("Error al intentar seguir al usuario:", error);
-
-      // Revertir al estado anterior si hay error
       setSiguiendo((prev) =>
         estabasSiguiendo
           ? [...prev, idUsuarioAAccionar]
           : prev.filter((id) => id !== idUsuarioAAccionar),
       );
     }
+    obtenerNotificaciones();
   };
 
   // Publicar post
@@ -392,7 +378,6 @@ const inputEdicionRef = useRef(null);
     }
   };
 
-  // Procesar archivo de imagen desde el modal
   const seleccionarImagen = (event) => {
     const archivo = event.target.files?.[0];
     if (!archivo) return;
@@ -416,7 +401,6 @@ const inputEdicionRef = useRef(null);
     lector.readAsDataURL(archivo);
   };
 
-  // Gestión de eliminación
   const abrirModalEliminar = (postId) => setPostAEliminar(postId);
   const cancelarEliminacion = () => setPostAEliminar(null);
 
@@ -445,8 +429,11 @@ const inputEdicionRef = useRef(null);
       const nuevos = Array.isArray(data.posts) ? data.posts : [];
       setPosts((prev) => [...prev, ...nuevos]);
       setNextCursor(data.nextCursor ?? null);
-    } catch { setErrorMsg("No se pudieron cargar más publicaciones."); }
-    finally { setCargandoMas(false); }
+    } catch { 
+      setErrorMsg("No se pudieron cargar más publicaciones."); 
+    } finally { 
+      setCargandoMas(false); 
+    }
   };
 
   const reportarPost = async (postId) => {
@@ -460,7 +447,6 @@ const inputEdicionRef = useRef(null);
     }
   };
 
-  // Expandir/colapsar texto
   const toggleExpandPost = (postId) => {
     setExpandedPosts((prev) => ({
       ...prev,
@@ -468,7 +454,6 @@ const inputEdicionRef = useRef(null);
     }));
   };
 
-  // Dar/quitar Like
   const manejarLikePost = async (postId) => {
     if (!usuarioAutenticado) return;
 
@@ -497,7 +482,6 @@ const inputEdicionRef = useRef(null);
         }),
       );
 
-      // Si el post abierto en el modal es al que le dimos Like, actualizamos también su estado local
       if (postDetalle && (postDetalle._id || postDetalle.id) === postId) {
         setPostDetalle((prev) => {
           const yaTieneLike = prev.likes?.includes(miId);
@@ -507,12 +491,12 @@ const inputEdicionRef = useRef(null);
           return { ...prev, likes: nuevosLikes };
         });
       }
+      obtenerNotificaciones();
     } catch (error) {
       console.error("Error al interactuar con el post:", error);
     }
   };
 
-  //hashtag logica
   const obtenerHashtags = async () => {
     try {
       setHashtagsCargando(true);
@@ -534,7 +518,7 @@ const inputEdicionRef = useRef(null);
 
   useEffect(() => {
     const modalAbierto = Boolean(
-      postDetalle || modalImagenAbierto || abrirBuscadorGif,
+      postDetalle || modalImagenAbierto || abrirBuscadorGif || mostrarNotificacionesPanel
     );
     const overflowAnterior = document.body.style.overflow;
 
@@ -545,9 +529,8 @@ const inputEdicionRef = useRef(null);
     return () => {
       document.body.style.overflow = overflowAnterior;
     };
-  }, [postDetalle, modalImagenAbierto, abrirBuscadorGif]);
+  }, [postDetalle, modalImagenAbierto, abrirBuscadorGif, mostrarNotificacionesPanel]);
 
-  //Hashtags en el filtrofeed haciendo que los hashtags existentes se filtren como carpetas
   const manejarFiltroHashtag = (hashtag) => {
     const etiqueta = formatearHashtag(hashtag);
     setFiltroFeed(etiqueta);
@@ -555,7 +538,6 @@ const inputEdicionRef = useRef(null);
     setMostrarCategoriasHashtags(false);
   };
 
-  // Crear comentario
   const manejarEnvioComentario = async (e, postId) => {
     e.preventDefault();
     if (!nuevoComentario.trim() && !gifSeleccionado) return;
@@ -581,13 +563,11 @@ const inputEdicionRef = useRef(null);
       );
       const comentarioCreado = respuesta.data.comment;
 
-      // Actualizar postDetalle con el nuevo comentario
       setPostDetalle((prev) => ({
         ...prev,
         comments: [comentarioCreado, ...(prev.comments || [])],
       }));
 
-      // Actualizar el post en el feed también
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
           const pId = post._id || post.id;
@@ -604,6 +584,7 @@ const inputEdicionRef = useRef(null);
       setNuevoComentario("");
       setMencionesComentarioSeleccionadas([]);
       setGifSeleccionado(null);
+      obtenerNotificaciones();
     } catch (error) {
       console.error("Error al crear comentario:", error);
       setErrorMsg("No se pudo publicar el comentario.");
@@ -612,133 +593,129 @@ const inputEdicionRef = useRef(null);
     }
   };
 
- const abrirModalEditar = (post) => {
-  const contenido = post.content || post.contenido || "";
-  setPostAEditar(post);
-  setFormularioEdicion({
-    title: post.title || "",
-    content: contenido,
-    imagePreview: post.imageUrl || null,
-    imageData: null,
-    removeImage: false,
-  });
-};
-
- const manejarCambioEdicion = (campo, valor) => {
-  setFormularioEdicion((prev) => ({ ...prev, [campo]: valor }));
-};
-
- const seleccionarImagenEdicion = (event) => {
-  const archivo = event.target.files?.[0];
-  if (!archivo) return;
-
-  if (!archivo.type.startsWith("image/")) {
-    setErrorMsg("Selecciona una imagen válida para editar la publicación.");
-    return;
-  }
-
-  const lector = new FileReader();
-  lector.onload = () => {
-    setFormularioEdicion((prev) => ({
-      ...prev,
-      imagePreview: lector.result,
-      imageData: lector.result,
-      removeImage: false,
-    }));
-    setErrorMsg("");
-  };
-  lector.readAsDataURL(archivo);
-};
-
- const quitarImagenEdicion = () => {
-  setFormularioEdicion((prev) => ({
-    ...prev,
-    imagePreview: null,
-    imageData: null,
-    removeImage: true,
-  }));
-  if (inputEdicionRef.current) inputEdicionRef.current.value = "";
-};
-
- const manejarGuardarEdicion = async (id, datosEdicion) => {
-  const payload = {
-    title: datosEdicion.title?.trim() || undefined,
-    content: datosEdicion.content?.trim() || undefined,
-    removeImage: datosEdicion.removeImage || false,
-  };
-
-  if (datosEdicion.imageData) {
-    payload.imageData = datosEdicion.imageData;
-  }
-
-  try {
-    const respuesta = await clienteAxios.put(`/posts/${id}`, payload);
-    const postActualizado = respuesta.data?.post || respuesta.data || null;
-
-    setPosts((prev) =>
-      prev.map((p) => {
-        const pId = p._id || p.id;
-        if (pId !== id) return p;
-
-        const proximoContenido =
-          postActualizado?.content ||
-          datosEdicion.content?.trim() ||
-          p.content ||
-          p.contenido ||
-          "";
-        const proximaImagen = datosEdicion.removeImage
-          ? null
-          : postActualizado?.imageUrl || p.imageUrl || null;
-
-        return {
-          ...p,
-          ...(postActualizado || {}),
-          title: postActualizado?.title || datosEdicion.title?.trim() || p.title,
-          content: proximoContenido,
-          contenido: proximoContenido,
-          imageUrl: proximaImagen,
-        };
-      }),
-    );
-
-    setPostAEditar(null);
+  const abrirModalEditar = (post) => {
+    const contenido = post.content || post.contenido || "";
+    setPostAEditar(post);
     setFormularioEdicion({
-      title: "",
-      content: "",
-      imagePreview: null,
+      title: post.title || "",
+      content: contenido,
+      imagePreview: post.imageUrl || null,
       imageData: null,
       removeImage: false,
     });
-    setErrorMsg("");
-  } catch (error) {
-    console.error("Error al editar el post:", error);
-    setPosts((prev) =>
-      prev.map((p) => {
-        const pId = p._id || p.id;
-        if (pId !== id) return p;
-        const proximoContenido = datosEdicion.content?.trim() || p.content || p.contenido || "";
-        return {
-          ...p,
-          title: datosEdicion.title?.trim() || p.title,
-          content: proximoContenido,
-          contenido: proximoContenido,
-          imageUrl: datosEdicion.removeImage ? null : p.imageUrl || null,
-        };
-      }),
-    );
-    setPostAEditar(null);
-    setErrorMsg(
-      "La edición quedó lista para conectarse con el backend cuando tu compañero active el endpoint.",
-    );
-  }
-};
+  };
 
-  // Eliminar comentario
+  const manejarCambioEdicion = (campo, valor) => {
+    setFormularioEdicion((prev) => ({ ...prev, [campo]: valor }));
+  };
+
+  const seleccionarImagenEdicion = (event) => {
+    const archivo = event.target.files?.[0];
+    if (!archivo) return;
+
+    if (!archivo.type.startsWith("image/")) {
+      setErrorMsg("Selecciona una imagen válida para editar la publicación.");
+      return;
+    }
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      setFormularioEdicion((prev) => ({
+        ...prev,
+        imagePreview: lector.result,
+        imageData: lector.result,
+        removeImage: false,
+      }));
+      setErrorMsg("");
+    };
+    lector.readAsDataURL(archivo);
+  };
+
+  const quitarImagenEdicion = () => {
+    setFormularioEdicion((prev) => ({
+      ...prev,
+      imagePreview: null,
+      imageData: null,
+      removeImage: true,
+    }));
+    if (inputEdicionRef.current) inputEdicionRef.current.value = "";
+  };
+
+  const manejarGuardarEdicion = async (id, datosEdicion) => {
+    const payload = {
+      title: datosEdicion.title?.trim() || undefined,
+      content: datosEdicion.content?.trim() || undefined,
+      removeImage: datosEdicion.removeImage || false,
+    };
+
+    if (datosEdicion.imageData) {
+      payload.imageData = datosEdicion.imageData;
+    }
+
+    try {
+      const respuesta = await clienteAxios.put(`/posts/${id}`, payload);
+      const postActualizado = respuesta.data?.post || respuesta.data || null;
+
+      setPosts((prev) =>
+        prev.map((p) => {
+          const pId = p._id || p.id;
+          if (pId !== id) return p;
+
+          const proximoContenido =
+            postActualizado?.content ||
+            datosEdicion.content?.trim() ||
+            p.content ||
+            p.contenido ||
+            "";
+          const proximaImagen = datosEdicion.removeImage
+            ? null
+            : postActualizado?.imageUrl || p.imageUrl || null;
+
+          return {
+            ...p,
+            ...(postActualizado || {}),
+            title: postActualizado?.title || datosEdicion.title?.trim() || p.title,
+            content: proximoContenido,
+            contenido: proximoContenido,
+            imageUrl: proximaImagen,
+          };
+        }),
+      );
+
+      setPostAEditar(null);
+      setFormularioEdicion({
+        title: "",
+        content: "",
+        imagePreview: null,
+        imageData: null,
+        removeImage: false,
+      });
+      setErrorMsg("");
+    } catch (error) {
+      console.error("Error al editar el post:", error);
+      setPosts((prev) =>
+        prev.map((p) => {
+          const pId = p._id || p.id;
+          if (pId !== id) return p;
+          const proximoContenido = datosEdicion.content?.trim() || p.content || p.contenido || "";
+          return {
+            ...p,
+            title: datosEdicion.title?.trim() || p.title,
+            content: proximoContenido,
+            contenido: proximoContenido,
+            imageUrl: datosEdicion.removeImage ? null : p.imageUrl || null,
+          };
+        }),
+      );
+      setPostAEditar(null);
+      setErrorMsg("La edición quedó lista para conectarse con el backend.");
+    }
+  };
+
   const manejarEliminarComentario = async (postId, comentarioId) => {
     try {
       await clienteAxios.delete(`/posts/${postId}/comments/${comentarioId}`);
 
-      // Actualizar postDetalle
       setPostDetalle((prev) => ({
         ...prev,
         comments: (prev.comments || []).filter(
@@ -746,7 +723,6 @@ const inputEdicionRef = useRef(null);
         ),
       }));
 
-      // Actualizar el post en el feed también
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
           const pId = post._id || post.id;
@@ -767,9 +743,7 @@ const inputEdicionRef = useRef(null);
     }
   };
 
-  const hashtagsDetectados = extraerHashtags(
-    `${nuevoTitulo} ${nuevoContenido}`,
-  );
+  const hashtagsDetectados = extraerHashtags(`${nuevoTitulo} ${nuevoContenido}`);
   const filtroHashtagActivo = filtroFeed.startsWith("#")
     ? formatearHashtag(filtroFeed)
     : "";
@@ -779,54 +753,189 @@ const inputEdicionRef = useRef(null);
       <div className="Aura-Apolo-Cyan" />
       <div className="Aura-Afrodita-Magenta" />
       <div className="Red-Geometrica" />
+      
+      <div className="Banner-Olimpo__mark">
+        <img src="/logosofo.png" alt="Sófocles" />
+      </div>
 
-      <header className="Banner-Olimpo">
-        <div>
-          <h1 className="Logo-Sofocles">Sófocles</h1>
-          {usuarioAutenticado && (
-            <p
-              className="Texto-Header-Agora mt-2 text-xs uppercase tracking-[0.25em] cursor-pointer hover:text-emerald-300 hover:underline transition-all select-none"
-              onClick={() =>
-                setPerfilSeleccionado({
-                  id: miId,
-                  username: usuarioAutenticado.username,
-                })
-              }
-              title="Ver mi perfil"
-            >
-              Ágora de: {usuarioAutenticado.username}
-            </p>
-          )}
-        </div>
-        <div className="Controles-Acceso flex items-center gap-2">
-          {modoOscuro ? (
+      <header className="Banner-Olimpo Banner-Olimpo--feed">
+        <div className="Banner-Olimpo__actions">
+          <div className="Banner-Olimpo__action-group flex items-center justify-center gap-3">
+            
+            {/* 1. Botón Perfil */}
+            {usuarioAutenticado && (
+              <button
+                type="button"
+                className="Header-Action-Button"
+                onClick={() =>
+                  setPerfilSeleccionado({
+                    id: miId,
+                    username: usuarioAutenticado.username,
+                  })
+                }
+                title={`Ver mi perfil (${usuarioAutenticado.username})`}
+              >
+                <img src="/user-svgrepo-com.svg" alt="Mi Perfil" />
+              </button>
+            )}
+
+            {/* 2. Botón Notificaciones */}
             <button
               type="button"
-              className="Btn-Secundario"
-              onClick={() => setModoOscuro(false)}
-              title="Volver al modo claro"
+              className="Header-Action-Button relative"
+              onClick={async () => {
+                const nuevoEstado = !mostrarNotificacionesPanel;
+                setMostrarNotificacionesPanel(nuevoEstado);
+                if (nuevoEstado) await obtenerNotificaciones();
+              }}
+              title="Notificaciones"
             >
-              <img src="/sun-svgrepo-com.svg" alt="Modo claro" className="h-4 w-4" />
+              <img src="/bell-svgrepo-com.svg" alt="Notificaciones" />
+              {notificaciones.filter((n) => !n.read && !n.leida).length > 0 && (
+                <span className="Insignia-Notificacion" aria-hidden="true" />
+              )}
             </button>
-          ) : (
+
+            {/* 3. Botón Admin / Moderación */}
+            {usuarioAutenticado?.role === 'ADMIN' && (
+              <button
+                type="button"
+                className="Header-Action-Button Header-Action-Button--admin"
+                onClick={() => setMostrarPanelModeracion(true)}
+                title="Panel de moderación"
+              >
+                <img src="/shield-alt-svgrepo-com.svg" alt="Panel de Moderación" />
+              </button>
+            )}
+
+            {/* 4. Botón Modo Claro / Oscuro */}
+            {modoOscuro ? (
+              <button
+                type="button"
+                className="Header-Action-Button"
+                onClick={() => setModoOscuro(false)}
+                title="Volver al modo claro"
+              >
+                <img src="/sun-svgrepo-com.svg" alt="Modo claro" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="Header-Action-Button"
+                onClick={() => setModoOscuro(true)}
+                title="Activar modo oscuro"
+              >
+                <img src="/cloud-moon-svgrepo-com.svg" alt="Modo oscuro" />
+              </button>
+            )}
+
+            {/* 5. Botón Cerrar Sesión */}
             <button
               type="button"
-              className="Btn-Secundario"
-              onClick={() => setModoOscuro(true)}
-              title="Activar modo oscuro"
+              className="Header-Action-Button"
+              onClick={cerrarSesion}
+              title="Cerrar sesión"
             >
-              <img src="/cloud-moon-svgrepo-com.svg" alt="Modo oscuro" className="h-4 w-4" />
+              <img src="/user-xmark-svgrepo-com.svg" alt="Cerrar sesión" />
             </button>
-          )}
-          <button className="Btn-Secundario" onClick={cerrarSesion}>
-            <img
-              src="/user-xmark-svgrepo-com.svg"
-              alt="Cerrar sesión"
-              className="h-4 w-4"
-            />
-          </button>
+
+          </div>
         </div>
       </header>
+
+      {/* MODAL DE NOTIFICACIONES */}
+      {mostrarNotificacionesPanel && (
+        <div 
+          className="Modal-Overlay" 
+          role="presentation" 
+          onMouseDown={() => setMostrarNotificacionesPanel(false)}
+        >
+          <div 
+            className="Modal-Confirmacion Noti-Modal max-w-lg w-full" 
+            role="dialog" 
+            aria-modal="true" 
+            aria-label="Notificaciones" 
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="Noti-Modal__header flex justify-between items-center mb-3">
+              <div className="text-left">
+                <h3 className="Titulo-Modal text-lg font-bold">Notificaciones</h3>
+                <p className="Texto-Modal text-xs text-stone-500">Revisa la actividad reciente en el Olimpo.</p>
+              </div>
+              <button 
+                type="button" 
+                className="Btn-Modal-Cancelar" 
+                onClick={() => setMostrarNotificacionesPanel(false)}
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <div className="Noti-Modal__actions flex justify-end mb-3">
+              <button 
+                type="button" 
+                className="Btn-Secundario text-xs" 
+                onClick={marcarTodasLeidas}
+              >
+                Marcar todas como leídas
+              </button>
+            </div>
+
+            <div className="Noti-List max-h-[60vh] overflow-y-auto space-y-2 pr-1">
+              {notificaciones.length === 0 ? (
+                <div className="Noti-Empty p-6 text-center text-stone-500 text-sm">
+                  Sin notificaciones por ahora.
+                </div>
+              ) : (
+                notificaciones.map((n) => {
+                  const id = n.id || n._id;
+                  const estaLeida = n.read || n.leida;
+                  const actorName = n.actor?.username || n.usuario || n.sender?.username || 'Usuario';
+                  const mensajeTexto = n.content || n.mensaje || 'Nueva interacción';
+
+                  return (
+                    <div
+                      key={id}
+                      className={`Noti-Item p-3 rounded-xl border transition-all flex items-center justify-between gap-3 cursor-pointer ${
+                        estaLeida
+                          ? 'bg-stone-900/40 border-stone-800/60 opacity-70'
+                          : 'bg-emerald-950/20 border-emerald-500/30'
+                      }`}
+                      onClick={() => {
+                        marcarNotificacionLeida(id);
+                        if (n.postId) {
+                          setFiltroFeed('todos');
+                          obtenerPosts();
+                          setMostrarNotificacionesPanel(false);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-3 text-left">
+                        <div className="w-9 h-9 rounded-full bg-emerald-800/20 border border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400 shrink-0 text-sm">
+                          {actorName[0]?.toUpperCase() || '•'}
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-stone-200">
+                            @{actorName}
+                          </div>
+                          <div className="text-xs text-stone-400">{mensajeTexto}</div>
+                          <div className="text-[10px] text-stone-500 mt-0.5">
+                            {n.createdAt ? new Date(n.createdAt).toLocaleString() : 'Hace instantes'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {!estaLeida && (
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="Cuerpo-Feed">
         {/* Editor de Post */}
@@ -1005,27 +1114,6 @@ const inputEdicionRef = useRef(null);
               Siguiendo
             </button>
 
-            <button
-              type="button"
-              className={`Filtro-Feed-Boton Btn-Filtro-Feed Btn-Filtro-Notificaciones px-3 py-1 text-xs font-bold rounded-lg transition-all border flex items-center gap-1.5 ${
-                filtroFeed === "Notificaciones"
-                  ? "Activo bg-emerald-700 text-white border-emerald-700"
-                  : "text-stone-600 hover:bg-emerald-50 border-transparent"
-              }`}
-              onClick={() => {
-                setFiltroFeed("Notificaciones");
-                obtenerNotificaciones(); // 👈 Llamas a tu función/endpoint de notificaciones, NO a obtenerPosts
-              }}
-            >
-              <img
-                src="/bell-svgrepo-com.svg"
-                alt=""
-                className="h-4 w-4 Btn-Filtro-Icono"
-                aria-hidden="true"
-              />
-              <span>Notificaciones</span>
-            </button>
-
             <div className="ml-auto relative">
               <button
                 type="button"
@@ -1137,272 +1225,242 @@ const inputEdicionRef = useRef(null);
             </div>
           )}
 
-          {/* Renderizado del Feed o Notificaciones */}
-{cargandoFeed ? (
-  <div className="Cargando-Contenedor">
-    <span className="Texto-Cargando">Invocando el feed...</span>
-  </div>
-) : filtroFeed === "Notificaciones" ? (
-  <div className="Lista-Notificaciones space-y-3">
-    {notificaciones.length === 0 ? (
-      <div className="Cargando-Contenedor">
-        <p className="text-stone-500 font-light italic">
-          No hay susurros en el Olimpo por ahora.
-        </p>
-      </div>
-    ) : (
-      notificaciones.map((n) => (
-        <div
-          key={n.id || n._id}
-          className={`p-4 rounded-xl border transition-all flex items-start gap-3 ${
-            n.leida
-              ? "bg-stone-900/40 border-stone-800/60 opacity-75"
-              : "bg-emerald-950/20 border-emerald-500/30"
-          }`}
-        >
-          <div className="p-2 rounded-full bg-stone-800 text-emerald-400 shrink-0">
-            🔔
-          </div>
-          <div className="flex-1 text-xs">
-            <p className="text-stone-200">
-              <strong className="font-semibold text-white">
-                @{n.usuario || n.sender?.username || "Usuario"}
-              </strong>{" "}
-              {n.mensaje || n.content}
-            </p>
-            <span className="text-[10px] text-stone-500 block mt-1">
-              {n.createdAt
-                ? new Date(n.createdAt).toLocaleDateString()
-                : "Hace instantes"}
-            </span>
-          </div>
-        </div>
-      ))
-    )}
-  </div>
-) : posts.length === 0 && usuariosEncontrados.length === 0 ? (
-  <div className="Cargando-Contenedor">
-    <p className="text-stone-500 font-light italic">
-      El ágora está en silencio. Sé el primero en dejar una marca.
-    </p>
-  </div>
-) : (
-  <div className="Lista-Posts">
-    {posts.map((post) => {
-      const pId = post._id || post.id;
-      const autorId =
-        post.author?._id ||
-        post.author?.id ||
-        post.usuario?._id ||
-        post.usuario?.id;
-      const authorName =
-        post.author?.username ||
-        post.usuario?.username ||
-        post.username ||
-        "Filósofo Anónimo";
-      const content = post.content || post.contenido || "";
-      const isExpanded = expandedPosts[pId];
-      const shouldTruncate = content.length > 180;
-      const preview = shouldTruncate
-        ? `${content.slice(0, 180).trimEnd()}...`
-        : content;
+          {/* Renderizado del Feed */}
+          {cargandoFeed ? (
+            <div className="Cargando-Contenedor">
+              <span className="Texto-Cargando">Invocando el feed...</span>
+            </div>
+          ) : posts.length === 0 && usuariosEncontrados.length === 0 ? (
+            <div className="Cargando-Contenedor">
+              <p className="text-stone-500 font-light italic">
+                El ágora está en silencio. Sé el primero en dejar una marca.
+              </p>
+            </div>
+          ) : (
+            <div className="Lista-Posts">
+              {posts.map((post) => {
+                const pId = post._id || post.id;
+                const autorId =
+                  post.author?._id ||
+                  post.author?.id ||
+                  post.usuario?._id ||
+                  post.usuario?.id;
+                const authorName =
+                  post.author?.username ||
+                  post.usuario?.username ||
+                  post.username ||
+                  "Filósofo Anónimo";
+                const content = post.content || post.contenido || "";
+                const isExpanded = expandedPosts[pId];
+                const shouldTruncate = content.length > 180;
+                const preview = shouldTruncate
+                  ? `${content.slice(0, 180).trimEnd()}...`
+                  : content;
 
-      const likes = post.likes || post.megustas || [];
-      const tieneLike = likes.some((like) => {
-        if (typeof like === "string") return like === miId;
-        return (like._id || like.id) === miId;
-      });
+                const likes = post.likes || post.megustas || [];
+                const tieneLike = likes.some((like) => {
+                  if (typeof like === "string") return like === miId;
+                  return (like._id || like.id) === miId;
+                });
 
-      const comentarios = post.comments || post.comentarios || [];
-      const cantidadComentarios = comentarios.length;
+                const comentarios = post.comments || post.comentarios || [];
+                const cantidadComentarios = comentarios.length;
 
-      const cantidadLikes = likes.length;
-      const loSigo = siguiendo.includes(autorId);
+                const cantidadLikes = likes.length;
+                const loSigo = siguiendo.includes(autorId);
 
-      return (
-        <article key={pId} className="Card-Post Modal-Animacion">
-          <header className="Header-Post">
-            <div className="Acciones-Post flex items-center w-full">
-              <button
-                type="button"
-                className="p-0 border-none bg-transparent cursor-pointer"
-                onClick={() =>
-                  setPerfilSeleccionado({
-                    id: autorId,
-                    username: authorName,
-                  })
-                }
-                aria-label={`Ver perfil de ${authorName}`}
-              >
-                <AvatarDisplay
-                  avatarUrl={
-                    post.author?.avatarUrl || post.usuario?.avatarUrl
-                  }
-                  username={authorName}
-                  size="md"
-                />
-              </button>
-              <div className="ml-3">
-                <h3 className="Nombre-Usuario">{authorName}</h3>
-                <span className="Fecha-Post">
-                  {post.createdAt
-                    ? new Date(post.createdAt).toLocaleDateString()
-                    : "Hace instantes"}
-                </span>
-              </div>
+                return (
+                  <article key={pId} className="Card-Post Modal-Animacion">
+                    <header className="Header-Post">
+                      <div className="Acciones-Post flex items-center w-full">
+                        <button
+                          type="button"
+                          className="p-0 border-none bg-transparent cursor-pointer"
+                          onClick={() =>
+                            setPerfilSeleccionado({
+                              id: autorId,
+                              username: authorName,
+                            })
+                          }
+                          aria-label={`Ver perfil de ${authorName}`}
+                        >
+                          <AvatarDisplay
+                            avatarUrl={
+                              post.author?.avatarUrl || post.usuario?.avatarUrl
+                            }
+                            username={authorName}
+                            size="md"
+                          />
+                        </button>
+                        <div className="ml-3">
+                          <h3 className="Nombre-Usuario">{authorName}</h3>
+                          <span className="Fecha-Post">
+                            {post.createdAt
+                              ? new Date(post.createdAt).toLocaleDateString()
+                              : "Hace instantes"}
+                          </span>
+                        </div>
 
-              {usuarioAutenticado && autorId !== miId && (
+                        {usuarioAutenticado && autorId !== miId && (
+                          <button
+                            type="button"
+                            className={`Btn-Secundario ml-auto ${loSigo ? "Siguiendo" : ""}`}
+                            onClick={() => manejarSeguir(autorId)}
+                          >
+                            {loSigo ? "Siguiendo" : "+ Seguir"}
+                          </button>
+                        )}
+                      </div>
+                    </header>
+
+                    <div className="Cuerpo-Post-Contenido">
+                      <h4 className="Title-Post-Display">
+                        {post.title || "Pensamiento sin título"}
+                      </h4>
+                      <p className="Contenido-Post">
+                        {isExpanded ? content : preview}
+                      </p>
+
+                      {post.imageUrl && (
+                        <img
+                          src={post.imageUrl}
+                          alt={`Imagen de la publicación de ${authorName}`}
+                          className="Imagen-Post"
+                        />
+                      )}
+
+                      {shouldTruncate && (
+                        <button
+                          type="button"
+                          className="Btn-VerMas"
+                          onClick={() => toggleExpandPost(pId)}
+                        >
+                          {isExpanded ? "Ver menos" : "Ver más"}
+                        </button>
+                      )}
+
+                      <div className="flex items-center gap-4 mt-3">
+                        <button
+                          type="button"
+                          className={`Btn-Like-Post ${tieneLike ? "Activo" : ""}`}
+                          onClick={() => manejarLikePost(pId)}
+                          aria-label="Me gusta"
+                        >
+                          <svg
+                            className="Icono-Like"
+                            viewBox="0 0 24 24"
+                            fill={tieneLike ? "currentColor" : "none"}
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M12 20s-6.5-4.35-8.2-8.03A4.82 4.82 0 0 1 7.8 4.7c1.47 0 2.76.74 3.5 1.93.74-1.19 2.03-1.93 3.5-1.93a4.82 4.82 0 0 1 3.99 7.97C18.5 15.65 12 20 12 20z" />
+                          </svg>
+                          <span className="Contador-Likes">
+                            {cantidadLikes}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="Btn-Comentario-Post"
+                          onClick={() => setPostDetalle(post)}
+                          aria-label="Comentarios"
+                          title="Ver publicación y comentarios"
+                        >
+                          <svg
+                            className="Icono-Like"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                          </svg>
+                          <span className="Contador-Likes">
+                            {cantidadComentarios}
+                          </span>
+                        </button>
+
+                        {usuarioAutenticado && autorId !== miId && (
+                          <button
+                            type="button"
+                            className="Btn-Accion-Post ml-auto"
+                            onClick={() => reportarPost(pId)}
+                            title="Reportar publicación"
+                            aria-label="Reportar publicación"
+                          >
+                            ⚑
+                          </button>
+                        )}
+
+                        {usuarioAutenticado && autorId === miId && (
+                          <div className="ml-auto flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="Btn-Accion-Post"
+                              onClick={() => abrirModalEditar(post)}
+                              title="Editar publicación"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 1 1 3.536 3.536L6.5 21H3v-3.5L16.732 3.732z"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              className="Btn-Accion-Post Eliminar"
+                              onClick={() => abrirModalEliminar(pId)}
+                              title="Eliminar publicación"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3H4v2h16V7h-3z"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+              {nextCursor && (
                 <button
                   type="button"
-                  className={`Btn-Secundario ml-auto ${loSigo ? "Siguiendo" : ""}`}
-                  onClick={() => manejarSeguir(autorId)}
+                  className="Btn-Secundario w-full mt-4"
+                  onClick={cargarMasPosts}
+                  disabled={cargandoMas}
                 >
-                  {loSigo ? "Siguiendo" : "+ Seguir"}
+                  {cargandoMas ? "Cargando…" : "Cargar más"}
                 </button>
               )}
             </div>
-          </header>
+          )}
+        </section>
+      </main>
 
-          <div className="Cuerpo-Post-Contenido">
-            <h4 className="Title-Post-Display">
-              {post.title || "Pensamiento sin título"}
-            </h4>
-            <p className="Contenido-Post">
-              {isExpanded ? content : preview}
-            </p>
-
-            {post.imageUrl && (
-              <img
-                src={post.imageUrl}
-                alt={`Imagen de la publicación de ${authorName}`}
-                className="Imagen-Post"
-              />
-            )}
-
-            {shouldTruncate && (
-              <button
-                type="button"
-                className="Btn-VerMas"
-                onClick={() => toggleExpandPost(pId)}
-              >
-                {isExpanded ? "Ver menos" : "Ver más"}
-              </button>
-            )}
-
-            <div className="flex items-center gap-4 mt-3">
-              <button
-                type="button"
-                className={`Btn-Like-Post ${tieneLike ? "Activo" : ""}`}
-                onClick={() => manejarLikePost(pId)}
-                aria-label="Me gusta"
-              >
-                <svg
-                  className="Icono-Like"
-                  viewBox="0 0 24 24"
-                  fill={tieneLike ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 20s-6.5-4.35-8.2-8.03A4.82 4.82 0 0 1 7.8 4.7c1.47 0 2.76.74 3.5 1.93.74-1.19 2.03-1.93 3.5-1.93a4.82 4.82 0 0 1 3.99 7.97C18.5 15.65 12 20 12 20z" />
-                </svg>
-                <span className="Contador-Likes">
-                  {cantidadLikes}
-                </span>
-              </button>
-
-              {/* Botón de Comentarios */}
-              <button
-                type="button"
-                className="Btn-Comentario-Post"
-                onClick={() => setPostDetalle(post)}
-                aria-label="Comentarios"
-                title="Ver publicación y comentarios"
-              >
-                <svg
-                  className="Icono-Like"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                <span className="Contador-Likes">
-                  {cantidadComentarios}
-                </span>
-              </button>
-
-              {usuarioAutenticado && autorId !== miId && (
-                <button
-                  type="button"
-                  className="Btn-Accion-Post ml-auto"
-                  onClick={() => reportarPost(pId)}
-                  title="Reportar publicación"
-                  aria-label="Reportar publicación"
-                >
-                  ⚑
-                </button>
-              )}
-
-              {/* Acciones de Autor (Editar y Eliminar) */}
-              {usuarioAutenticado && autorId === miId && (
-                <div className="ml-auto flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="Btn-Accion-Post"
-                    onClick={() => abrirModalEditar(post)}
-                    title="Editar publicación"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 1 1 3.536 3.536L6.5 21H3v-3.5L16.732 3.732z"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    className="Btn-Accion-Post Eliminar"
-                    onClick={() => abrirModalEliminar(pId)}
-                    title="Eliminar publicación"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3H4v2h16V7h-3z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </article>
-      );
-    })}
-    {nextCursor && <button type="button" className="Btn-Secundario w-full mt-4" onClick={cargarMasPosts} disabled={cargandoMas}>{cargandoMas ? "Cargando…" : "Cargar más"}</button>}
-  </div>
-)}
-</section>
-</main>
       {/* Modal de Detalle de Publicación / Comentarios */}
       {postDetalle && (
         <div
@@ -1577,7 +1635,6 @@ const inputEdicionRef = useRef(null);
                           </div>
                         </div>
 
-                        {/* GIF Seleccionado */}
                         {gifSeleccionado && (
                           <div className="comentarios-composer__gif-preview">
                             <img
@@ -1782,6 +1839,10 @@ const inputEdicionRef = useRef(null);
         </div>
       )}
 
+      {mostrarPanelModeracion && (
+        <AdminReports onClose={() => setMostrarPanelModeracion(false)} />
+      )}
+
       {/* Modal Búsqueda GIFs */}
       {abrirBuscadorGif && (
         <GiphySearch
@@ -1790,86 +1851,11 @@ const inputEdicionRef = useRef(null);
         />
       )}
 
-{/* Modal de edición con imagen preparada para conectar luego */}
-{postAEditar && (
-  <div
-    className="Modal-Overlay"
-    onMouseDown={() => {
-      setPostAEditar(null);
-      setFormularioEdicion({
-        title: "",
-        content: "",
-        imagePreview: null,
-        imageData: null,
-        removeImage: false,
-      });
-    }}
-  >
-    <div
-      className="Modal-Confirmacion max-w-lg w-full max-h-[85vh] flex flex-col"
-      onMouseDown={(e) => e.stopPropagation()}
-    >
-      <h3 className="Titulo-Modal mb-3">Editar Publicación</h3>
-
-      <div className="flex-1 min-h-0 overflow-y-auto pr-2">
-        <input
-          type="text"
-          className="Input-Olimpo-Feed mb-3"
-          value={formularioEdicion.title}
-          onChange={(e) => manejarCambioEdicion("title", e.target.value)}
-          placeholder="Título"
-          maxLength={50}
-        />
-
-        <textarea
-          className="Textarea-Olimpo w-full min-h-[120px] max-h-[280px] p-3 rounded-xl text-sm focus:outline-none focus:border-emerald-600 resize-y mb-3 transition-all"
-          value={formularioEdicion.content}
-          onChange={(e) => manejarCambioEdicion("content", e.target.value)}
-          rows={Math.max(4, (formularioEdicion.content.match(/\n/g) || []).length + 3)}
-          placeholder="Escribe el nuevo contenido de la publicación"
-        />
-
-        <input
-          ref={inputEdicionRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={seleccionarImagenEdicion}
-        />
-
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <button
-            type="button"
-            className="Btn-Secundario"
-            onClick={() => inputEdicionRef.current?.click()}
-          >
-            {formularioEdicion.imagePreview ? "Cambiar imagen" : "Agregar imagen"}
-          </button>
-          {formularioEdicion.imagePreview && (
-            <button
-              type="button"
-              className="Btn-Secundario"
-              onClick={quitarImagenEdicion}
-            >
-              Quitar imagen
-            </button>
-          )}
-        </div>
-
-        {formularioEdicion.imagePreview && (
-          <img
-            src={formularioEdicion.imagePreview}
-            alt="Vista previa de la publicación"
-            className="Imagen-Preview-Editor mb-3"
-          />
-        )}
-      </div>
-
-      <div className="flex justify-end gap-2 shrink-0 pt-2 border-t border-stone-200 mt-3">
-        <button
-          type="button"
-          className="Btn-Secundario"
-          onClick={() => {
+      {/* Modal de edición */}
+      {postAEditar && (
+        <div
+          className="Modal-Overlay"
+          onMouseDown={() => {
             setPostAEditar(null);
             setFormularioEdicion({
               title: "",
@@ -1880,19 +1866,94 @@ const inputEdicionRef = useRef(null);
             });
           }}
         >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          className="Btn-Primario-Feed"
-          onClick={() => manejarGuardarEdicion(postAEditar._id || postAEditar.id, formularioEdicion)}
-        >
-          Guardar Cambios
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+          <div
+            className="Modal-Confirmacion max-w-lg w-full max-h-[85vh] flex flex-col"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <h3 className="Titulo-Modal mb-3">Editar Publicación</h3>
+
+            <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+              <input
+                type="text"
+                className="Input-Olimpo-Feed mb-3"
+                value={formularioEdicion.title}
+                onChange={(e) => manejarCambioEdicion("title", e.target.value)}
+                placeholder="Título"
+                maxLength={50}
+              />
+
+              <textarea
+                className="Textarea-Olimpo w-full min-h-[120px] max-h-[280px] p-3 rounded-xl text-sm focus:outline-none focus:border-emerald-600 resize-y mb-3 transition-all"
+                value={formularioEdicion.content}
+                onChange={(e) => manejarCambioEdicion("content", e.target.value)}
+                rows={Math.max(4, (formularioEdicion.content.match(/\n/g) || []).length + 3)}
+                placeholder="Escribe el nuevo contenido de la publicación"
+              />
+
+              <input
+                ref={inputEdicionRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={seleccionarImagenEdicion}
+              />
+
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <button
+                  type="button"
+                  className="Btn-Secundario"
+                  onClick={() => inputEdicionRef.current?.click()}
+                >
+                  {formularioEdicion.imagePreview ? "Cambiar imagen" : "Agregar imagen"}
+                </button>
+                {formularioEdicion.imagePreview && (
+                  <button
+                    type="button"
+                    className="Btn-Secundario"
+                    onClick={quitarImagenEdicion}
+                  >
+                    Quitar imagen
+                  </button>
+                )}
+              </div>
+
+              {formularioEdicion.imagePreview && (
+                <img
+                  src={formularioEdicion.imagePreview}
+                  alt="Vista previa de la publicación"
+                  className="Imagen-Preview-Editor mb-3"
+                />
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 shrink-0 pt-2 border-t border-stone-200 mt-3">
+              <button
+                type="button"
+                className="Btn-Secundario"
+                onClick={() => {
+                  setPostAEditar(null);
+                  setFormularioEdicion({
+                    title: "",
+                    content: "",
+                    imagePreview: null,
+                    imageData: null,
+                    removeImage: false,
+                  });
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="Btn-Primario-Feed"
+                onClick={() => manejarGuardarEdicion(postAEditar._id || postAEditar.id, formularioEdicion)}
+              >
+                Guardar Cambios
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="Footer-Olimpo mt-12 mb-16 md:mb-0">
         <h3>Un nuevo orden social</h3>
@@ -1903,53 +1964,36 @@ const inputEdicionRef = useRef(null);
       </footer>
 
       {/* Barra de Navegación Inferior Móvil */}
-<nav className="Nav-Inferior-Olimpo">
-  <button
-    type="button"
-    onClick={() => {
-      setFiltroFeed("todos");
-      obtenerPosts("todos");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }}
-    className={`Btn-Nav-Item ${filtroFeed === "todos" ? "Activo" : ""}`}
-  >
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6" />
-    </svg>
-    <span>Feed</span>
-  </button>
+      <nav className="Nav-Inferior-Olimpo">
+        <button
+          type="button"
+          onClick={() => {
+            setFiltroFeed("todos");
+            obtenerPosts("todos");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`Btn-Nav-Item ${filtroFeed === "todos" ? "Activo" : ""}`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6" />
+          </svg>
+          <span>Feed</span>
+        </button>
 
-  <button
-    type="button"
-    onClick={() => {
-      setFiltroFeed("seguidos");
-      obtenerPosts("seguidos");
-    }}
-    className={`Btn-Nav-Item ${filtroFeed === "seguidos" ? "Activo" : ""}`}
-  >
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-    </svg>
-    <span>Siguiendo</span>
-  </button>
-
-  <button
-    type="button"
-    onClick={() => {
-      setFiltroFeed("Notificaciones");
-      obtenerNotificaciones();
-    }}
-    className={`Btn-Nav-Item relative ${filtroFeed === "Notificaciones" ? "Activo" : ""}`}
-  >
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-    </svg>
-    <span>Avisos</span>
-    {notificaciones.filter((n) => !n.leida).length > 0 && (
-      <span className="Insignia-Notificacion" />
-    )}
-  </button>
-</nav>
+        <button
+          type="button"
+          onClick={() => {
+            setFiltroFeed("seguidos");
+            obtenerPosts("seguidos");
+          }}
+          className={`Btn-Nav-Item ${filtroFeed === "seguidos" ? "Activo" : ""}`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span>Siguiendo</span>
+        </button>
+      </nav>
     </div>
   );
 }

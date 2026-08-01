@@ -9,7 +9,9 @@ function normalizeEmail(email) {
 }
 
 function normalizeUsername(username) {
-  return String(username ?? '').trim()
+  const value = String(username ?? '').trim()
+  if (!value) return ''
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 export async function registerUser({ username, email, password }) {

@@ -125,8 +125,8 @@ function App() {
 
   if (cargandoSesion) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
-        <div className="text-sm uppercase tracking-[0.35em] text-slate-400">
+      <div className="Olimpo-Contenedor min-h-screen flex items-center justify-center">
+        <div className="text-sm uppercase tracking-[0.35em]" style={{ color: 'var(--text-muted)' }}>
           Cargando sesión...
         </div>
       </div>
@@ -135,12 +135,12 @@ function App() {
 
   if (usuarioAutenticado) {
     if (verAdmin && usuarioAutenticado.role === 'ADMIN') return <AdminReports onClose={() => setVerAdmin(false)} />
-    if (usuarioAutenticado.role === 'ADMIN') return <><div className="fixed right-4 top-4 z-50"><button className="Btn-Secundario" onClick={() => setVerAdmin(true)}>Moderación</button></div><FeedScreen usuarioAutenticado={usuarioAutenticado} cerrarSesion={cerrarSesion} /></>
+    if (usuarioAutenticado.role === 'ADMIN') return <FeedScreen usuarioAutenticado={usuarioAutenticado} cerrarSesion={cerrarSesion} />
     return <FeedScreen usuarioAutenticado={usuarioAutenticado} cerrarSesion={cerrarSesion} />
   }
 
-  if (isReset) return <div className="Olimpo-Contenedor min-h-screen flex items-center justify-center"><form className="Card-Formulario flex flex-col gap-4" onSubmit={restablecerContrasena}><h1 className="Logo-Sofocles !text-3xl">Nueva contraseña</h1><input className="Input-Olimpo" type="password" minLength="8" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 8 caracteres"/><button className="Btn-Primario" type="submit">Actualizar contraseña</button>{authNotice && <p>{authNotice}</p>}</form></div>
-  if (isVerification) return <div className="Olimpo-Contenedor min-h-screen flex items-center justify-center"><div className="Card-Formulario text-center"><h1 className="Logo-Sofocles !text-3xl">Verificación</h1><p>{authNotice || 'Verificando correo…'}</p></div></div>
+  if (isReset) return <div className="Olimpo-Contenedor"><div className="Auth-Scene"><form className="Auth-Panel" onSubmit={restablecerContrasena}><div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}><img src="/logosofo.png" alt="Sófocles" /></div><h1 className="sr-only">Nueva contraseña</h1><div className="Form-Grupo"><label>Nueva contraseña</label><input className="Input-Olimpo" type="password" minLength="8" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 8 caracteres"/></div><button className="Btn-Primario" type="submit">Actualizar contraseña</button>{authNotice && <p className="Auth-Panel__meta">{authNotice}</p>}</form></div></div>
+  if (isVerification) return <div className="Olimpo-Contenedor"><div className="Auth-Scene"><div className="Auth-Panel"><div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}><img src="/logosofo.png" alt="Sófocles" /></div><h1 className="sr-only">Verificación</h1><p className="Auth-Panel__meta">{authNotice || 'Verificando correo…'}</p></div></div></div>
 
   return (
     <div className="Olimpo-Contenedor">
@@ -148,64 +148,49 @@ function App() {
       <div className="Aura-Afrodita-Magenta" />
       <div className="Red-Geometrica" />
 
-      <header className="Banner-Olimpo">
-        <div>
-          <h1 className="Logo-Sofocles">Sófocles</h1>
-          {usuarioAutenticado && (
-            <p className="mt-2 text-xs uppercase tracking-[0.25em] text-cyan-300/80">
-              Sesión activa: {usuarioAutenticado.username}
+      <main className="Auth-Scene">
+        <section className="Auth-Panel">
+          <div className="Logo-Stage">
+            <div className="Logo-Stage__mark">
+              <img src="/logosofo.png" alt="Sófocles" />
+            </div>
+            <p className="Auth-Panel__meta">
+              Una red visual más serena, centrada en la marca y pensada como un espacio de presencia.
             </p>
-          )}
-        </div>
-        <div className="Controles-Acceso">
-          {usuarioAutenticado ? (
-            <button className="Btn-Secundario" onClick={cerrarSesion}>
-              Cerrar sesión
-            </button>
-          ) : (
-            <>
-              <button
-                className="Btn-Secundario"
-                onClick={() => {
-                  setErrorMsg('')
-                  setModalActivo('login')
-                }}
-              >
-                Iniciar sesión
-              </button>
-              <button
-                className="Btn-Primario"
-                onClick={() => {
-                  setErrorMsg('')
-                  setModalActivo('registro')
-                }}
-              >
-                Registrar
-              </button>
-            </>
-          )}
-        </div>
-      </header>
+          </div>
 
-      <main className="Seccion-Hero">
-        <div className="Detalle-Corona">✦ 🏛️ ✦</div>
-        <h2 className="Eslogan-Olimpo">
-          Vive la red desde{" "}
-          <span className="Texto-Gradiente">otro enfoque</span>, otra forma de
-          ver la vida...
-        </h2>
-        <div className="Caja-Conectados">
-          <span className="Texto-Conectados">Conectados</span>
-        </div>
+          <div className="Auth-Panel__actions Auth-Panel__actions--hero">
+            {usuarioAutenticado ? (
+              <button className="Btn-Primario" onClick={cerrarSesion}>
+                Cerrar sesión
+              </button>
+            ) : (
+              <>
+                <button
+                  className="Btn-Secundario"
+                  onClick={() => {
+                    setErrorMsg('')
+                    setModalActivo('login')
+                  }}
+                >
+                  Iniciar sesión
+                </button>
+                <button
+                  className="Btn-Primario"
+                  onClick={() => {
+                    setErrorMsg('')
+                    setModalActivo('registro')
+                  }}
+                >
+                  Registrar
+                </button>
+              </>
+            )}
+          </div>
+
+          {errorMsg && <p className="Auth-Panel__meta text-red-600">{errorMsg}</p>}
+        </section>
       </main>
-
-      <footer className="Footer-Olimpo">
-        <h3>Un nuevo orden social</h3>
-        <p>
-          Infórmate sobre este nuevo mundo, un enfoque distinto donde la
-          filosofía del mañana y la arquitectura del código se encuentran.
-        </p>
-      </footer>
 
       {/* MODAL DE LOGIN */}
       {modalActivo === "login" && (
@@ -216,7 +201,11 @@ function App() {
             </button>
 
             <div className="text-center">
-              <h2 className="Logo-Sofocles !text-3xl mb-1">Sófocles</h2>
+              <div className="Logo-Lockup Logo-Lockup--compact justify-center mb-1">
+                <div className="Logo-Marca Logo-Marca--compact">
+                  <img src="/logosofo.png" alt="Sófocles" />
+                </div>
+              </div>
               <p className="text-xs text-slate-400">
                 Ingresa al templo de la red
               </p>
@@ -281,7 +270,11 @@ function App() {
             </button>
 
             <div className="text-center">
-              <h2 className="Logo-Sofocles !text-3xl mb-1">Sófocles</h2>
+              <div className="Logo-Lockup Logo-Lockup--compact justify-center mb-1">
+                <div className="Logo-Marca Logo-Marca--compact">
+                  <img src="/logosofo.png" alt="Sófocles" />
+                </div>
+              </div>
               <p className="text-xs text-slate-400">
                 Forja tu identidad en el orden
               </p>

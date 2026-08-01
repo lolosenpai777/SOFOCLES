@@ -8,6 +8,7 @@ import {
 } from '../services/post.service.js'
 import { prisma } from '../config/prisma.js'
 import { storeImage } from '../services/storage.service.js'
+import { createNotification } from '../services/notification.service.js'
 
 export async function createPostHandler(request, reply) {
   try {
@@ -138,6 +139,15 @@ export async function likePostHandler(request, reply) {
     }
 
     const resultado = await togglePostLike(postId, Number(userId))
+
+    // crear notificación si se dio like (y no es al propio autor)
+    try {
+      if (resultado && resultado.liked && resultado.post && resultado.post.author && resultado.post.author.id !== Number(userId)) {
+        await createNotification(resultado.post.author.id, { actorId: Number(userId), type: 'LIKE', content: `@${resultado.post.author.username || 'usuario'} recibió un like`, postId: resultado.post.id })
+      }
+    } catch (err) {
+      request.log.warn('No se pudo crear notificación de like', err)
+    }
 
     return reply.send(resultado)
   } catch (error) {

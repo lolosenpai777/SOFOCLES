@@ -9,12 +9,11 @@
 
 /* Tarjeta Modal (Efecto Cristal / Aero) */
 .Modal-Confirmacion {
-  @apply w-full max-w-md rounded-3xl 
-         bg-stone-50/90 border border-white/60 
-         p-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] 
-         backdrop-blur-xl relative 
-         transition-all transform duration-300 ease-out 
-         ring-1 ring-emerald-900/10;
+  @apply w-full max-w-md rounded-[28px] p-6 relative transition-all transform duration-300 ease-out;
+  background: linear-gradient(135deg, var(--surface-strong), var(--surface-muted));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(24px) saturate(160%);
 }
 
 /* Tipografía dentro de la modal */

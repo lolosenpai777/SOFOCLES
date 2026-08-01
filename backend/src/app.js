@@ -108,6 +108,11 @@ export function buildApp() {
     await mod.userRoutes(instance)
   }, { prefix: '/api' })
 
+  fastify.register(async function (instance) {
+    const mod = await import('./routes/notification.routes.js')
+    await mod.notificationRoutes(instance)
+  }, { prefix: '/api' })
+
   fastify.setErrorHandler((error, request, reply) => {
     request.log.error(error)
 

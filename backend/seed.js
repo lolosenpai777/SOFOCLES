@@ -9,38 +9,44 @@ async function main() {
   // Crear usuarios
   const usuarios = [
     {
-      username: 'platon',
+      username: 'Paul',
+      email: 'paul@gmail.com',
+      password: 'paul@gmail.com',
+      role: 'ADMIN',
+      biography: 'Administrador del ágora',
+      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Paul',
+    },
+    {
+      username: 'Platon',
       email: 'platon@sofocles.com',
       biography: 'El filósofo de las ideas inmutables',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=platon',
+      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Platon',
     },
     {
-      username: 'aristoteles',
+      username: 'Aristoteles',
       email: 'aristoteles@sofocles.com',
       biography: 'Lógico y observador de la naturaleza',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=aristoteles',
+      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aristoteles',
     },
     {
-      username: 'descartes',
+      username: 'Descartes',
       email: 'descartes@sofocles.com',
       biography: 'Dudo, luego existo',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=descartes',
+      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Descartes',
     },
     {
-      username: 'kant',
+      username: 'Kant',
       email: 'kant@sofocles.com',
       biography: 'Crítica de la razón pura',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=kant',
+      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kant',
     },
     {
-      username: 'nietzsche',
+      username: 'Nietzsche',
       email: 'nietzsche@sofocles.com',
       biography: 'Más allá del bien y del mal',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=nietzsche',
+      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nietzsche',
     },
   ]
-
-  const passwordHash = await bcrypt.hash('password123', 10)
 
   const usuariosCreados = []
 
@@ -50,10 +56,28 @@ async function main() {
     })
 
     if (existe) {
+      const updateData = {}
+      if (usuario.username && existe.username !== usuario.username) updateData.username = usuario.username
+      if (usuario.role && existe.role !== usuario.role) updateData.role = usuario.role
+      if (usuario.password) updateData.passwordHash = await bcrypt.hash(usuario.password, 10)
+      if (usuario.biography !== undefined && existe.biography !== usuario.biography) updateData.biography = usuario.biography
+      if (usuario.avatarUrl !== undefined && existe.avatarUrl !== usuario.avatarUrl) updateData.avatarUrl = usuario.avatarUrl
+
+      if (Object.keys(updateData).length > 0) {
+        const updated = await prisma.user.update({
+          where: { email: usuario.email },
+          data: updateData,
+        })
+        usuariosCreados.push(updated)
+        console.log(`✓ Usuario actualizado: ${usuario.username}`)
+        continue
+      }
       console.log(`✓ Usuario ya existe: ${usuario.username}`)
       usuariosCreados.push(existe)
       continue
     }
+
+    const passwordHash = await bcrypt.hash(usuario.password || 'password123', 10)
 
     const created = await prisma.user.create({
       data: {
@@ -61,6 +85,7 @@ async function main() {
         email: usuario.email,
         biography: usuario.biography,
         avatarUrl: usuario.avatarUrl,
+        role: usuario.role,
         passwordHash: passwordHash,
       },
     })
@@ -234,11 +259,12 @@ async function main() {
 
   console.log('\n✨ ¡Seed completado exitosamente!')
   console.log('\n📝 Credenciales de prueba:')
-  usuariosCreados.forEach((u) => {
-    console.log(
-      `   Usuario: ${u.username} | Email: ${u.email} | Password: password123`,
-    )
-  })
+  console.log(`   Usuario: Paul | Email: paul@gmail.com | Password: paul@gmail.com`)
+  console.log(`   Usuario: Platon | Email: platon@sofocles.com | Password: password123`)
+  console.log(`   Usuario: Aristoteles | Email: aristoteles@sofocles.com | Password: password123`)
+  console.log(`   Usuario: Descartes | Email: descartes@sofocles.com | Password: password123`)
+  console.log(`   Usuario: Kant | Email: kant@sofocles.com | Password: password123`)
+  console.log(`   Usuario: Nietzsche | Email: nietzsche@sofocles.com | Password: password123`)
 }
 
 main()

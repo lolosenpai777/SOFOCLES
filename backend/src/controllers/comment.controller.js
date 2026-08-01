@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma.js'
+import { createNotification } from '../services/notification.service.js'
 
 export async function listCommentsHandler(request) {
   const take = Math.min(Math.max(Number(request.query?.limit) || 20, 1), 50)
@@ -49,6 +50,15 @@ export async function createCommentHandler(request, reply) {
         },
       },
     })
+
+    // crear notificación para el autor del post si no es el mismo usuario
+    try {
+      if (post.authorId !== userId) {
+        await createNotification(post.authorId, { actorId: userId, type: 'COMMENT', content: `@${comment.author.username} comentó: ${comment.text?.slice(0,140)}`, postId: post.id, commentId: comment.id })
+      }
+    } catch (err) {
+      request.log.warn('No se pudo crear notificación de comentario', err)
+    }
 
     return reply.code(201).send({ mensaje: 'Comentario creado', comment })
   } catch (error) {

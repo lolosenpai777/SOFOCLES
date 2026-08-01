@@ -12,14 +12,38 @@ if (!process.env.DATABASE_URL) {
   dotenv.config({ path: fallback })
 }
 
+function buildDatabaseUrl() {
+  const rawUrl = process.env.DATABASE_URL?.trim()
+  if (rawUrl) return normalizeDatabaseUrl(rawUrl)
+
+  const dbUser = process.env.DB_USER?.trim()
+  const dbPassword = process.env.DB_PASSWORD?.trim()
+  const dbName = process.env.DB_NAME?.trim()
+
+  if (!dbUser || !dbPassword || !dbName) {
+    throw new Error('Falta DATABASE_URL o las variables DB_USER, DB_PASSWORD y DB_NAME para construir la conexión a PostgreSQL')
+  }
+
+  return normalizeDatabaseUrl(`postgresql://${encodeURIComponent(dbUser)}:${encodeURIComponent(dbPassword)}@postgres:5432/${encodeURIComponent(dbName)}?schema=public`)
+}
+
+function normalizeDatabaseUrl(value) {
+  const url = new URL(value)
+  if (!url.searchParams.has('connection_limit')) url.searchParams.set('connection_limit', '10')
+  if (!url.searchParams.has('pool_timeout')) url.searchParams.set('pool_timeout', '60')
+  return url.toString()
+}
+
 const globalForPrisma = globalThis
+
+const databaseUrl = buildDatabaseUrl()
 
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     datasources: {
       db: {
-        url: process.env.DATABASE_URL,
+        url: databaseUrl,
       },
     },
   })
