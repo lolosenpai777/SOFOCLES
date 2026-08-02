@@ -12,6 +12,8 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [expandedPosts, setExpandedPosts] = useState({});
+  const [linkedAccounts, setLinkedAccounts] = useState([]);
+  const [linkingProvider, setLinkingProvider] = useState('');
   const avatarInputRef = useRef(null);
 
   const esMiPerfil = usuario?.id === miId;
@@ -36,6 +38,34 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
 
     cargarPerfil();
   }, [usuario?.id]);
+
+  useEffect(() => {
+    if (!esMiPerfil) return;
+    clienteAxios.get('/auth/linked-accounts')
+      .then(({ data }) => setLinkedAccounts(data.accounts || []))
+      .catch(() => setLinkedAccounts([]));
+  }, [esMiPerfil]);
+
+  const vincularCuenta = async (provider) => {
+    try {
+      setLinkingProvider(provider);
+      const { data } = await clienteAxios.post(`/auth/link/${provider}`);
+      window.location.href = data.url;
+    } catch {
+      window.alert('No se pudo iniciar la vinculación de la cuenta.');
+      setLinkingProvider('');
+    }
+  };
+
+  const desvincularCuenta = async (provider) => {
+    if (!window.confirm(`¿Desvincular ${provider}?`)) return;
+    try {
+      const { data } = await clienteAxios.delete(`/auth/link/${provider}`);
+      setLinkedAccounts(data.accounts || []);
+    } catch (error) {
+      window.alert(error.response?.data?.error || 'No se pudo desvincular la cuenta.');
+    }
+  };
 
   const guardarCambios = async () => {
     try {
@@ -214,6 +244,25 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
                     <p className="text-xs text-stone-600 bg-white/60 p-3 rounded-xl border border-stone-200/60 leading-relaxed italic">
                       "{perfilData.biography}"
                     </p>
+                  )}
+
+                  {esMiPerfil && (
+                    <div className="space-y-2 bg-white/60 p-3 rounded-xl border border-stone-200/60">
+                      <p className="text-xs font-semibold text-stone-700">Cuentas vinculadas</p>
+                      {linkedAccounts.map((account) => (
+                        <div key={account.provider} className="flex items-center justify-between text-xs text-stone-600">
+                          <span className="capitalize">{account.provider}{account.email ? ` · ${account.email}` : ''}</span>
+                          <button type="button" className="text-red-700" onClick={() => desvincularCuenta(account.provider)}>Desvincular</button>
+                        </div>
+                      ))}
+                      <div className="flex gap-2 pt-1">
+                        {['google', 'discord'].filter((provider) => !linkedAccounts.some((account) => account.provider === provider)).map((provider) => (
+                          <button key={provider} type="button" className="Btn-Secundario text-xs" disabled={Boolean(linkingProvider)} onClick={() => vincularCuenta(provider)}>
+                            {linkingProvider === provider ? 'Abriendo...' : `Vincular ${provider}`}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   )}
 
                   {/* Estadísticas */}

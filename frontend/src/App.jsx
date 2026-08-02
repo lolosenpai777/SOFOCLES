@@ -46,6 +46,8 @@ function App() {
   const resetToken = query.get('token')
   const isReset = pathname.includes('restablecer-contrasena') && resetToken
   const isVerification = pathname.includes('verificar-correo') && resetToken
+  const isOAuthCallback = pathname === '/oauth/callback' || pathname === '/oauth/callback/'
+  const oauthCode = query.get('code')
   const [newPassword, setNewPassword] = useState('')
   const [authNotice, setAuthNotice] = useState('')
   const adminRoute = parseAdminRoute(pathname)
@@ -67,6 +69,35 @@ function App() {
       .then(() => setAuthNotice('Correo verificado. Ya puedes iniciar sesión.'))
       .catch(() => setAuthNotice('El enlace de verificación no es válido o expiró.'))
   }, [isVerification, resetToken])
+
+  useEffect(() => {
+    const oauthError = query.get('oauthError')
+    const oauthLinked = query.get('oauthLinked')
+    if (oauthError === 'SOCIAL_EMAIL_REQUIRES_PASSWORD') {
+      setErrorMsg('Ya existe una cuenta con ese correo. Inicia sesión con tu contraseña y vincula la cuenta desde tu perfil.')
+    } else if (oauthError === 'LAST_LOGIN_METHOD') {
+      setErrorMsg('No puedes desvincular tu único método de acceso. Establece una contraseña primero.')
+    } else if (oauthError) {
+      setErrorMsg('No se pudo completar la operación social. Inténtalo nuevamente.')
+    } else if (oauthLinked) {
+      setAuthNotice(`Cuenta de ${oauthLinked} vinculada correctamente.`)
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    if (!isOAuthCallback || !oauthCode) return
+    clienteAxios.post('/auth/oauth/exchange', { code: oauthCode })
+      .then(({ data }) => {
+        localStorage.setItem('sofocles_token', data.token)
+        setUsuarioAutenticado(data.usuario)
+        navigateTo('/', { replace: true })
+      })
+      .catch((err) => {
+        console.error(err)
+        setErrorMsg('No se pudo completar el inicio de sesión social. Inténtalo nuevamente.')
+        navigateTo('/login', { replace: true })
+      })
+  }, [isOAuthCallback, navigateTo, oauthCode])
 
   useEffect(() => {
     const onPopState = () => setPathname(window.location.pathname)
@@ -183,6 +214,10 @@ function App() {
         </div>
       </div>
     )
+  }
+
+  if (isOAuthCallback) {
+    return <div className="Olimpo-Contenedor"><div className="Auth-Scene"><div className="Auth-Panel"><p className="Auth-Panel__meta">Completando inicio de sesión...</p></div></div></div>
   }
 
   if (usuarioAutenticado) {
@@ -329,6 +364,15 @@ function App() {
               </button>
             </form>
 
+            <div className="flex flex-col gap-2 pt-2">
+              <button type="button" className="Btn-Secundario w-full" onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/google` }}>
+                Continuar con Google
+              </button>
+              <button type="button" className="Btn-Secundario w-full" onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/discord` }}>
+                Continuar con Discord
+              </button>
+            </div>
+
             <button
               className="Enlace-Simple border-none bg-none cursor-pointer"
               onClick={() => {
@@ -408,6 +452,15 @@ function App() {
                 Crear Cuenta
               </button>
             </form>
+
+            <div className="flex flex-col gap-2 pt-2">
+              <button type="button" className="Btn-Secundario w-full" onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/google` }}>
+                Continuar con Google
+              </button>
+              <button type="button" className="Btn-Secundario w-full" onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/discord` }}>
+                Continuar con Discord
+              </button>
+            </div>
 
             <button className="Enlace-Simple border-none bg-none cursor-pointer" type="button" onClick={solicitarRecuperacion}>¿Olvidaste tu contraseña?</button>
 
