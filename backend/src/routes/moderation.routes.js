@@ -4,23 +4,31 @@ import {
   createAppealHandler,
   listAppealsHandler,
   muteHandler,
+  moderatedUsersHandler,
   reportActionHandler,
   reportCaseDetailHandler,
   reportHandler,
   reportsHandler,
+  reopenReportCaseHandler,
+  revokeUserSanctionHandler,
   reviewAppealHandler,
   updateReportCaseStatusHandler,
   userModerationHistoryHandler,
 } from '../controllers/moderation.controller.js'
 import { requireAuth } from '../middlewares/auth.middleware.js'
 import { requireModeratorAdmin, requireModeratorJunior } from '../middlewares/moderator.middleware.js'
-import { validateBody, validateParams } from '../middlewares/validate-schema.middleware.js'
+import { validateBody, validateParams, validateQuery } from '../middlewares/validate-schema.middleware.js'
 import {
   createAppealSchema,
   createReportSchema,
   moderationCaseParamsSchema,
+  reportListQuerySchema,
   reportActionSchema,
+  reopenCaseSchema,
+  revokeSanctionParamsSchema,
+  revokeSanctionSchema,
   reviewAppealSchema,
+  sanctionsListQuerySchema,
   updateCaseStatusSchema,
 } from '../schemas/moderation.schema.js'
 
@@ -51,7 +59,10 @@ export async function moderationRoutes(fastify) {
 
   fastify.get(
     '/admin/reports',
-    { preHandler: [requireAuth, requireModeratorJunior] },
+    {
+      preHandler: [requireAuth, requireModeratorJunior],
+      preValidation: validateQuery(reportListQuerySchema),
+    },
     reportsHandler,
   )
   fastify.get(
@@ -77,6 +88,36 @@ export async function moderationRoutes(fastify) {
       preValidation: [validateParams(moderationCaseParamsSchema), validateBody(reportActionSchema)],
     },
     reportActionHandler,
+  )
+
+  fastify.post(
+    '/admin/reports/:id/reopen',
+    {
+      preHandler: [requireAuth, requireModeratorAdmin],
+      preValidation: [validateParams(moderationCaseParamsSchema), validateBody(reopenCaseSchema)],
+    },
+    reopenReportCaseHandler,
+  )
+
+  fastify.get(
+    '/admin/users/sanctions',
+    {
+      preHandler: [requireAuth, requireModeratorJunior],
+      preValidation: validateQuery(sanctionsListQuerySchema),
+    },
+    moderatedUsersHandler,
+  )
+
+  fastify.post(
+    '/admin/users/:id/sanctions/:suspensionId/revoke',
+    {
+      preHandler: [requireAuth, requireModeratorAdmin],
+      preValidation: [
+        validateParams(revokeSanctionParamsSchema),
+        validateBody(revokeSanctionSchema),
+      ],
+    },
+    revokeUserSanctionHandler,
   )
 
   fastify.get(

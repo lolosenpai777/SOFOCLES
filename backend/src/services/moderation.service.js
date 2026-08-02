@@ -42,6 +42,33 @@ function assertActionPermission(moderator, actionType) {
   }
 }
 
+function actionAffectsTargetUser(actionType) {
+  return (
+    actionType === 'ISSUE_WARNING' ||
+    actionType === 'SUSPEND_TEMPORARY' ||
+    actionType === 'SUSPEND_PERMANENT' ||
+    actionType === 'DELETE_POST'
+  )
+}
+
+function assertCanModerateTarget(moderator, targetUser) {
+  if (!targetUser) {
+    throw Object.assign(new Error('Usuario objetivo no encontrado'), { statusCode: 404 })
+  }
+
+  if (Number(moderator.id) === Number(targetUser.id)) {
+    throw Object.assign(new Error('No puedes aplicar acciones de moderación sobre tu propia cuenta'), {
+      statusCode: 403,
+    })
+  }
+
+  if (targetUser.role === 'ADMIN' || targetUser.moderationRole === 'ADMIN') {
+    throw Object.assign(new Error('No puedes aplicar esta acción sobre otro administrador'), {
+      statusCode: 403,
+    })
+  }
+}
+
 async function writeAuditLog(tx, actorId, eventType, details, actionId = null) {
   await tx.moderationAuditLog.create({
     data: {
@@ -132,18 +159,21 @@ async function createWarningWithEscalation(tx, {
   reason,
   reportId,
   targetPostId,
+  moderationActionId = null,
 }) {
-  const action = await tx.moderationAction.create({
-    data: {
-      actionType: 'ISSUE_WARNING',
-      reason,
-      moderatorId,
-      caseId: moderationCaseId,
-      reportId,
-      targetUserId,
-      targetPostId,
-    },
-  })
+  const action = moderationActionId
+    ? { id: Number(moderationActionId) }
+    : await tx.moderationAction.create({
+      data: {
+        actionType: 'ISSUE_WARNING',
+        reason,
+        moderatorId,
+        caseId: moderationCaseId,
+        reportId,
+        targetUserId,
+        targetPostId,
+      },
+    })
 
   await tx.userWarning.create({
     data: {
@@ -218,6 +248,19 @@ async function createWarningWithEscalation(tx, {
 }
 
 function toPublicCase(caseRow) {
+  const latestActionRow = Array.isArray(caseRow.actions) ? caseRow.actions[0] : null
+  const latestAction = latestActionRow
+    ? {
+      id: latestActionRow.id,
+      actionType: latestActionRow.actionType,
+      reason: latestActionRow.reason,
+      createdAt: latestActionRow.createdAt,
+      moderator: latestActionRow.moderator
+        ? { id: latestActionRow.moderator.id, username: latestActionRow.moderator.username }
+        : null,
+    }
+    : null
+
   return {
     id: caseRow.id,
     postId: caseRow.postId,
@@ -228,6 +271,7 @@ function toPublicCase(caseRow) {
     lastReportedAt: caseRow.lastReportedAt,
     autoHiddenAt: caseRow.autoHiddenAt,
     post: caseRow.post,
+    latestAction,
   }
 }
 
@@ -393,9 +437,11 @@ export async function toggleRelation(model, ownerField, targetField, ownerId, ta
   return true
 }
 
-export async function getReports({ cursor, limit = 20, status }) {
+export async function getReports({ cursor, limit = 20, status, bucket = 'all' }) {
   const take = Math.min(Math.max(Number(limit) || 20, 1), 50)
-  const where = status ? { status } : {}
+  let where = status ? { status } : {}
+  if (!status && bucket === 'pending') where = { status: { in: ['OPEN', 'REVIEWING'] } }
+  if (!status && bucket === 'resolved') where = { status: { in: ['RESOLVED', 'DISMISSED'] } }
   const rows = await prisma.moderationCase.findMany({
     where,
     take: take + 1,
@@ -423,6 +469,13 @@ export async function getReports({ cursor, limit = 20, status }) {
           details: true,
           createdAt: true,
           reporter: { select: { id: true, username: true } },
+        },
+      },
+      actions: {
+        take: 1,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          moderator: { select: { id: true, username: true } },
         },
       },
     },
@@ -524,127 +577,196 @@ export async function applyModerationAction(caseId, moderator, payload) {
     throw Object.assign(new Error('Caso de moderación no encontrado'), { statusCode: 404 })
   }
 
-  const targetUserId = moderationCase.post.authorId
-  const actionType = payload.actionType
-  assertActionPermission(moderator, actionType)
+  // TODO(Fase B): cuando ModerationCase incluya targetUserId para casos de usuario,
+  // resolver el objetivo desde ese campo y no solo desde post.authorId.
+  // FASE B: no usar targetUserId de ModerationCase todavía (campo no migrado en schema actual).
+  const targetUserIdFromCase = moderationCase.targetUserId ?? null
+  const targetUserId = targetUserIdFromCase || moderationCase.post?.authorId || null
+  const targetPostId = moderationCase.post?.id || null
+
+  if (!targetUserId) {
+    throw Object.assign(new Error('No se pudo resolver el usuario objetivo del caso'), { statusCode: 400 })
+  }
+
+  const selectedActionTypes = []
+  if (payload.dismiss) {
+    selectedActionTypes.push('DISMISS_REPORT')
+  } else {
+    if (payload.contentAction === 'DELETE_POST') selectedActionTypes.push('DELETE_POST')
+    if (payload.sanctionAction) selectedActionTypes.push(payload.sanctionAction)
+  }
+
+  for (const actionType of selectedActionTypes) {
+    assertActionPermission(moderator, actionType)
+  }
+
+  if (payload.sanctionAction) {
+    const targetUser = await prisma.user.findUnique({
+      where: { id: Number(targetUserId) },
+      select: { id: true, role: true, moderationRole: true },
+    })
+    assertCanModerateTarget(moderator, targetUser)
+  }
 
   const execution = await prisma.$transaction(async (tx) => {
-    const action = await tx.moderationAction.create({
-      data: {
-        actionType,
-        reason: payload.reason,
-        durationHours: payload.durationHours ?? null,
-        moderatorId: Number(moderator.id),
-        caseId: moderationCase.id,
-        reportId: moderationCase.reports[0]?.id ?? null,
-        targetUserId,
-        targetPostId: moderationCase.post.id,
-      },
-    })
-
-    let nextCaseStatus = 'REVIEWING'
+    const createdActions = []
+    const nextCaseStatus = payload.dismiss ? 'DISMISSED' : 'RESOLVED'
     let warningResult = null
     let suspension = null
 
-    if (actionType === 'DISMISS_REPORT') {
-      nextCaseStatus = 'DISMISSED'
-      await tx.report.updateMany({
-        where: { caseId: moderationCase.id },
-        data: { status: 'DISMISSED', reviewedAt: new Date() },
-      })
-    }
-
-    if (actionType === 'DELETE_POST') {
-      nextCaseStatus = 'RESOLVED'
-      await tx.post.update({
-        where: { id: moderationCase.post.id },
-        data: { hiddenAt: new Date() },
-      })
-      await tx.report.updateMany({
-        where: { caseId: moderationCase.id },
-        data: { status: 'RESOLVED', reviewedAt: new Date() },
-      })
-    }
-
-    if (actionType === 'ISSUE_WARNING') {
-      nextCaseStatus = 'RESOLVED'
-      warningResult = await createWarningWithEscalation(tx, {
-        moderatorId: Number(moderator.id),
-        moderationCaseId: moderationCase.id,
-        targetUserId,
-        reason: payload.reason,
-        reportId: moderationCase.reports[0]?.id ?? null,
-        targetPostId: moderationCase.post.id,
-      })
-      await tx.report.updateMany({
-        where: { caseId: moderationCase.id },
-        data: { status: 'RESOLVED', reviewedAt: new Date() },
-      })
-    }
-
-    if (actionType === 'SUSPEND_TEMPORARY') {
-      nextCaseStatus = 'RESOLVED'
-      const endAt = new Date(Date.now() + Number(payload.durationHours) * 60 * 60 * 1000)
-      suspension = await tx.userSuspension.create({
+    const createAction = async (actionType, durationHours = null) => {
+      const action = await tx.moderationAction.create({
         data: {
-          userId: targetUserId,
-          moderationActionId: action.id,
-          type: 'TEMPORARY',
-          scope: 'ACCOUNT',
-          startAt: new Date(),
-          endAt,
+          actionType,
           reason: payload.reason,
+          durationHours,
+          moderatorId: Number(moderator.id),
+          caseId: moderationCase.id,
+          reportId: moderationCase.reports[0]?.id ?? null,
+          targetUserId,
+          targetPostId,
+        },
+        include: {
+          moderator: { select: { id: true, username: true } },
         },
       })
-      await tx.report.updateMany({
-        where: { caseId: moderationCase.id },
-        data: { status: 'RESOLVED', reviewedAt: new Date() },
-      })
+
+      createdActions.push(action)
+      await writeAuditLog(
+        tx,
+        Number(moderator.id),
+        'MODERATION_ACTION_APPLIED',
+        {
+          caseId: moderationCase.id,
+          postId: targetPostId,
+          targetUserId,
+          actionType,
+          reason: payload.reason,
+          durationHours: durationHours ?? null,
+        },
+        action.id,
+      )
+      return action
     }
 
-    if (actionType === 'SUSPEND_PERMANENT') {
-      nextCaseStatus = 'RESOLVED'
-      suspension = await tx.userSuspension.create({
-        data: {
-          userId: targetUserId,
-          moderationActionId: action.id,
-          type: 'PERMANENT',
-          scope: 'ACCOUNT',
-          startAt: new Date(),
-          endAt: null,
+    if (payload.dismiss) {
+      await createAction('DISMISS_REPORT', null)
+    } else {
+      if (payload.contentAction === 'DELETE_POST') {
+        await createAction('DELETE_POST', null)
+        if (targetPostId) {
+          await tx.post.update({
+            where: { id: targetPostId },
+            data: { hiddenAt: new Date() },
+          })
+        }
+      }
+
+      if (payload.sanctionAction === 'ISSUE_WARNING') {
+        const warningAction = await createAction('ISSUE_WARNING', null)
+        warningResult = await createWarningWithEscalation(tx, {
+          moderatorId: Number(moderator.id),
+          moderationCaseId: moderationCase.id,
+          targetUserId,
           reason: payload.reason,
-        },
-      })
-      await tx.report.updateMany({
-        where: { caseId: moderationCase.id },
-        data: { status: 'RESOLVED', reviewedAt: new Date() },
-      })
+          reportId: moderationCase.reports[0]?.id ?? null,
+          targetPostId,
+          moderationActionId: warningAction.id,
+        })
+      }
+
+      if (payload.sanctionAction === 'SUSPEND_TEMPORARY') {
+        const durationHours = Number(payload.durationHours)
+        const suspendAction = await createAction('SUSPEND_TEMPORARY', durationHours)
+        const endAt = new Date(Date.now() + durationHours * 60 * 60 * 1000)
+        suspension = await tx.userSuspension.create({
+          data: {
+            userId: targetUserId,
+            moderationActionId: suspendAction.id,
+            type: 'TEMPORARY',
+            scope: 'ACCOUNT',
+            startAt: new Date(),
+            endAt,
+            reason: payload.reason,
+          },
+        })
+      }
+
+      if (payload.sanctionAction === 'SUSPEND_PERMANENT') {
+        const suspendAction = await createAction('SUSPEND_PERMANENT', null)
+        suspension = await tx.userSuspension.create({
+          data: {
+            userId: targetUserId,
+            moderationActionId: suspendAction.id,
+            type: 'PERMANENT',
+            scope: 'ACCOUNT',
+            startAt: new Date(),
+            endAt: null,
+            reason: payload.reason,
+          },
+        })
+      }
     }
+
+    await tx.report.updateMany({
+      where: { caseId: moderationCase.id },
+      data: {
+        status: nextCaseStatus,
+        reviewedAt: new Date(),
+      },
+    })
 
     await tx.moderationCase.update({
       where: { id: moderationCase.id },
       data: { status: nextCaseStatus },
     })
 
-    await writeAuditLog(
-      tx,
-      Number(moderator.id),
-      'MODERATION_ACTION_APPLIED',
-      {
-        caseId: moderationCase.id,
-        postId: moderationCase.post.id,
-        targetUserId,
-        actionType,
-        reason: payload.reason,
-        durationHours: payload.durationHours ?? null,
+    const updatedCase = await tx.moderationCase.findUnique({
+      where: { id: moderationCase.id },
+      include: {
+        post: {
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            imageUrl: true,
+            hiddenAt: true,
+            createdAt: true,
+            author: {
+              select: {
+                id: true,
+                username: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+        reports: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            reporter: {
+              select: { id: true, username: true, avatarUrl: true },
+            },
+          },
+        },
+        actions: {
+          take: 1,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            moderator: {
+              select: { id: true, username: true },
+            },
+          },
+        },
       },
-      action.id,
-    )
+    })
 
-    return { action, warningResult, suspension, nextCaseStatus }
+    return { createdActions, warningResult, suspension, nextCaseStatus, updatedCase }
   })
 
-  if (execution.action.actionType === 'ISSUE_WARNING') {
+  const hasAction = (actionType) => execution.createdActions.some((action) => action.actionType === actionType)
+
+  if (hasAction('ISSUE_WARNING')) {
     await notifyUserModerationEvent(
       targetUserId,
       `Recibiste una advertencia: ${payload.reason}`,
@@ -666,7 +788,7 @@ export async function applyModerationAction(caseId, moderator, payload) {
     }
   }
 
-  if (execution.action.actionType === 'SUSPEND_TEMPORARY' && execution.suspension?.endAt) {
+  if (hasAction('SUSPEND_TEMPORARY') && execution.suspension?.endAt) {
     await notifyUserModerationEvent(
       targetUserId,
       `Tu cuenta fue suspendida hasta ${new Date(execution.suspension.endAt).toISOString()}. Motivo: ${payload.reason}`,
@@ -674,7 +796,7 @@ export async function applyModerationAction(caseId, moderator, payload) {
     )
   }
 
-  if (execution.action.actionType === 'SUSPEND_PERMANENT') {
+  if (hasAction('SUSPEND_PERMANENT')) {
     await notifyUserModerationEvent(
       targetUserId,
       `Tu cuenta fue suspendida permanentemente. Motivo: ${payload.reason}`,
@@ -682,7 +804,7 @@ export async function applyModerationAction(caseId, moderator, payload) {
     )
   }
 
-  if (execution.action.actionType === 'DELETE_POST') {
+  if (hasAction('DELETE_POST')) {
     await notifyUserModerationEvent(
       targetUserId,
       `Una de tus publicaciones fue retirada por moderación. Motivo: ${payload.reason}`,
@@ -690,7 +812,10 @@ export async function applyModerationAction(caseId, moderator, payload) {
     )
   }
 
-  return execution
+  return {
+    ...execution,
+    updatedCase: execution.updatedCase ? toPublicCase(execution.updatedCase) : null,
+  }
 }
 
 export async function getUserModerationHistory(userId) {
@@ -727,6 +852,285 @@ export async function getUserModerationHistory(userId) {
     suspensions,
     actions,
     openAppeals,
+  }
+}
+
+export async function listModeratedUsers({ q = '', status = 'ALL', limit = 50 } = {}) {
+  const now = new Date()
+  const rows = await prisma.user.findMany({
+    where: {
+      ...(q ? { username: { contains: q, mode: 'insensitive' } } : {}),
+      OR: [
+        {
+          suspensions: {
+            some: {
+              active: true,
+              scope: 'ACCOUNT',
+              OR: [{ type: 'PERMANENT' }, { endAt: { gt: now } }],
+            },
+          },
+        },
+        { warnings: { some: {} } },
+      ],
+    },
+    take: Math.min(Math.max(Number(limit) || 50, 1), 100),
+    orderBy: { username: 'asc' },
+    select: {
+      id: true,
+      username: true,
+      role: true,
+      moderationRole: true,
+      suspensions: {
+        where: {
+          active: true,
+          scope: 'ACCOUNT',
+          OR: [{ type: 'PERMANENT' }, { endAt: { gt: now } }],
+        },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          moderationAction: {
+            include: { moderator: { select: { id: true, username: true } } },
+          },
+        },
+      },
+      warnings: {
+        take: 1,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          moderationAction: {
+            include: { moderator: { select: { id: true, username: true } } },
+          },
+        },
+      },
+    },
+  })
+
+  const items = rows
+    .map((user) => {
+      const activePermanent = user.suspensions.find((suspension) => suspension.type === 'PERMANENT')
+      const activeTemporary = user.suspensions.find((suspension) => suspension.type === 'TEMPORARY')
+      const latestWarning = user.warnings[0] ?? null
+
+      if (activePermanent) {
+        return {
+          user: { id: user.id, username: user.username, role: user.role, moderationRole: user.moderationRole },
+          status: 'BANNED_PERMANENT',
+          revocable: true,
+          suspensionId: activePermanent.id,
+          expiresAt: null,
+          action: {
+            reason: activePermanent.reason,
+            createdAt: activePermanent.createdAt,
+            moderator: activePermanent.moderationAction?.moderator ?? null,
+          },
+        }
+      }
+
+      if (activeTemporary) {
+        return {
+          user: { id: user.id, username: user.username, role: user.role, moderationRole: user.moderationRole },
+          status: 'SUSPENDED_TEMPORARY',
+          revocable: true,
+          suspensionId: activeTemporary.id,
+          expiresAt: activeTemporary.endAt,
+          action: {
+            reason: activeTemporary.reason,
+            createdAt: activeTemporary.createdAt,
+            moderator: activeTemporary.moderationAction?.moderator ?? null,
+          },
+        }
+      }
+
+      return {
+        user: { id: user.id, username: user.username, role: user.role, moderationRole: user.moderationRole },
+        status: 'WARNING',
+        revocable: false,
+        suspensionId: null,
+        expiresAt: null,
+        action: latestWarning
+          ? {
+            reason: latestWarning.reason,
+            createdAt: latestWarning.createdAt,
+            moderator: latestWarning.moderationAction?.moderator ?? null,
+          }
+          : null,
+      }
+    })
+    .filter(Boolean)
+
+  const filtered = status === 'ALL' ? items : items.filter((item) => item.status === status)
+  return { items: filtered }
+}
+
+export async function revokeUserSanction({ targetUserId, suspensionId, moderator, reason }) {
+  const normalizedTargetUserId = Number(targetUserId)
+  const normalizedSuspensionId = Number(suspensionId)
+  const now = new Date()
+  const normalizedReason = String(reason).trim()
+
+  const suspension = await prisma.userSuspension.findFirst({
+    where: {
+      id: normalizedSuspensionId,
+      userId: normalizedTargetUserId,
+      active: true,
+      scope: 'ACCOUNT',
+    },
+    include: {
+      user: {
+        select: { id: true, username: true, role: true, moderationRole: true },
+      },
+    },
+  })
+
+  if (!suspension) {
+    throw Object.assign(new Error('Sanción activa no encontrada'), { statusCode: 404 })
+  }
+
+  assertCanModerateTarget(moderator, suspension.user)
+
+  if (suspension.type === 'TEMPORARY' && suspension.endAt && new Date(suspension.endAt).getTime() <= now.getTime()) {
+    throw Object.assign(new Error('La suspensión temporal ya expiró y no requiere revocación'), {
+      statusCode: 409,
+    })
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.userSuspension.update({
+      where: { id: suspension.id },
+      data: {
+        active: false,
+        endAt: now,
+      },
+    })
+
+    await writeAuditLog(
+      tx,
+      Number(moderator.id),
+      'SANCTION_REVOKED',
+      {
+        suspensionId: suspension.id,
+        targetUserId: suspension.userId,
+        reason: normalizedReason,
+        previousType: suspension.type,
+      },
+      null,
+    )
+  })
+
+  await notifyUserModerationEvent(
+    suspension.userId,
+    `Tu sanción fue revocada por moderación. Motivo: ${normalizedReason}`,
+    Number(moderator.id),
+  )
+
+  return {
+    suspensionId: suspension.id,
+    userId: suspension.userId,
+    revokedAt: now.toISOString(),
+  }
+}
+
+export async function reopenModerationCase({ caseId, moderator, reason }) {
+  const normalizedCaseId = Number(caseId)
+  const normalizedReason = String(reason ?? '').trim()
+
+  const row = await prisma.moderationCase.findUnique({
+    where: { id: normalizedCaseId },
+    include: {
+      post: {
+        select: {
+          id: true,
+          title: true,
+          authorId: true,
+          hiddenAt: true,
+          author: {
+            select: { id: true, username: true },
+          },
+        },
+      },
+      actions: {
+        take: 1,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          moderator: { select: { id: true, username: true } },
+        },
+      },
+    },
+  })
+
+  if (!row) {
+    throw Object.assign(new Error('Caso de moderación no encontrado'), { statusCode: 404 })
+  }
+
+  if (row.status === 'REVIEWING') {
+    throw Object.assign(new Error('El caso ya se encuentra en revisión'), { statusCode: 409 })
+  }
+
+  if (row.status !== 'RESOLVED' && row.status !== 'DISMISSED') {
+    throw Object.assign(
+      new Error('Solo se pueden reabrir casos resueltos o descartados'),
+      { statusCode: 409 },
+    )
+  }
+
+  const previousStatus = row.status
+
+  await prisma.$transaction(async (tx) => {
+    await tx.moderationCase.update({
+      where: { id: row.id },
+      data: { status: 'REVIEWING' },
+    })
+
+    await tx.report.updateMany({
+      where: { caseId: row.id },
+      data: {
+        status: 'REVIEWING',
+        reviewedAt: null,
+      },
+    })
+
+    await writeAuditLog(
+      tx,
+      Number(moderator.id),
+      'CASE_REOPENED',
+      {
+        caseId: row.id,
+        previousStatus,
+        nextStatus: 'REVIEWING',
+        reason: normalizedReason,
+      },
+      null,
+    )
+  })
+
+  const updatedCase = await prisma.moderationCase.findUnique({
+    where: { id: row.id },
+    include: {
+      post: {
+        select: {
+          id: true,
+          title: true,
+          authorId: true,
+          hiddenAt: true,
+          author: {
+            select: { id: true, username: true },
+          },
+        },
+      },
+      actions: {
+        take: 1,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          moderator: { select: { id: true, username: true } },
+        },
+      },
+    },
+  })
+
+  return {
+    caseId: row.id,
+    status: 'REVIEWING',
+    updatedCase: updatedCase ? toPublicCase(updatedCase) : null,
   }
 }
 
@@ -820,4 +1224,8 @@ export async function reviewAppeal(appealId, reviewerId, { status, reviewerNotes
       reviewerNotes: reviewerNotes || null,
     })
   })
+}
+
+export const __testables = {
+  assertCanModerateTarget,
 }

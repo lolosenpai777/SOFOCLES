@@ -60,19 +60,34 @@ export const moderationCaseParamsSchema = z.object({
 
 export const reportActionSchema = z
   .object({
-    actionType: z.enum([
-      'DISMISS_REPORT',
-      'ISSUE_WARNING',
-      'DELETE_POST',
-      'SUSPEND_TEMPORARY',
-      'SUSPEND_PERMANENT',
-    ]),
+    dismiss: z.boolean().optional().default(false),
+    contentAction: z.enum(['DELETE_POST']).nullable().optional(),
+    sanctionAction: z
+      .enum(['ISSUE_WARNING', 'SUSPEND_TEMPORARY', 'SUSPEND_PERMANENT'])
+      .nullable()
+      .optional(),
     reason: z.string().trim().min(3, 'El motivo es obligatorio').max(500, 'El motivo es demasiado largo'),
     durationHours: z.coerce.number().int().positive().optional(),
-    permanent: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.actionType === 'SUSPEND_TEMPORARY' && !data.durationHours) {
+    if (data.dismiss) {
+      if (data.contentAction || data.sanctionAction) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Descartar no se combina con decisiones de resolución',
+        })
+      }
+      return
+    }
+
+    if (!data.contentAction && !data.sanctionAction) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Debes seleccionar al menos una decisión de moderación',
+      })
+    }
+
+    if (data.sanctionAction === 'SUSPEND_TEMPORARY' && !data.durationHours) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Debes indicar la duración en horas para suspensión temporal',
@@ -85,6 +100,40 @@ export const updateCaseStatusSchema = z.object({
   status: z.enum(reportStatusValues, {
     error: 'Estado de caso inválido',
   }),
+})
+
+export const reportListQuerySchema = z.object({
+  cursor: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+  bucket: z.enum(['pending', 'resolved', 'all']).optional(),
+  status: z.enum(reportStatusValues).optional(),
+})
+
+export const sanctionsListQuerySchema = z.object({
+  q: z.string().trim().max(60).optional(),
+  status: z.enum(['ALL', 'WARNING', 'SUSPENDED_TEMPORARY', 'BANNED_PERMANENT']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+})
+
+export const revokeSanctionParamsSchema = z.object({
+  id: z.coerce.number().int().positive('El id del usuario debe ser mayor a cero'),
+  suspensionId: z.coerce.number().int().positive('El id de la sanción debe ser mayor a cero'),
+})
+
+export const revokeSanctionSchema = z.object({
+  reason: z
+    .string({ error: 'El motivo de revocación es obligatorio' })
+    .trim()
+    .min(3, 'El motivo de revocación es obligatorio')
+    .max(500, 'El motivo es demasiado largo'),
+})
+
+export const reopenCaseSchema = z.object({
+  reason: z
+    .string({ error: 'El motivo de reapertura es obligatorio' })
+    .trim()
+    .min(3, 'El motivo de reapertura es obligatorio')
+    .max(500, 'El motivo es demasiado largo'),
 })
 
 export const createAppealSchema = z.object({

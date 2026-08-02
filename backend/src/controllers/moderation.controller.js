@@ -6,6 +6,9 @@ import {
   getReports,
   getUserModerationHistory,
   listAppeals,
+  listModeratedUsers,
+  reopenModerationCase,
+  revokeUserSanction,
   reviewAppeal,
   toggleRelation,
   updateModerationCaseStatus,
@@ -62,6 +65,29 @@ export async function reportActionHandler(request) {
 export async function userModerationHistoryHandler(request) {
   const history = await getUserModerationHistory(request.params.id)
   return { history }
+}
+
+export async function moderatedUsersHandler(request) {
+  return listModeratedUsers(request.query ?? {})
+}
+
+export async function revokeUserSanctionHandler(request) {
+  const result = await revokeUserSanction({
+    targetUserId: request.params.id,
+    suspensionId: request.params.suspensionId,
+    moderator: request.moderator,
+    reason: request.body.reason,
+  })
+  return { success: true, ...result }
+}
+
+export async function reopenReportCaseHandler(request) {
+  const result = await reopenModerationCase({
+    caseId: request.params.id,
+    moderator: request.moderator,
+    reason: request.body.reason,
+  })
+  return { success: true, ...result }
 }
 
 export async function createAppealHandler(request, reply) {
