@@ -42,12 +42,16 @@ export async function exchangeOAuthCodeHandler(request, reply) {
     return reply.code(400).send({ error: 'El enlace de inicio de sesión ya no es válido' })
   }
   exchanges.delete(code)
+  if (!exchange.user.emailVerified) {
+    return reply.code(403).send({ error: 'Debes verificar tu correo antes de iniciar sesión.', code: 'EMAIL_NOT_VERIFIED' })
+  }
   const token = await reply.jwtSign({
     sub: exchange.user.id,
     username: exchange.user.username,
     email: exchange.user.email,
     role: exchange.user.role,
     moderationRole: exchange.user.moderationRole,
+    emailVerified: Boolean(exchange.user.emailVerified),
     needsUsernameSetup: Boolean(exchange.user.needsUsernameSetup),
   })
   return reply.send({ token, usuario: exchange.user })

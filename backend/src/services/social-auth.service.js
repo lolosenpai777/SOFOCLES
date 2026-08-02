@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js'
 import { ensureUserCanAuthenticate } from './suspension.service.js'
 import { generateUniqueUsername } from './user.service.js'
+import { issueVerificationCode } from './auth.service.js'
 
 function normalizeEmail(email) {
   return String(email ?? '').trim().toLowerCase()
@@ -47,6 +48,10 @@ export async function loginOrRegisterSocialAccount(account) {
 
   if (existingAccount) {
     await ensureUserCanAuthenticate(existingAccount.user.id)
+    if (account.emailVerified && existingAccount.user.emailVerified === false) {
+      await prisma.user.update({ where: { id: existingAccount.user.id }, data: { emailVerified: true, emailVerifiedAt: new Date() } })
+      existingAccount.user.emailVerified = true
+    }
     await prisma.linkedAccount.update({
       where: { id: existingAccount.id },
       data: { accessToken: account.accessToken, refreshToken: account.refreshToken, email: account.email },
@@ -69,6 +74,10 @@ export async function loginOrRegisterSocialAccount(account) {
 
     await ensureUserCanAuthenticate(existingUser.id)
     await prisma.linkedAccount.create({ data: linkedAccountData(existingUser.id, account) })
+    if (account.emailVerified && existingUser.emailVerified === false) {
+      await prisma.user.update({ where: { id: existingUser.id }, data: { emailVerified: true, emailVerifiedAt: new Date() } })
+      existingUser.emailVerified = true
+    }
     return publicSocialUser(existingUser)
   }
 
@@ -79,10 +88,12 @@ export async function loginOrRegisterSocialAccount(account) {
       email: account.email || `${account.providerAccountId}@${account.provider}.invalid`,
       passwordHash: null,
       needsUsernameSetup: true,
+      emailVerified: account.emailVerified,
       linkedAccounts: { create: linkedAccountData(undefined, account) },
       emailVerifiedAt: account.emailVerified ? new Date() : null,
     },
   })
+  if (!account.emailVerified && account.email) await issueVerificationCode(user)
   return publicSocialUser(user)
 }
 
@@ -104,6 +115,7 @@ function publicSocialUser(user) {
     email: user.email,
     role: user.role,
     moderationRole: user.moderationRole,
+    emailVerified: Boolean(user.emailVerified),
     needsUsernameSetup: Boolean(user.needsUsernameSetup),
   }
 }

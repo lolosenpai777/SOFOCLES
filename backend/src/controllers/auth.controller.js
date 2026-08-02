@@ -1,13 +1,9 @@
-import { authenticateUser, registerUser, verifyEmail, requestPasswordReset, resetPassword, changePassword } from '../services/auth.service.js'
+import { authenticateUser, registerUser, verifyEmail, verifyEmailCode, resendVerification, requestPasswordReset, resetPassword, changePassword } from '../services/auth.service.js'
 
 export async function registerHandler(request, reply) {
   try {
-    const user = await registerUser(request.body)
-
-    return reply.code(201).send({
-      mensaje: 'Usuario registrado correctamente',
-      usuario: user,
-    })
+    await registerUser(request.body)
+    return reply.code(202).send({ mensaje: 'Si el registro puede continuar, recibirás un correo de verificación.' })
   } catch (error) {
     const statusCode = error.statusCode ?? 500
 
@@ -20,13 +16,14 @@ export async function registerHandler(request, reply) {
 export async function loginHandler(request, reply) {
   try {
     const user = await authenticateUser(request.body)
-    const token = await reply.jwtSign({
+  const token = await reply.jwtSign({
       sub: user.id,
       username: user.username,
       email: user.email,
       role: user.role,
-      moderationRole: user.moderationRole,
-    })
+    moderationRole: user.moderationRole,
+    emailVerified: user.emailVerified,
+  })
 
     return reply.send({
       mensaje: 'Login exitoso',
@@ -52,6 +49,25 @@ export async function verifyEmailHandler(request, reply) {
   const verified = await verifyEmail(request.body?.token)
   if (!verified) return reply.code(400).send({ error: 'El enlace de verificación no es válido o expiró' })
   return reply.send({ mensaje: 'Correo verificado correctamente' })
+}
+
+export async function verifyEmailCodeHandler(request, reply) {
+  try {
+    await verifyEmailCode(request.body.email, request.body.code)
+    return reply.send({ mensaje: 'Correo verificado correctamente' })
+  } catch (error) {
+    return reply.code(error.statusCode ?? 400).send({ error: error.message || 'El código de verificación no es válido.' })
+  }
+}
+
+export async function resendVerificationHandler(request, reply) {
+  try {
+    await resendVerification(request.body.email)
+  } catch (error) {
+    // Keep the response identical for unknown, verified, and rate-limited emails.
+    if (error.code !== 'VERIFICATION_RATE_LIMITED') throw error
+  }
+  return reply.code(202).send({ mensaje: 'Si el correo puede recibir un código, lo recibirás pronto.' })
 }
 
 export async function forgotPasswordHandler(request, reply) {

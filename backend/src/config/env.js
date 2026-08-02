@@ -39,6 +39,10 @@ export const env = {
     pass: process.env.SMTP_PASS,
     from: process.env.MAIL_FROM,
   },
+  resend: {
+    apiKey: process.env.RESEND_API_KEY,
+    from: process.env.MAIL_FROM,
+  },
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME,
     apiKey: process.env.CLOUDINARY_API_KEY,

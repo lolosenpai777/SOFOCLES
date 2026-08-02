@@ -1,8 +1,8 @@
-import { loginHandler, registerHandler, verifyEmailHandler, forgotPasswordHandler, resetPasswordHandler, changePasswordHandler } from '../controllers/auth.controller.js'
+import { loginHandler, registerHandler, verifyEmailHandler, verifyEmailCodeHandler, resendVerificationHandler, forgotPasswordHandler, resetPasswordHandler, changePasswordHandler } from '../controllers/auth.controller.js'
 import { meHandler } from '../controllers/user.controller.js'
 import { requireAuth } from '../middlewares/auth.middleware.js'
 import { validateBody } from '../middlewares/validate-schema.middleware.js'
-import { loginSchema, registerSchema, tokenSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from '../schemas/auth.schema.js'
+import { loginSchema, registerSchema, tokenSchema, verifyEmailCodeSchema, resendVerificationSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from '../schemas/auth.schema.js'
 
 export async function authRoutes(fastify) {
   fastify.post(
@@ -20,6 +20,12 @@ export async function authRoutes(fastify) {
   )
 
   fastify.post('/auth/verificar-correo', { preValidation: validateBody(tokenSchema) }, verifyEmailHandler)
+  // TODO: after deployment, wait 48h and verify there are no active LINK tokens before removing this legacy route.
+  fastify.post('/auth/verify-email', { preValidation: validateBody(verifyEmailCodeSchema) }, verifyEmailCodeHandler)
+  fastify.post('/auth/resend-verification', {
+    preValidation: validateBody(resendVerificationSchema),
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+  }, resendVerificationHandler)
   fastify.post('/auth/recuperar-contrasena', { preValidation: validateBody(forgotPasswordSchema), config: { rateLimit: { max: 3, timeWindow: '15 minutes' } } }, forgotPasswordHandler)
   fastify.post('/auth/restablecer-contrasena', { preValidation: validateBody(resetPasswordSchema) }, resetPasswordHandler)
   fastify.post('/auth/cambiar-contrasena', { preHandler: requireAuth, preValidation: validateBody(changePasswordSchema) }, changePasswordHandler)

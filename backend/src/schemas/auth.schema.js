@@ -26,6 +26,13 @@ export const tokenSchema = z.object({
   token: z.string().trim().min(20, 'Token inválido').max(200),
 })
 
+export const verifyEmailCodeSchema = z.object({
+  email: emailSchema,
+  code: z.string().trim().regex(/^\d{6}$/, 'El código debe tener 6 dígitos'),
+})
+
+export const resendVerificationSchema = z.object({ email: emailSchema })
+
 export const forgotPasswordSchema = z.object({ email: emailSchema })
 export const resetPasswordSchema = z.object({ token: z.string().trim().min(20).max(200), password: passwordSchema.min(8) })
 export const changePasswordSchema = z.object({ currentPassword: z.string().min(1), newPassword: passwordSchema.min(8) })
