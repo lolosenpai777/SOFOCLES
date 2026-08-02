@@ -11,7 +11,7 @@ model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
   email        String   @unique
-  passwordHash String   @map("password_hash")
+  passwordHash String?  @map("password_hash")
   biography    String?  @default("")
   avatarUrl    String?  @map("avatar_url")
   emailVerifiedAt DateTime? @map("email_verified_at")
@@ -42,9 +42,27 @@ model User {
   mutesReceived UserMute[] @relation("MutesReceived")
   passwordResetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
+  linkedAccounts LinkedAccount[]
 
   @@index([createdAt])
   @@map("users")
+}
+
+model LinkedAccount {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  provider          String
+  providerAccountId String   @map("provider_account_id")
+  accessToken       String?  @map("access_token")
+  refreshToken      String?  @map("refresh_token")
+  email             String?
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("linked_accounts")
 }
 
 model Post {
