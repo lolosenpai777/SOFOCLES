@@ -4,5 +4,7 @@ frontend/node_modules/
 frontend/dist/
 dist/
 *.log
+backup_post_social_auth.sql
 backend/.env
+backend/.env.docker-oauth
 frontend/.env
