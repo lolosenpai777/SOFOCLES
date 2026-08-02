@@ -65,14 +65,16 @@ test('login social crea un usuario nuevo sin contraseña si no coincide el email
     'linkedAccount.findUnique': async () => null,
     'user.findUnique': async () => null,
     '$queryRaw': async () => [],
-    'user.create': async (args) => { createArgs = args; return { id: 11, username: 'Socrates', email: account().email, role: 'USER', moderationRole: 'NONE', needsUsernameSetup: true } },
+    'user.create': async (args) => { createArgs = args; return { id: 11, username: 'Socrates', email: account().email, role: 'USER', moderationRole: 'NONE', needsUsernameSetup: true, emailVerified: true } },
   })
   try {
     const result = await loginOrRegisterSocialAccount(account())
     assert.equal(result.id, 11)
     assert.equal(result.needsUsernameSetup, true)
+    assert.equal(result.emailVerified, true)
     assert.equal(createArgs.data.passwordHash, null)
     assert.equal(createArgs.data.needsUsernameSetup, true)
+    assert.equal(createArgs.data.emailVerified, true)
     assert.equal(createArgs.data.linkedAccounts.create.provider, 'google')
   } finally { restore() }
 })
