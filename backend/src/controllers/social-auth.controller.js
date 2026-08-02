@@ -48,6 +48,7 @@ export async function exchangeOAuthCodeHandler(request, reply) {
     email: exchange.user.email,
     role: exchange.user.role,
     moderationRole: exchange.user.moderationRole,
+    needsUsernameSetup: Boolean(exchange.user.needsUsernameSetup),
   })
   return reply.send({ token, usuario: exchange.user })
 }

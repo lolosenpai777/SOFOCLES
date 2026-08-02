@@ -1,4 +1,37 @@
 import { prisma } from '../config/prisma.js'
+import { normalizeUsername } from '../schemas/shared/username.schema.js'
+import { findUsernameConflict } from './username.service.js'
+
+export async function updateUsername(userId, username) {
+  const user = await prisma.user.findUnique({ where: { id: Number(userId) } })
+  if (!user) {
+    const error = new Error('Usuario no encontrado')
+    error.statusCode = 404
+    throw error
+  }
+
+  // Preserve the existing display normalization, but compare lowercase values to prevent visual duplicates.
+  if (await findUsernameConflict(username, user.id)) {
+    const conflict = new Error('Ese nombre de usuario ya está en uso')
+    conflict.statusCode = 409
+    throw conflict
+  }
+
+  try {
+    return await prisma.user.update({
+      where: { id: user.id },
+      data: { username: normalizeUsername(username), needsUsernameSetup: false },
+      select: { id: true, username: true, email: true, needsUsernameSetup: true },
+    })
+  } catch (error) {
+    if (error.code === 'P2002') {
+      const conflict = new Error('Ese nombre de usuario ya está en uso')
+      conflict.statusCode = 409
+      throw conflict
+    }
+    throw error
+  }
+}
 
 export async function generateUniqueUsername(displayName, fallback = 'Usuario') {
   const base = String(displayName || fallback)
@@ -9,7 +42,7 @@ export async function generateUniqueUsername(displayName, fallback = 'Usuario') 
 
   let username = base
   let suffix = 1
-  while (await prisma.user.findUnique({ where: { username } })) {
+  while (await findUsernameConflict(username)) {
     username = `${base.slice(0, 39 - String(suffix).length)}${suffix}`
     suffix += 1
   }

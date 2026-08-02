@@ -1,4 +1,4 @@
-import { searchUsersByUsername, toggleFollow, getUserProfile, updateUserProfile } from '../services/user.service.js'
+import { searchUsersByUsername, toggleFollow, getUserProfile, updateUserProfile, updateUsername } from '../services/user.service.js'
 import { prisma } from '../config/prisma.js'
 import { createNotification } from '../services/notification.service.js'
 
@@ -13,6 +13,7 @@ export async function meHandler(request) {
       email: true,
       role: true,
       moderationRole: true,
+      needsUsernameSetup: true,
       following: {
         select: { id: true },
       },
@@ -27,9 +28,15 @@ export async function meHandler(request) {
       email: user.email,
       role: user.role,
       moderationRole: user.moderationRole,
+      needsUsernameSetup: Boolean(user.needsUsernameSetup),
       following: (user.following || []).map((u) => u.id),
     },
   }
+}
+
+export async function updateUsernameHandler(request, reply) {
+  const updated = await updateUsername(request.userId, request.body.username)
+  return reply.send({ success: true, usuario: updated })
 }
 
 export async function getUsersHandler(request, reply) {

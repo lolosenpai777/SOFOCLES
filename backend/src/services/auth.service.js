@@ -4,15 +4,11 @@ import { prisma } from '../config/prisma.js'
 import { env } from '../config/env.js'
 import { createOpaqueToken, sendSecurityEmail } from './mail.service.js'
 import { ensureUserCanAuthenticate } from './suspension.service.js'
+import { normalizeUsername } from '../schemas/shared/username.schema.js'
+import { findUsernameConflict } from './username.service.js'
 
 function normalizeEmail(email) {
   return String(email ?? '').trim().toLowerCase()
-}
-
-function normalizeUsername(username) {
-  const value = String(username ?? '').trim()
-  if (!value) return ''
-  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 export async function registerUser({ username, email, password }) {
@@ -32,13 +28,10 @@ export async function registerUser({ username, email, password }) {
     throw error
   }
 
-  const existingUser = await prisma.user.findFirst({
-    where: {
-      OR: [{ email: cleanEmail }, { username: cleanUsername }],
-    },
-  })
+  const existingUser = await prisma.user.findUnique({ where: { email: cleanEmail } })
+  const existingUsername = await findUsernameConflict(cleanUsername)
 
-  if (existingUser) {
+  if (existingUser || existingUsername) {
     const error = new Error('El usuario o correo ya existe')
     error.statusCode = 409
     throw error
@@ -51,13 +44,15 @@ export async function registerUser({ username, email, password }) {
       username: cleanUsername,
       email: cleanEmail,
       passwordHash,
+      needsUsernameSetup: false,
     },
     select: {
       id: true,
       username: true,
-    email: true,
-    role: true,
-    moderationRole: true,
+      email: true,
+      role: true,
+      moderationRole: true,
+      needsUsernameSetup: true,
       createdAt: true,
     },
   })
@@ -170,5 +165,6 @@ export async function authenticateUser({ email, password }) {
     email: user.email,
     role: user.role,
     moderationRole: user.moderationRole,
+    needsUsernameSetup: false,
   }
 }

@@ -78,6 +78,7 @@ export async function loginOrRegisterSocialAccount(account) {
       username,
       email: account.email || `${account.providerAccountId}@${account.provider}.invalid`,
       passwordHash: null,
+      needsUsernameSetup: true,
       linkedAccounts: { create: linkedAccountData(undefined, account) },
       emailVerifiedAt: account.emailVerified ? new Date() : null,
     },
@@ -103,6 +104,7 @@ function publicSocialUser(user) {
     email: user.email,
     role: user.role,
     moderationRole: user.moderationRole,
+    needsUsernameSetup: Boolean(user.needsUsernameSetup),
   }
 }
 

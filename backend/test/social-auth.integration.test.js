@@ -11,12 +11,21 @@ import {
 function patchPrisma(handlers) {
   const originals = {}
   for (const key of Object.keys(handlers)) {
+    if (key.startsWith('$')) {
+      originals[key] = prisma[key]
+      prisma[key] = handlers[key]
+      continue
+    }
     const [model, method] = key.split('.')
     originals[key] = prisma[model][method]
     prisma[model][method] = handlers[key]
   }
   return () => {
     for (const key of Object.keys(originals)) {
+      if (key.startsWith('$')) {
+        prisma[key] = originals[key]
+        continue
+      }
       const [model, method] = key.split('.')
       prisma[model][method] = originals[key]
     }
@@ -45,6 +54,7 @@ test('login social reutiliza una LinkedAccount existente y actualiza tokens', as
   try {
     const result = await loginOrRegisterSocialAccount(account())
     assert.equal(result.id, 10)
+    assert.equal(result.needsUsernameSetup, false)
     assert.equal(updateArgs.data.accessToken, 'access')
   } finally { restore() }
 })
@@ -54,12 +64,15 @@ test('login social crea un usuario nuevo sin contraseña si no coincide el email
   const restore = patchPrisma({
     'linkedAccount.findUnique': async () => null,
     'user.findUnique': async () => null,
-    'user.create': async (args) => { createArgs = args; return { id: 11, username: 'Socrates', email: account().email, role: 'USER', moderationRole: 'NONE' } },
+    '$queryRaw': async () => [],
+    'user.create': async (args) => { createArgs = args; return { id: 11, username: 'Socrates', email: account().email, role: 'USER', moderationRole: 'NONE', needsUsernameSetup: true } },
   })
   try {
     const result = await loginOrRegisterSocialAccount(account())
     assert.equal(result.id, 11)
+    assert.equal(result.needsUsernameSetup, true)
     assert.equal(createArgs.data.passwordHash, null)
+    assert.equal(createArgs.data.needsUsernameSetup, true)
     assert.equal(createArgs.data.linkedAccounts.create.provider, 'google')
   } finally { restore() }
 })
@@ -91,6 +104,7 @@ test('email social verificado sí vincula al usuario existente', async () => {
   try {
     const result = await loginOrRegisterSocialAccount(account())
     assert.equal(result.id, 13)
+    assert.equal(result.needsUsernameSetup, false)
     assert.equal(createArgs.data.userId, 13)
   } finally { restore() }
 })
@@ -134,4 +148,65 @@ test('vincular una cuenta social autenticada devuelve la lista actualizada', asy
     restore()
     await app.close()
   }
+})
+
+test('PATCH /api/auth/username actualiza el username y completa el setup', async () => {
+  let updateArgs
+  const restore = patchPrisma({
+    'user.findUnique': async () => ({ id: 15, username: 'Usuario15' }),
+    '$queryRaw': async () => [],
+    'user.update': async (args) => { updateArgs = args; return { id: 15, username: 'NuevoNombre', email: 'a@example.com', needsUsernameSetup: false } },
+    'userSuspension.findMany': async () => [],
+  })
+  const app = buildApp()
+  await app.ready()
+  try {
+    const token = app.jwt.sign({ sub: 15, username: 'Usuario15', email: 'a@example.com', role: 'USER', moderationRole: 'NONE' })
+    const response = await app.inject({
+      method: 'PATCH',
+      url: '/api/auth/username',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { username: '  nuevoNombre ' },
+    })
+    assert.equal(response.statusCode, 200)
+    assert.equal(response.json().usuario.needsUsernameSetup, false)
+    assert.equal(updateArgs.data.username, 'NuevoNombre')
+    assert.equal(updateArgs.data.needsUsernameSetup, false)
+  } finally {
+    restore()
+    await app.close()
+  }
+})
+
+test('PATCH /api/auth/username devuelve 409 si la restricción unique falla', async () => {
+  const restore = patchPrisma({
+    'user.findUnique': async () => ({ id: 15, username: 'Usuario15' }),
+    '$queryRaw': async () => [],
+    'user.update': async () => { throw { code: 'P2002' } },
+    'userSuspension.findMany': async () => [],
+  })
+  const app = buildApp()
+  await app.ready()
+  try {
+    const token = app.jwt.sign({ sub: 15, username: 'Usuario15', email: 'a@example.com', role: 'USER', moderationRole: 'NONE' })
+    const response = await app.inject({
+      method: 'PATCH',
+      url: '/api/auth/username',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { username: 'Ocupado' },
+    })
+    assert.equal(response.statusCode, 409)
+    assert.equal(response.json().error, 'Ese nombre de usuario ya está en uso')
+  } finally {
+    restore()
+    await app.close()
+  }
+})
+
+test('PATCH /api/auth/username sin JWT devuelve 401', async () => {
+  const app = buildApp()
+  try {
+    const response = await app.inject({ method: 'PATCH', url: '/api/auth/username', payload: { username: 'NuevoNombre' } })
+    assert.equal(response.statusCode, 401)
+  } finally { await app.close() }
 })

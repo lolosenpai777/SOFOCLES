@@ -4,6 +4,7 @@ import FeedScreen from './styles/FeedScreen.jsx'
 import AdminReports from './components/AdminReports.jsx'
 import AdminUsersModeration from './components/AdminUsersModeration.jsx'
 import AdminRoute from './components/AdminRoute.jsx'
+import UsernameSetupModal from './components/UsernameSetupModal.jsx'
 import { formatDateWithRelative } from './utils/formatDate'
 
 function parseAdminRoute(pathname) {
@@ -216,11 +217,19 @@ function App() {
     )
   }
 
+  const completarUsernameSetup = (updatedUser) => {
+    setUsuarioAutenticado((current) => ({ ...current, ...updatedUser, needsUsernameSetup: false }))
+  }
+
   if (isOAuthCallback) {
     return <div className="Olimpo-Contenedor"><div className="Auth-Scene"><div className="Auth-Panel"><p className="Auth-Panel__meta">Completando inicio de sesión...</p></div></div></div>
   }
 
   if (usuarioAutenticado) {
+    if (usuarioAutenticado.needsUsernameSetup) {
+      return <UsernameSetupModal user={usuarioAutenticado} onCompleted={completarUsernameSetup} />
+    }
+
     if (adminRoute?.isMatch) {
       return (
         <AdminRoute

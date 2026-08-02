@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { usernameSchema } from './shared/username.schema.js'
 
 const emailSchema = z
   .string({ error: 'El email debe ser texto' })
@@ -16,11 +17,7 @@ export const loginSchema = z.object({
 })
 
 export const registerSchema = z.object({
-  username: z
-    .string({ error: 'El username debe ser texto' })
-    .trim()
-    .min(3, 'El username debe tener al menos 3 caracteres')
-    .max(40, 'El username no puede superar 40 caracteres'),
+  username: usernameSchema,
   email: emailSchema,
   password: passwordSchema,
 })
