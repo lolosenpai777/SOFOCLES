@@ -24,6 +24,8 @@ export async function loginHandler(request, reply) {
       sub: user.id,
       username: user.username,
       email: user.email,
+      role: user.role,
+      moderationRole: user.moderationRole,
     })
 
     return reply.send({

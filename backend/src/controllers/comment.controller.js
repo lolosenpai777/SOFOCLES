@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma.js'
 import { createNotification } from '../services/notification.service.js'
+import { ensureNotRestricted } from '../services/suspension.service.js'
 
 export async function listCommentsHandler(request) {
   const take = Math.min(Math.max(Number(request.query?.limit) || 20, 1), 50)
@@ -18,6 +19,8 @@ export async function createCommentHandler(request, reply) {
     if (!userId) {
       return reply.code(401).send({ error: 'No autenticado' })
     }
+
+    await ensureNotRestricted(userId, 'COMMENT_ONLY')
 
     if (!text?.trim() && !gifUrl) {
       return reply.code(400).send({ error: 'El comentario debe tener texto o un GIF' })

@@ -1,16 +1,119 @@
 import { z } from 'zod'
+import {
+  blockHandler,
+  createAppealHandler,
+  listAppealsHandler,
+  muteHandler,
+  reportActionHandler,
+  reportCaseDetailHandler,
+  reportHandler,
+  reportsHandler,
+  reviewAppealHandler,
+  updateReportCaseStatusHandler,
+  userModerationHistoryHandler,
+} from '../controllers/moderation.controller.js'
 import { requireAuth } from '../middlewares/auth.middleware.js'
-import { requireAdmin } from '../middlewares/admin.middleware.js'
-import { validateBody } from '../middlewares/validate-schema.middleware.js'
-import { validateParams } from '../middlewares/validate-schema.middleware.js'
-import { blockHandler, muteHandler, reportHandler, reportsHandler, resolveReportHandler } from '../controllers/moderation.controller.js'
-const id = z.object({ id: z.coerce.number().int().positive() })
-const report = z.object({ postId: z.coerce.number().int().positive().optional(), userId: z.coerce.number().int().positive().optional(), reason: z.string().trim().min(3).max(160), details: z.string().trim().max(1000).optional() })
-const resolution = z.object({ status: z.enum(['RESOLVED', 'DISMISSED']), removeContent: z.boolean().optional() })
+import { requireModeratorAdmin, requireModeratorJunior } from '../middlewares/moderator.middleware.js'
+import { validateBody, validateParams } from '../middlewares/validate-schema.middleware.js'
+import {
+  createAppealSchema,
+  createReportSchema,
+  moderationCaseParamsSchema,
+  reportActionSchema,
+  reviewAppealSchema,
+  updateCaseStatusSchema,
+} from '../schemas/moderation.schema.js'
+
+const userIdParams = z.object({
+  id: z.coerce.number().int().positive('El id del usuario debe ser mayor a cero'),
+})
+
 export async function moderationRoutes(fastify) {
-  fastify.post('/reports', { preHandler: requireAuth, preValidation: validateBody(report) }, reportHandler)
-  fastify.post('/users/:id/block', { preHandler: requireAuth, preValidation: validateParams(id) }, blockHandler)
-  fastify.post('/users/:id/mute', { preHandler: requireAuth, preValidation: validateParams(id) }, muteHandler)
-  fastify.get('/admin/reports', { preHandler: [requireAuth, requireAdmin] }, reportsHandler)
-  fastify.patch('/admin/reports/:id', { preHandler: [requireAuth, requireAdmin], preValidation: [validateParams(id), validateBody(resolution)] }, resolveReportHandler)
+  fastify.post(
+    '/reports',
+    {
+      preHandler: [requireAuth],
+      preValidation: validateBody(createReportSchema),
+    },
+    reportHandler,
+  )
+
+  fastify.post(
+    '/users/:id/block',
+    { preHandler: [requireAuth], preValidation: validateParams(userIdParams) },
+    blockHandler,
+  )
+  fastify.post(
+    '/users/:id/mute',
+    { preHandler: [requireAuth], preValidation: validateParams(userIdParams) },
+    muteHandler,
+  )
+
+  fastify.get(
+    '/admin/reports',
+    { preHandler: [requireAuth, requireModeratorJunior] },
+    reportsHandler,
+  )
+  fastify.get(
+    '/admin/reports/:id',
+    {
+      preHandler: [requireAuth, requireModeratorJunior],
+      preValidation: validateParams(moderationCaseParamsSchema),
+    },
+    reportCaseDetailHandler,
+  )
+  fastify.patch(
+    '/admin/reports/:id/status',
+    {
+      preHandler: [requireAuth, requireModeratorJunior],
+      preValidation: [validateParams(moderationCaseParamsSchema), validateBody(updateCaseStatusSchema)],
+    },
+    updateReportCaseStatusHandler,
+  )
+  fastify.post(
+    '/admin/reports/:id/actions',
+    {
+      preHandler: [requireAuth, requireModeratorJunior],
+      preValidation: [validateParams(moderationCaseParamsSchema), validateBody(reportActionSchema)],
+    },
+    reportActionHandler,
+  )
+
+  fastify.get(
+    '/admin/users/:id/moderation-history',
+    {
+      preHandler: [requireAuth, requireModeratorJunior],
+      preValidation: validateParams(userIdParams),
+    },
+    userModerationHistoryHandler,
+  )
+
+  fastify.post(
+    '/moderation/appeals',
+    {
+      preHandler: [requireAuth],
+      preValidation: validateBody(createAppealSchema),
+    },
+    createAppealHandler,
+  )
+
+  fastify.get(
+    '/admin/appeals',
+    {
+      preHandler: [requireAuth, requireModeratorJunior],
+    },
+    listAppealsHandler,
+  )
+
+  fastify.patch(
+    '/admin/appeals/:id',
+    {
+      preHandler: [requireAuth, requireModeratorAdmin],
+      preValidation: [
+        validateParams(moderationCaseParamsSchema),
+        validateBody(reviewAppealSchema),
+      ],
+    },
+    reviewAppealHandler,
+  )
 }

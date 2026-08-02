@@ -1,3 +1,5 @@
+import { ensureNotRestricted } from '../services/suspension.service.js'
+
 function isTokenExpired(error) {
   return (
     error?.code === 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED' ||
@@ -36,6 +38,7 @@ export async function requireAuth(request, reply) {
       const normalizedUserId = Number(request.user.sub)
       request.userId = Number.isNaN(normalizedUserId) ? request.user.sub : normalizedUserId
       request.user.id = request.userId
+      await ensureNotRestricted(request.userId, 'ACCOUNT')
     }
   } catch (error) {
     request.log.warn({ err: error }, 'Fallo de autenticacion por token')

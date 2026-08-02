@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import { prisma } from '../config/prisma.js'
 import { env } from '../config/env.js'
 import { createOpaqueToken, sendSecurityEmail } from './mail.service.js'
+import { ensureUserCanAuthenticate } from './suspension.service.js'
 
 function normalizeEmail(email) {
   return String(email ?? '').trim().toLowerCase()
@@ -56,6 +57,7 @@ export async function registerUser({ username, email, password }) {
       username: true,
     email: true,
     role: true,
+    moderationRole: true,
       createdAt: true,
     },
   })
@@ -160,10 +162,13 @@ export async function authenticateUser({ email, password }) {
     throw error
   }
 
+  await ensureUserCanAuthenticate(user.id)
+
   return {
     id: user.id,
     username: user.username,
     email: user.email,
     role: user.role,
+    moderationRole: user.moderationRole,
   }
 }

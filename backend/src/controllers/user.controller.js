@@ -12,6 +12,7 @@ export async function meHandler(request) {
       username: true,
       email: true,
       role: true,
+      moderationRole: true,
       following: {
         select: { id: true },
       },
@@ -25,6 +26,7 @@ export async function meHandler(request) {
       username: user.username,
       email: user.email,
       role: user.role,
+      moderationRole: user.moderationRole,
       following: (user.following || []).map((u) => u.id),
     },
   }
@@ -55,7 +57,21 @@ export async function followUserHandler(request, reply) {
 
 export async function getProfileHandler(request, reply) {
   const userId = Number(request.params.id)
-  const profile = await getUserProfile(userId)
+  let viewer = null
+  if (request.headers?.authorization) {
+    try {
+      await request.jwtVerify()
+      viewer = {
+        id: Number(request.user?.sub),
+        role: request.user?.role,
+        moderationRole: request.user?.moderationRole,
+      }
+    } catch {
+      viewer = null
+    }
+  }
+
+  const profile = await getUserProfile(userId, viewer)
   return reply.code(200).send(profile)
 }
 

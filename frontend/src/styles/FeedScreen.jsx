@@ -5,6 +5,7 @@ import GiphySearch from "../components/GiphySearch";
 import "./FeedScreen.css";
 import PerfilModal from "./PerfilModal";
 import AdminReports from "../components/AdminReports";
+import ReportPostModal from "../components/ReportPostModal";
 
 function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   // Inicialización de 'siguiendo'
@@ -66,6 +67,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
 
   const [notificaciones, setNotificaciones] = useState([]);
   const [mostrarPanelModeracion, setMostrarPanelModeracion] = useState(false);
+  const [postAReportar, setPostAReportar] = useState(null);
   const [mostrarNotificacionesPanel, setMostrarNotificacionesPanel] = useState(false);
 
   // Función para obtener las notificaciones
@@ -437,14 +439,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   };
 
   const reportarPost = async (postId) => {
-    const reason = window.prompt("¿Por qué quieres reportar esta publicación?", "Contenido inapropiado");
-    if (!reason?.trim()) return;
-    try {
-      await clienteAxios.post("/reports", { postId, reason: reason.trim() });
-      window.alert("Gracias. El reporte fue enviado al equipo de moderación.");
-    } catch (error) {
-      setErrorMsg(error.response?.data?.error || "No se pudo enviar el reporte.");
-    }
+    setPostAReportar(postId);
   };
 
   const toggleExpandPost = (postId) => {
@@ -498,23 +493,17 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   };
 
   const obtenerHashtags = async () => {
-    try {
-      setHashtagsCargando(true);
-      const respuesta = await clienteAxios.get("/hashtags");
-      setHashtags(
-        normalizarListaHashtags(respuesta.data.hashtags || respuesta.data),
-      );
-    } catch (error) {
-      console.error("Error al traer los hashtags:", error);
-      setHashtagsError("No se pudieron cargar los hashtags.");
-    } finally {
-      setHashtagsCargando(false);
-    }
+    setHashtagsCargando(true);
+
+    // Los hashtags se derivan de los posts cargados; evitamos una ruta dedicada
+    // que no existe en el backend y que generaba 404 repetidos en consola.
+    const fuente = Array.isArray(posts) ? posts : [];
+    actualizarHashtagsDesdePosts(fuente);
   };
 
   useEffect(() => {
     obtenerHashtags();
-  }, []);
+  }, [posts]);
 
   useEffect(() => {
     const modalAbierto = Boolean(
@@ -1841,6 +1830,14 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
 
       {mostrarPanelModeracion && (
         <AdminReports onClose={() => setMostrarPanelModeracion(false)} />
+      )}
+
+      {postAReportar && (
+        <ReportPostModal
+          postId={postAReportar}
+          onClose={() => setPostAReportar(null)}
+          onReported={() => window.alert("Gracias. El reporte fue enviado al equipo de moderación.")}
+        />
       )}
 
       {/* Modal Búsqueda GIFs */}

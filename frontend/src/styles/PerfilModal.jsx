@@ -84,7 +84,15 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
       if (action === "report") {
         const reason = window.prompt("Motivo del reporte", "Comportamiento inapropiado");
         if (!reason?.trim()) return;
-        await clienteAxios.post("/reports", { userId: usuario.id, reason: reason.trim() });
+        if (reason.trim().length < 20) {
+          window.alert("El motivo debe tener al menos 20 caracteres.");
+          return;
+        }
+        await clienteAxios.post("/reports", {
+          userId: usuario.id,
+          category: "OTHER",
+          details: reason.trim(),
+        });
         window.alert("Reporte enviado.");
       } else {
         const { data } = await clienteAxios.post(`/users/${usuario.id}/${action}`);
@@ -227,6 +235,14 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
                       </p>
                       <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">Siguiendo</p>
                     </div>
+                    {perfilData.warningsCount !== null && perfilData.warningsCount !== undefined && (
+                      <div>
+                        <p className="text-base font-bold text-amber-700">
+                          {perfilData.warningsCount}
+                        </p>
+                        <p className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider">Advertencias</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Botones de acción */}

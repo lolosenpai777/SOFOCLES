@@ -76,7 +76,16 @@ export async function toggleFollow(currentUserId, targetUserId) {
   return { following: true }
 }
 
-export async function getUserProfile(userId) {
+function isModeratorViewer(viewer) {
+  if (!viewer) return false
+  return (
+    viewer.role === 'ADMIN' ||
+    viewer.moderationRole === 'ADMIN' ||
+    viewer.moderationRole === 'JUNIOR'
+  )
+}
+
+export async function getUserProfile(userId, viewer = null) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -122,6 +131,13 @@ export async function getUserProfile(userId) {
     throw err
   }
 
+  let warningsCount = null
+  if (isModeratorViewer(viewer)) {
+    warningsCount = await prisma.userWarning.count({
+      where: { userId: user.id },
+    })
+  }
+
   return {
     id: user.id,
     username: user.username,
@@ -130,6 +146,7 @@ export async function getUserProfile(userId) {
     postsCount: user.posts.length,
     followersCount: user.followers.length,
     followingCount: user.following.length,
+    warningsCount,
     joinDate: user.createdAt,
     posts: user.posts.map(post => ({
       id: post.id,

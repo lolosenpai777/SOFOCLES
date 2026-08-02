@@ -16,6 +16,7 @@ model User {
   avatarUrl    String?  @map("avatar_url")
   emailVerifiedAt DateTime? @map("email_verified_at")
   role         UserRole @default(USER)
+  moderationRole ModerationRole @default(NONE) @map("moderation_role")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -28,6 +29,13 @@ model User {
   notificationsActed Notification[] @relation("NotificationActor")
   reportsMade  Report[] @relation("ReportsMade")
   reportsReceived Report[] @relation("ReportsReceived")
+  moderationActions ModerationAction[] @relation("ModerationActionsTaken")
+  receivedModerationActions ModerationAction[] @relation("ModerationActionTargetUser")
+  warnings UserWarning[]
+  suspensions UserSuspension[]
+  appeals ModerationAppeal[] @relation("AppealsByUser")
+  appealsReviewed ModerationAppeal[] @relation("AppealsReviewedBy")
+  moderationAuditLogs ModerationAuditLog[] @relation("ModerationAuditActor")
   blocksMade   UserBlock[] @relation("BlocksMade")
   blocksReceived UserBlock[] @relation("BlocksReceived")
   mutesMade    UserMute[] @relation("MutesMade")
@@ -54,6 +62,8 @@ model Post {
   likes     User[]     @relation("PostLikes")
   comments  Comment[]
   reports   Report[]
+  moderationActions ModerationAction[] @relation("ModerationActionTargetPost")
+  moderationCase ModerationCase?
 
   @@index([createdAt])
   @@index([authorId, createdAt])
@@ -82,6 +92,12 @@ enum UserRole {
   ADMIN
 }
 
+enum ModerationRole {
+  NONE
+  JUNIOR
+  ADMIN
+}
+
 enum ReportStatus {
   OPEN
   REVIEWING
@@ -89,9 +105,73 @@ enum ReportStatus {
   DISMISSED
 }
 
+enum ReportCategory {
+  SPAM
+  SEXUAL_CONTENT
+  HATE_SPEECH
+  HARASSMENT_BULLYING
+  VIOLENCE_GRAPHIC
+  MISINFORMATION
+  SELF_HARM_SUICIDE
+  MINOR_SAFETY
+  IMPERSONATION
+  COPYRIGHT_IP
+  ILLEGAL_SALES
+  OTHER
+}
+
+enum ModerationActionType {
+  DISMISS_REPORT
+  ISSUE_WARNING
+  DELETE_POST
+  SUSPEND_TEMPORARY
+  SUSPEND_PERMANENT
+  AUTO_SUSPEND_7_DAYS
+  COMMENT_RESTRICTION_24H
+}
+
+enum SuspensionType {
+  TEMPORARY
+  PERMANENT
+}
+
+enum SuspensionScope {
+  ACCOUNT
+  COMMENT_ONLY
+}
+
+enum AppealStatus {
+  PENDING
+  REVIEWING
+  APPROVED
+  REJECTED
+}
+
+model ModerationCase {
+  id Int @id @default(autoincrement())
+  postId Int @unique @map("post_id")
+  status ReportStatus @default(OPEN)
+  priorityScore Int @default(0) @map("priority_score")
+  reportsCount Int @default(0) @map("reports_count")
+  distinctReportersCount Int @default(0) @map("distinct_reporters_count")
+  lastReportedAt DateTime @default(now()) @map("last_reported_at")
+  autoHiddenAt DateTime? @map("auto_hidden_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reports Report[]
+  actions ModerationAction[]
+
+  @@index([status, priorityScore, lastReportedAt])
+  @@index([lastReportedAt])
+  @@map("moderation_cases")
+}
+
 model Report {
   id             Int          @id @default(autoincrement())
   reason         String
+  category       ReportCategory
   details        String?
   status         ReportStatus @default(OPEN)
   createdAt      DateTime     @default(now()) @map("created_at")
@@ -99,13 +179,116 @@ model Report {
   reporterId     Int          @map("reporter_id")
   reportedUserId Int?         @map("reported_user_id")
   postId         Int?         @map("post_id")
+  caseId         Int?         @map("case_id")
   reporter       User         @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
   reportedUser   User?        @relation("ReportsReceived", fields: [reportedUserId], references: [id], onDelete: Cascade)
   post           Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  moderationCase ModerationCase? @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  actions ModerationAction[]
 
   @@index([status, createdAt])
   @@index([reporterId, createdAt])
+  @@index([caseId, createdAt])
   @@map("reports")
+}
+
+model ModerationAction {
+  id Int @id @default(autoincrement())
+  actionType ModerationActionType @map("action_type")
+  reason String
+  durationHours Int? @map("duration_hours")
+  metadata Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  moderatorId Int @map("moderator_id")
+  reportId Int? @map("report_id")
+  caseId Int? @map("case_id")
+  targetUserId Int? @map("target_user_id")
+  targetPostId Int? @map("target_post_id")
+
+  moderator User @relation("ModerationActionsTaken", fields: [moderatorId], references: [id], onDelete: Cascade)
+  report Report? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  moderationCase ModerationCase? @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  warnings UserWarning[]
+  suspensions UserSuspension[]
+  targetUser User? @relation("ModerationActionTargetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetPost Post? @relation("ModerationActionTargetPost", fields: [targetPostId], references: [id], onDelete: SetNull)
+  auditLogs ModerationAuditLog[]
+  appeals ModerationAppeal[]
+
+  @@index([caseId, createdAt])
+  @@index([targetUserId, createdAt])
+  @@index([actionType, createdAt])
+  @@map("moderation_actions")
+}
+
+model UserWarning {
+  id Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  moderationActionId Int @map("moderation_action_id")
+  reason String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moderationAction ModerationAction @relation(fields: [moderationActionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("user_warnings")
+}
+
+model UserSuspension {
+  id Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  moderationActionId Int? @map("moderation_action_id")
+  type SuspensionType
+  scope SuspensionScope @default(ACCOUNT)
+  startAt DateTime @default(now()) @map("start_at")
+  endAt DateTime? @map("end_at")
+  reason String
+  active Boolean @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moderationAction ModerationAction? @relation(fields: [moderationActionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, active, endAt])
+  @@index([type, active, endAt])
+  @@map("user_suspensions")
+}
+
+model ModerationAppeal {
+  id Int @id @default(autoincrement())
+  userId Int @map("user_id")
+  moderationActionId Int @map("moderation_action_id")
+  reason String
+  status AppealStatus @default(PENDING)
+  reviewerId Int? @map("reviewer_id")
+  reviewerNotes String? @map("reviewer_notes")
+  createdAt DateTime @default(now()) @map("created_at")
+  reviewedAt DateTime? @map("reviewed_at")
+
+  user User @relation("AppealsByUser", fields: [userId], references: [id], onDelete: Cascade)
+  moderationAction ModerationAction @relation(fields: [moderationActionId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("AppealsReviewedBy", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+  @@map("moderation_appeals")
+}
+
+model ModerationAuditLog {
+  id Int @id @default(autoincrement())
+  actorId Int @map("actor_id")
+  actionId Int? @map("action_id")
+  eventType String @map("event_type")
+  details Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  actor User @relation("ModerationAuditActor", fields: [actorId], references: [id], onDelete: Cascade)
+  moderationAction ModerationAction? @relation(fields: [actionId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([eventType, createdAt])
+  @@map("moderation_audit_logs")
 }
 
 model UserBlock {
