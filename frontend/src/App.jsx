@@ -55,6 +55,7 @@ function App() {
   const [verificationEmail, setVerificationEmail] = useState('')
   const [verificationCode, setVerificationCode] = useState('')
   const [verificationNotice, setVerificationNotice] = useState('')
+  const [verificandoCodigo, setVerificandoCodigo] = useState(false)
   const adminRoute = parseAdminRoute(pathname)
 
   const navigateTo = useCallback((nextPath, options = {}) => {
@@ -226,13 +227,21 @@ function App() {
 
   const verificarCodigo = async (event) => {
     event.preventDefault()
+    if (verificandoCodigo) return
     setVerificationNotice('')
+    setVerificandoCodigo(true)
     try {
       await clienteAxios.post('/auth/verify-email', { email: verificationEmail, code: verificationCode })
-      setVerificationNotice('Correo verificado correctamente. Ya puedes iniciar sesión.')
+      setMostrarVerificacion(false)
+      setVerificationCode('')
+      setVerificationNotice('')
+      setAuthNotice('Correo verificado correctamente. Ya puedes iniciar sesión.')
+      setModalActivo('login')
     } catch (error) {
       console.error(error)
       setVerificationNotice(error.response?.data?.error || 'No se pudo verificar el código.')
+    } finally {
+      setVerificandoCodigo(false)
     }
   }
 
@@ -525,7 +534,9 @@ function App() {
             {verificationNotice && <p className="text-sm text-slate-300">{verificationNotice}</p>}
             <form className="w-full flex flex-col gap-3" onSubmit={verificarCodigo}>
               <input className="Input-Olimpo text-center tracking-[0.4em]" inputMode="numeric" maxLength={6} pattern="[0-9]{6}" value={verificationCode} onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, ''))} placeholder="000000" required />
-              <button type="submit" className="Btn-Primario w-full py-3 rounded-xl font-bold">Verificar correo</button>
+              <button type="submit" disabled={verificandoCodigo} className="Btn-Primario w-full py-3 rounded-xl font-bold disabled:cursor-not-allowed disabled:opacity-60">
+                {verificandoCodigo ? 'Verificando…' : 'Verificar correo'}
+              </button>
             </form>
             <button onClick={reenviarCodigo} className="Enlace-Simple border-none bg-none cursor-pointer">Reenviar código</button>
             <button onClick={() => { setMostrarVerificacion(false); setModalActivo('login') }} className="Enlace-Simple border-none bg-none cursor-pointer">Volver al inicio de sesión</button>
