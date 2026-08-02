@@ -130,7 +130,7 @@ export default function AdminReports({
       await loadQueues()
     } catch (err) {
       console.error(err)
-      setError(err.response?.data?.error || 'No se pudo abrir el detalle del caso.')
+      setError('No se pudo abrir el detalle del caso, intenta de nuevo.')
     } finally {
       setLoadingCase(false)
     }
@@ -223,7 +223,7 @@ export default function AdminReports({
       await loadQueues()
     } catch (err) {
       console.error(err)
-      setError(err.response?.data?.error || 'No se pudo aplicar la acción de moderación.')
+      setError('No se pudo aplicar la acción, revisa los datos e intenta de nuevo.')
     } finally {
       setSubmittingAction(false)
     }
@@ -297,7 +297,7 @@ export default function AdminReports({
       await loadCaseDetail(selectedCase.id)
     } catch (err) {
       console.error(err)
-      setError(err.response?.data?.error || 'No se pudo reabrir el caso.')
+      setError('No se pudo reabrir el caso, revisa los datos e intenta de nuevo.')
     } finally {
       setSubmittingReopen(false)
     }

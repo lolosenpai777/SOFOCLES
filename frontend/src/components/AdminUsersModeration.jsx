@@ -30,7 +30,8 @@ export default function AdminUsersModeration({ onBack, onOpenReports }) {
       setItems(Array.isArray(data?.items) ? data.items : [])
       setError('')
     } catch (err) {
-      setError(err.response?.data?.error || 'No se pudo cargar la lista de usuarios moderados.')
+      console.error(err)
+      setError('No se pudo cargar la lista de usuarios moderados.')
     } finally {
       setLoading(false)
     }
@@ -57,7 +58,8 @@ export default function AdminUsersModeration({ onBack, onOpenReports }) {
       setRevokeReason('')
       await load()
     } catch (err) {
-      setError(err.response?.data?.error || 'No se pudo revocar la sanción.')
+      console.error(err)
+      setError('No se pudo revocar la sanción, revisa los datos e intenta de nuevo.')
     } finally {
       setSubmittingRevoke(false)
     }

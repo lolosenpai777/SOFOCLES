@@ -589,7 +589,7 @@ test('POST /api/admin/reports/:id/actions combina DELETE_POST + ISSUE_WARNING y 
         dismiss: false,
         contentAction: 'DELETE_POST',
         sanctionAction: 'ISSUE_WARNING',
-        reason: 'Contenido infringe normas y requiere advertencia',
+        reason: 'aaaa',
       },
     })
 
