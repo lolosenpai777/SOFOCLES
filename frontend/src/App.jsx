@@ -40,6 +40,7 @@ function App() {
   // Estado para mensajes de error y éxito
   const [errorMsg, setErrorMsg] = useState('')
   const [mostrarExito, setMostrarExito] = useState(false)
+  const [mostrarVerificacion, setMostrarVerificacion] = useState(false)
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(null)
   const [cargandoSesion, setCargandoSesion] = useState(true)
   const [pathname, setPathname] = useState(window.location.pathname)
@@ -51,6 +52,9 @@ function App() {
   const oauthCode = query.get('code')
   const [newPassword, setNewPassword] = useState('')
   const [authNotice, setAuthNotice] = useState('')
+  const [verificationEmail, setVerificationEmail] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
+  const [verificationNotice, setVerificationNotice] = useState('')
   const adminRoute = parseAdminRoute(pathname)
 
   const navigateTo = useCallback((nextPath, options = {}) => {
@@ -179,10 +183,13 @@ function App() {
       setNombreUsuario('')
       setEmailRegistro('')
       setPasswordRegistro('')
+      setVerificationEmail(emailRegistro.trim())
+      setVerificationCode('')
+      setVerificationNotice('')
 
       // Cerramos el modal de registro y abrimos la ventana de éxito
       setModalActivo(null)
-      setMostrarExito(true)
+      setMostrarVerificacion(true)
     } catch (error) {
       console.error('Error al registrar en el templo:', error)
       setErrorMsg(error.response?.data?.mensaje || 'Error al crear la cuenta')
@@ -215,6 +222,29 @@ function App() {
         </div>
       </div>
     )
+  }
+
+  const verificarCodigo = async (event) => {
+    event.preventDefault()
+    setVerificationNotice('')
+    try {
+      await clienteAxios.post('/auth/verify-email', { email: verificationEmail, code: verificationCode })
+      setVerificationNotice('Correo verificado correctamente. Ya puedes iniciar sesión.')
+    } catch (error) {
+      console.error(error)
+      setVerificationNotice(error.response?.data?.error || 'No se pudo verificar el código.')
+    }
+  }
+
+  const reenviarCodigo = async () => {
+    setVerificationNotice('')
+    try {
+      await clienteAxios.post('/auth/resend-verification', { email: verificationEmail })
+      setVerificationNotice('Si el correo puede recibir un código, lo recibirás pronto.')
+    } catch (error) {
+      console.error(error)
+      setVerificationNotice('No se pudo solicitar el código. Inténtalo nuevamente.')
+    }
   }
 
   const completarUsernameSetup = (updatedUser) => {
@@ -487,6 +517,22 @@ function App() {
       )}
 
       {/* VENTANA EMERGENTE: ¡USUARIO FORJADO EN EL OLIMPO! */}
+      {mostrarVerificacion && (
+        <div className="Overlay-Modal">
+          <div className="Card-Formulario Modal-Animacion text-center flex flex-col items-center gap-4 p-8">
+            <h2 className="text-xl font-black text-amber-400 uppercase">Verifica tu correo</h2>
+            <p className="text-sm text-slate-300">Enviamos un código de seis dígitos a {verificationEmail}.</p>
+            {verificationNotice && <p className="text-sm text-slate-300">{verificationNotice}</p>}
+            <form className="w-full flex flex-col gap-3" onSubmit={verificarCodigo}>
+              <input className="Input-Olimpo text-center tracking-[0.4em]" inputMode="numeric" maxLength={6} pattern="[0-9]{6}" value={verificationCode} onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, ''))} placeholder="000000" required />
+              <button type="submit" className="Btn-Primario w-full py-3 rounded-xl font-bold">Verificar correo</button>
+            </form>
+            <button onClick={reenviarCodigo} className="Enlace-Simple border-none bg-none cursor-pointer">Reenviar código</button>
+            <button onClick={() => { setMostrarVerificacion(false); setModalActivo('login') }} className="Enlace-Simple border-none bg-none cursor-pointer">Volver al inicio de sesión</button>
+          </div>
+        </div>
+      )}
+
       {mostrarExito && (
         <div className="Overlay-Modal">
           <div className="Card-Formulario Modal-Animacion border border-amber-500/30 text-center flex flex-col items-center gap-6 p-8">
