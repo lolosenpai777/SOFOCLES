@@ -1,15 +1,23 @@
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 import rateLimit from '@fastify/rate-limit'
+import secureSession from '@fastify/secure-session'
+import { Authenticator } from '@fastify/passport'
 import Fastify from 'fastify'
 import path from 'node:path'
 import { env } from './config/env.js'
 import { authRoutes } from './routes/auth.routes.js'
+import { socialAuthRoutes } from './routes/social-auth.routes.js'
+import { configurePassport, oauthSessionKey, secureCookie } from './config/passport.js'
 
 export function buildApp() {
   const fastify = Fastify({
     logger: true,
   })
+  // @fastify/jwt already reserves request.user; keep Passport's transient
+  // OAuth result in a separate property.
+  const fastifyPassport = new Authenticator({ userProperty: 'oauthUser' })
+  fastify.decorate('passport', fastifyPassport)
 
   fastify.register(cors, {
     origin(origin, callback) {
@@ -28,6 +36,20 @@ export function buildApp() {
     secret: env.jwtSecret,
     sign: { expiresIn: env.jwtExpiresIn },
   })
+
+  fastify.register(secureSession, {
+    key: oauthSessionKey,
+    cookie: {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: secureCookie,
+      maxAge: 300,
+    },
+  })
+  configurePassport(fastifyPassport)
+  fastify.register(fastifyPassport.initialize())
+  fastify.register(fastifyPassport.secureSession())
 
   // Serve uploaded files from public/uploads without external plugins
   fastify.get('/uploads/:file', async (request, reply) => {
@@ -80,6 +102,7 @@ export function buildApp() {
   fastify.get('/health', async () => ({ ok: true }))
 
   fastify.register(authRoutes, { prefix: '/api' })
+  fastify.register(socialAuthRoutes, { prefix: '/api' })
   // register posts route via dynamic import to ensure module loads correctly
   fastify.register(async function (instance) {
     const mod = await import('./routes/post.routes.js')

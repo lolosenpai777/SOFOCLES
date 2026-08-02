@@ -23,6 +23,15 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '1h',
   corsOrigins: csv('CORS_ORIGINS', 'http://localhost:5173'),
   appUrl: process.env.APP_URL ?? 'http://localhost:5173',
+  oauth: {
+    googleClientId: process.env.GOOGLE_CLIENT_ID,
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    googleCallbackUrl: process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:5000/api/auth/google/callback',
+    discordClientId: process.env.DISCORD_CLIENT_ID,
+    discordClientSecret: process.env.DISCORD_CLIENT_SECRET,
+    discordCallbackUrl: process.env.DISCORD_CALLBACK_URL ?? 'http://localhost:5000/api/auth/discord/callback',
+    sessionKey: process.env.OAUTH_SESSION_KEY,
+  },
   smtp: {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT ?? 587),

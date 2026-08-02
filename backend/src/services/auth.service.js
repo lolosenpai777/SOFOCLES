@@ -154,7 +154,7 @@ export async function authenticateUser({ email, password }) {
     throw error
   }
 
-  const passwordMatches = await bcrypt.compare(cleanPassword, user.passwordHash)
+  const passwordMatches = Boolean(user.passwordHash) && await bcrypt.compare(cleanPassword, user.passwordHash)
 
   if (!passwordMatches) {
     const error = new Error('Credenciales inválidas')

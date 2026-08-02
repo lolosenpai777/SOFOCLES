@@ -1,5 +1,21 @@
 import { prisma } from '../config/prisma.js'
 
+export async function generateUniqueUsername(displayName, fallback = 'Usuario') {
+  const base = String(displayName || fallback)
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '')
+    .slice(0, 32) || fallback
+
+  let username = base
+  let suffix = 1
+  while (await prisma.user.findUnique({ where: { username } })) {
+    username = `${base.slice(0, 39 - String(suffix).length)}${suffix}`
+    suffix += 1
+  }
+  return username
+}
+
 export async function searchUsersByUsername(q, { cursor, limit = 20 } = {}) {
   const where = q
     ? {
