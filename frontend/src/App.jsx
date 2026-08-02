@@ -1,7 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import clienteAxios from './api/clienteAxios'
 import FeedScreen from './styles/FeedScreen.jsx'
 import AdminReports from './components/AdminReports.jsx'
+import AdminUsersModeration from './components/AdminUsersModeration.jsx'
+import AdminRoute from './components/AdminRoute.jsx'
+import { formatDateWithRelative } from './utils/formatDate'
+
+function parseAdminRoute(pathname) {
+  if (pathname === '/admin/users' || pathname === '/admin/users/') {
+    return {
+      isMatch: true,
+      section: 'users',
+      caseId: null,
+    }
+  }
+
+  const match = pathname.match(/^\/admin\/reports(?:\/(\d+))?\/?$/)
+  if (!match) return null
+  return {
+    isMatch: true,
+    section: 'reports',
+    caseId: match[1] ? Number(match[1]) : null,
+  }
+}
 
 function App() {
   const [modalActivo, setModalActivo] = useState(null)
@@ -20,13 +41,25 @@ function App() {
   const [mostrarExito, setMostrarExito] = useState(false)
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(null)
   const [cargandoSesion, setCargandoSesion] = useState(true)
-  const [verAdmin, setVerAdmin] = useState(false)
+  const [pathname, setPathname] = useState(window.location.pathname)
   const query = new URLSearchParams(window.location.search)
   const resetToken = query.get('token')
-  const isReset = window.location.pathname.includes('restablecer-contrasena') && resetToken
-  const isVerification = window.location.pathname.includes('verificar-correo') && resetToken
+  const isReset = pathname.includes('restablecer-contrasena') && resetToken
+  const isVerification = pathname.includes('verificar-correo') && resetToken
   const [newPassword, setNewPassword] = useState('')
   const [authNotice, setAuthNotice] = useState('')
+  const adminRoute = parseAdminRoute(pathname)
+
+  const navigateTo = useCallback((nextPath, options = {}) => {
+    const { replace = false } = options
+    const target = nextPath || '/'
+    if (replace) {
+      window.history.replaceState({}, '', target)
+    } else {
+      window.history.pushState({}, '', target)
+    }
+    setPathname(window.location.pathname)
+  }, [])
 
   useEffect(() => {
     if (!isVerification) return
@@ -34,6 +67,12 @@ function App() {
       .then(() => setAuthNotice('Correo verificado. Ya puedes iniciar sesión.'))
       .catch(() => setAuthNotice('El enlace de verificación no es válido o expiró.'))
   }, [isVerification, resetToken])
+
+  useEffect(() => {
+    const onPopState = () => setPathname(window.location.pathname)
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
 
   useEffect(() => {
     const tokenGuardado = localStorage.getItem('sofocles_token')
@@ -57,6 +96,12 @@ function App() {
     cargarSesion()
   }, [])
 
+  useEffect(() => {
+    if (!cargandoSesion && !usuarioAutenticado && adminRoute?.isMatch) {
+      navigateTo('/login', { replace: true })
+    }
+  }, [adminRoute, cargandoSesion, navigateTo, usuarioAutenticado])
+
   // Función de Login
   const login = async (e) => {
     e.preventDefault()
@@ -73,9 +118,16 @@ function App() {
       setModalActivo(null)
     } catch (error) {
       console.error('Error al conectar con el templo:', error)
-      setErrorMsg(
-        error.response?.data?.mensaje || 'Error de conexión con el servidor',
-      )
+      const payload = error.response?.data
+      if (payload?.code === 'ACCOUNT_SUSPENDED') {
+        if (payload?.suspendedUntil) {
+          setErrorMsg(`Tu cuenta está suspendida hasta ${formatDateWithRelative(payload.suspendedUntil)}`)
+        } else {
+          setErrorMsg('Tu cuenta está suspendida permanentemente')
+        }
+        return
+      }
+      setErrorMsg(payload?.mensaje || 'Error de conexión con el servidor')
     }
   }
 
@@ -134,9 +186,38 @@ function App() {
   }
 
   if (usuarioAutenticado) {
-    if (verAdmin && usuarioAutenticado.role === 'ADMIN') return <AdminReports onClose={() => setVerAdmin(false)} />
-    if (usuarioAutenticado.role === 'ADMIN') return <FeedScreen usuarioAutenticado={usuarioAutenticado} cerrarSesion={cerrarSesion} />
-    return <FeedScreen usuarioAutenticado={usuarioAutenticado} cerrarSesion={cerrarSesion} />
+    if (adminRoute?.isMatch) {
+      return (
+        <AdminRoute
+          user={usuarioAutenticado}
+          onRedirectToLogin={() => navigateTo('/login', { replace: true })}
+          onBackToFeed={() => navigateTo('/')}
+        >
+          {adminRoute.section === 'reports' ? (
+            <AdminReports
+              currentUser={usuarioAutenticado}
+              initialCaseId={adminRoute.caseId}
+              onBack={() => navigateTo('/')}
+              onCaseChange={(caseId) => navigateTo(`/admin/reports/${caseId}`)}
+              onOpenUsersModeration={() => navigateTo('/admin/users')}
+            />
+          ) : (
+            <AdminUsersModeration
+              onBack={() => navigateTo('/')}
+              onOpenReports={() => navigateTo('/admin/reports')}
+            />
+          )}
+        </AdminRoute>
+      )
+    }
+
+    return (
+      <FeedScreen
+        usuarioAutenticado={usuarioAutenticado}
+        cerrarSesion={cerrarSesion}
+        onOpenAdminReports={() => navigateTo('/admin/reports')}
+      />
+    )
   }
 
   if (isReset) return <div className="Olimpo-Contenedor"><div className="Auth-Scene"><form className="Auth-Panel" onSubmit={restablecerContrasena}><div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}><img src="/logosofo.png" alt="Sófocles" /></div><h1 className="sr-only">Nueva contraseña</h1><div className="Form-Grupo"><label>Nueva contraseña</label><input className="Input-Olimpo" type="password" minLength="8" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 8 caracteres"/></div><button className="Btn-Primario" type="submit">Actualizar contraseña</button>{authNotice && <p className="Auth-Panel__meta">{authNotice}</p>}</form></div></div>

@@ -36,9 +36,15 @@ export async function loginHandler(request, reply) {
   } catch (error) {
     const statusCode = error.statusCode ?? 500
 
-    return reply.code(statusCode).send({
+    const payload = {
       mensaje: error.message || 'Error al iniciar sesión',
-    })
+    }
+    if (error.code) payload.code = error.code
+    if (Object.prototype.hasOwnProperty.call(error, 'suspendedUntil')) {
+      payload.suspendedUntil = error.suspendedUntil
+    }
+
+    return reply.code(statusCode).send(payload)
   }
 }
 

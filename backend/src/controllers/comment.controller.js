@@ -68,7 +68,12 @@ export async function createCommentHandler(request, reply) {
     request.log.error(error)
     const statusCode = error.statusCode ?? 500
     const message = statusCode >= 500 ? 'Error al crear comentario' : error.message || 'Solicitud inválida'
-    return reply.code(statusCode).send({ error: message })
+    const payload = { error: message }
+    if (error.code) payload.code = error.code
+    if (Object.prototype.hasOwnProperty.call(error, 'suspendedUntil')) {
+      payload.suspendedUntil = error.suspendedUntil
+    }
+    return reply.code(statusCode).send(payload)
   }
 }
 

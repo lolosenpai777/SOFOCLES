@@ -31,6 +31,11 @@ export async function ensureUserCanAuthenticate(userId) {
       : `Tu cuenta está suspendida hasta ${new Date(accountSuspension.endAt).toISOString()}`,
   )
   error.statusCode = 403
+  error.code = 'ACCOUNT_SUSPENDED'
+  error.suspendedUntil =
+    accountSuspension.type === 'PERMANENT' || !accountSuspension.endAt
+      ? null
+      : new Date(accountSuspension.endAt).toISOString()
   throw error
 }
 
@@ -45,5 +50,10 @@ export async function ensureNotRestricted(userId, scope = 'ACCOUNT') {
       : `Tu cuenta está restringida hasta ${new Date(restriction.endAt).toISOString()}`,
   )
   error.statusCode = 403
+  error.code = restriction.scope === 'COMMENT_ONLY' ? 'COMMENT_RESTRICTED' : 'ACCOUNT_SUSPENDED'
+  error.suspendedUntil =
+    restriction.type === 'PERMANENT' || !restriction.endAt
+      ? null
+      : new Date(restriction.endAt).toISOString()
   throw error
 }

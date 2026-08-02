@@ -4,10 +4,10 @@ import AvatarDisplay from "../components/AvatarDisplay";
 import GiphySearch from "../components/GiphySearch";
 import "./FeedScreen.css";
 import PerfilModal from "./PerfilModal";
-import AdminReports from "../components/AdminReports";
 import ReportPostModal from "../components/ReportPostModal";
+import { formatDateWithRelative } from "../utils/formatDate";
 
-function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
+function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
   // Inicialización de 'siguiendo'
   const initialFollowing = (() => {
     const f =
@@ -66,9 +66,12 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
   const [gifSeleccionado, setGifSeleccionado] = useState(null);
 
   const [notificaciones, setNotificaciones] = useState([]);
-  const [mostrarPanelModeracion, setMostrarPanelModeracion] = useState(false);
   const [postAReportar, setPostAReportar] = useState(null);
   const [mostrarNotificacionesPanel, setMostrarNotificacionesPanel] = useState(false);
+  const tieneAccesoModeracion =
+    usuarioAutenticado?.role === "ADMIN" ||
+    usuarioAutenticado?.moderationRole === "ADMIN" ||
+    usuarioAutenticado?.moderationRole === "JUNIOR";
 
   // Función para obtener las notificaciones
   const obtenerNotificaciones = async () => {
@@ -576,7 +579,26 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
       obtenerNotificaciones();
     } catch (error) {
       console.error("Error al crear comentario:", error);
-      setErrorMsg("No se pudo publicar el comentario.");
+      const payload = error?.response?.data;
+      if (payload?.code === "ACCOUNT_SUSPENDED") {
+        if (payload?.suspendedUntil) {
+          setErrorMsg(
+            `Tu cuenta está suspendida hasta ${formatDateWithRelative(payload.suspendedUntil)}`,
+          );
+        } else {
+          setErrorMsg("Tu cuenta está suspendida permanentemente");
+        }
+      } else if (payload?.code === "COMMENT_RESTRICTED") {
+        if (payload?.suspendedUntil) {
+          setErrorMsg(
+            `Tienes restricción para comentar hasta ${formatDateWithRelative(payload.suspendedUntil)}`,
+          );
+        } else {
+          setErrorMsg("Tienes restricción para comentar");
+        }
+      } else {
+        setErrorMsg(payload?.error || "No se pudo publicar el comentario.");
+      }
     } finally {
       setCargandoComentario(false);
     }
@@ -786,11 +808,11 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
             </button>
 
             {/* 3. Botón Admin / Moderación */}
-            {usuarioAutenticado?.role === 'ADMIN' && (
+            {tieneAccesoModeracion && (
               <button
                 type="button"
                 className="Header-Action-Button Header-Action-Button--admin"
-                onClick={() => setMostrarPanelModeracion(true)}
+                onClick={onOpenAdminReports}
                 title="Panel de moderación"
               >
                 <img src="/shield-alt-svgrepo-com.svg" alt="Panel de Moderación" />
@@ -909,7 +931,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                           </div>
                           <div className="text-xs text-stone-400">{mensajeTexto}</div>
                           <div className="text-[10px] text-stone-500 mt-0.5">
-                            {n.createdAt ? new Date(n.createdAt).toLocaleString() : 'Hace instantes'}
+                            {n.createdAt ? formatDateWithRelative(n.createdAt) : 'Hace instantes'}
                           </div>
                         </div>
                       </div>
@@ -1284,9 +1306,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                         <div className="ml-3">
                           <h3 className="Nombre-Usuario">{authorName}</h3>
                           <span className="Fecha-Post">
-                            {post.createdAt
-                              ? new Date(post.createdAt).toLocaleDateString()
-                              : "Hace instantes"}
+                            {post.createdAt ? formatDateWithRelative(post.createdAt) : "Hace instantes"}
                           </span>
                         </div>
 
@@ -1685,11 +1705,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
                                       />
                                     )}
                                     <span className="comentarios-lista__date">
-                                      {c.createdAt
-                                        ? new Date(
-                                            c.createdAt,
-                                          ).toLocaleDateString()
-                                        : "Hace poco"}
+                                      {c.createdAt ? formatDateWithRelative(c.createdAt) : "Hace poco"}
                                     </span>
                                   </div>
                                   {esMinioPost && (
@@ -1826,10 +1842,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion }) {
             </div>
           </section>
         </div>
-      )}
-
-      {mostrarPanelModeracion && (
-        <AdminReports onClose={() => setMostrarPanelModeracion(false)} />
       )}
 
       {postAReportar && (

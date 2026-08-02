@@ -128,9 +128,15 @@ export function buildApp() {
         ? 'Error interno del servidor'
         : error.message || 'Solicitud invalida'
 
-    reply.code(statusCode).send({
+    const payload = {
       error: message,
-    })
+    }
+    if (error.code) payload.code = error.code
+    if (Object.prototype.hasOwnProperty.call(error, 'suspendedUntil')) {
+      payload.suspendedUntil = error.suspendedUntil
+    }
+
+    reply.code(statusCode).send(payload)
   })
 
   return fastify

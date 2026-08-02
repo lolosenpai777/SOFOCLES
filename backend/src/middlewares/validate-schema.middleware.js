@@ -20,3 +20,7 @@ export function validateBody(schema) {
 export function validateParams(schema) {
   return validatePart('params', schema)
 }
+
+export function validateQuery(schema) {
+  return validatePart('query', schema)
+}

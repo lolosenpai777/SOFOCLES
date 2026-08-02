@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import clienteAxios from "../api/clienteAxios";
 import AvatarDisplay from "../components/AvatarDisplay";
+import { formatDateWithRelative } from "../utils/formatDate";
 import "./PerfilModal.css";
 
 function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
@@ -323,7 +324,7 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
             )}
 
             <p className="text-[10px] text-stone-400 mt-2">
-              {new Date(post.createdAt).toLocaleDateString()}
+              {formatDateWithRelative(post.createdAt)}
             </p>
           </div>
         );
