@@ -3,7 +3,9 @@ import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../src/config/prisma.js'
-import { authenticateUser, issueVerificationCode, registerUser, resendVerification, verifyEmailCode } from '../src/services/auth.service.js'
+import { authenticateUser, checkRegistrationAvailability, issueVerificationCode, registerUser, resendVerification, verifyEmailCode } from '../src/services/auth.service.js'
+import { sendExistingAccountNotice } from '../src/services/mail.service.js'
+import { buildApp } from '../src/app.js'
 
 let serialQueue = Promise.resolve()
 function serialTest(name, options, handler) {
@@ -67,6 +69,126 @@ serialTest('envío exitoso crea un código CODE de seis dígitos con expiración
   } finally { restore() }
 })
 
+serialTest('registro exitoso crea usuario y prepara verificacion', { concurrency: false }, async () => {
+  let createdUser
+  const restore = patchPrisma({
+    'user.findUnique': async () => null,
+    '$queryRaw': async () => [],
+    'user.create': async (args) => { createdUser = args.data; return { id: 709, username: 'Nuevo', email: 'new@example.com', role: 'USER', moderationRole: null, needsUsernameSetup: false, createdAt: new Date() } },
+    'emailVerificationToken.findFirst': async () => null,
+    'emailVerificationToken.updateMany': async () => ({}),
+    'emailVerificationToken.create': async (args) => args.data,
+    '$transaction': transactionMock(),
+  })
+  try {
+    const user = await registerUser({ username: 'Nuevo', email: 'new@example.com', password: 'secret123' })
+    assert.equal(user.email, 'new@example.com')
+    assert.equal(createdUser.email, 'new@example.com')
+    assert.ok(createdUser.passwordHash)
+  } finally { restore() }
+})
+
+serialTest('registro aplica rate limit por IP', { concurrency: false }, async () => {
+  const app = buildApp()
+  try {
+    await app.ready()
+    let lastResponse
+    for (let attempt = 0; attempt < 16; attempt += 1) {
+      lastResponse = await app.inject({ method: 'POST', url: '/api/auth/registro', payload: {} })
+    }
+    assert.equal(lastResponse.statusCode, 429)
+  } finally {
+    await app.close()
+  }
+})
+
+serialTest('check-availability informa disponibilidad de username y email', { concurrency: false }, async () => {
+  let queryCount = 0
+  const restore = patchPrisma({
+    '$queryRaw': async () => {
+      queryCount += 1
+      return queryCount === 1 ? [] : [{ id: 1 }]
+    },
+  })
+  try {
+    assert.deepEqual(await checkRegistrationAvailability('username', 'Libre'), { available: true })
+    assert.deepEqual(await checkRegistrationAvailability('email', 'tomado@example.com'), { available: false })
+  } finally { restore() }
+})
+
+serialTest('GET check-availability responde disponibilidad real para username y email', { concurrency: false }, async () => {
+  let queryCount = 0
+  const restore = patchPrisma({
+    '$queryRaw': async () => {
+      queryCount += 1
+      return queryCount === 1 ? [{ id: 1 }] : []
+    },
+  })
+  const app = buildApp()
+  try {
+    await app.ready()
+    const username = await app.inject({ method: 'GET', url: '/api/auth/check-availability?field=username&value=Ocupado' })
+    const email = await app.inject({ method: 'GET', url: '/api/auth/check-availability?field=email&value=libre%40example.com' })
+    assert.deepEqual(username.json(), { available: false })
+    assert.deepEqual(email.json(), { available: true })
+  } finally {
+    await app.close()
+    restore()
+  }
+})
+
+serialTest('check-availability activa 429 después de 30 solicitudes por IP', { concurrency: false }, async () => {
+  const restore = patchPrisma({ '$queryRaw': async () => [] })
+  const app = buildApp()
+  try {
+    await app.ready()
+    let lastResponse
+    for (let attempt = 0; attempt < 31; attempt += 1) {
+      lastResponse = await app.inject({ method: 'GET', url: '/api/auth/check-availability?field=email&value=libre%40example.com' })
+    }
+    assert.equal(lastResponse.statusCode, 429)
+  } finally {
+    await app.close()
+    restore()
+  }
+})
+
+serialTest('verify-email devuelve un JWT funcional para un endpoint protegido', { concurrency: false }, async () => {
+  const user = { id: 708, username: 'Verificado', email: 'jwt@example.com', role: 'USER', moderationRole: null, emailVerified: true, needsUsernameSetup: false, following: [] }
+  const restore = patchPrisma({
+    'emailVerificationToken.findFirst': async () => ({
+      id: 11, userId: user.id, tokenHash: hash('123456'), tokenType: 'CODE', usedAt: null,
+      expiresAt: new Date(Date.now() + 60_000), attemptCount: 0, lockedUntil: null,
+      user: { id: user.id, emailVerified: false },
+    }),
+    'user.update': async () => user,
+    'user.findUnique': async () => user,
+    'userSuspension.findMany': async () => [],
+    'emailVerificationToken.update': async () => ({}),
+    '$transaction': transactionMock(),
+  })
+  const app = buildApp()
+  try {
+    await app.ready()
+    const response = await app.inject({ method: 'POST', url: '/api/auth/verify-email', payload: { email: user.email, code: '123456' } })
+    assert.equal(response.statusCode, 200)
+    const body = response.json()
+    assert.ok(body.token)
+    assert.equal(body.usuario.email, user.email)
+
+    const protectedResponse = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      headers: { authorization: `Bearer ${body.token}` },
+    })
+    assert.equal(protectedResponse.statusCode, 200)
+    assert.equal(protectedResponse.json().usuario.email, user.email)
+  } finally {
+    await app.close()
+    restore()
+  }
+})
+
 serialTest('código expirado se rechaza con mensaje genérico', { concurrency: false }, async () => {
   const restore = patchPrisma({
     'emailVerificationToken.findFirst': async () => ({
@@ -82,19 +204,20 @@ serialTest('código expirado se rechaza con mensaje genérico', { concurrency: f
 
 serialTest('código correcto verifica el email y consume el token', { concurrency: false }, async () => {
   const updates = []
+  const verifiedUser = { id: 701, username: 'Verificado', email: 'test@example.com', role: 'USER', moderationRole: null, emailVerified: true, needsUsernameSetup: false }
   const restore = patchPrisma({
     'emailVerificationToken.findFirst': async () => ({
       id: 10, userId: 701, tokenHash: hash('123456'), tokenType: 'CODE', usedAt: null,
       expiresAt: new Date(Date.now() + 60_000), attemptCount: 0, lockedUntil: null,
       user: { id: 701, emailVerified: false },
     }),
-    'user.update': async (args) => { updates.push(args); return {} },
+    'user.update': async (args) => { updates.push(args); return verifiedUser },
     'emailVerificationToken.update': async (args) => { updates.push(args); return {} },
     '$transaction': transactionMock(),
   })
   try {
     const verified = await verifyEmailCode('test@example.com', '123456')
-    assert.equal(verified, true)
+    assert.equal(verified, verifiedUser)
     assert.equal(updates[0].data.emailVerified, true)
     assert.ok(updates[1].data.usedAt)
   } finally { restore() }
@@ -170,26 +293,50 @@ serialTest('login queda bloqueado con 403 mientras emailVerified sea false', { c
   } finally { restore() }
 })
 
-serialTest('registro con email existente responde de forma genérica', { concurrency: false }, async () => {
-  const restore = patchPrisma({ 'user.findUnique': async () => ({ id: 703, email: 'existing@example.com' }) })
+serialTest('registro con email existente responde 409 y marca el campo email', { concurrency: false }, async () => {
+  let lookup
+  let created = false
+  const restore = patchPrisma({
+    '$queryRaw': async (...args) => {
+      lookup = args
+      return [{ id: 703, email: 'existing@example.com' }]
+    },
+    'user.create': async () => { created = true; return {} },
+  })
   try {
-    await assert.rejects(() => registerUser({ username: 'Nuevo', email: 'existing@example.com', password: 'secret123' }), (error) => error.statusCode === 202 && error.code === 'REGISTRATION_GENERIC')
+    await assert.rejects(() => registerUser({ username: 'Nuevo', email: 'EXISTING@example.com', password: 'secret123' }), (error) => error.statusCode === 409 && error.code === 'EMAIL_TAKEN' && error.field === 'email' && error.message.includes('Inicia sesión'))
+    assert.ok(lookup.length > 0)
+    assert.equal(created, false)
   } finally { restore() }
+})
+
+serialTest('registro duplicado limita el aviso por email de destino', { concurrency: false }, async () => {
+  let sent = 0
+  const send = async () => { sent += 1 }
+  const to = `notice-${Date.now()}@example.com`
+
+  assert.equal(await sendExistingAccountNotice({ to, send }), true)
+  assert.equal(await sendExistingAccountNotice({ to: to.toUpperCase(), send }), false)
+  assert.equal(await sendExistingAccountNotice({ to, send }), false)
+  assert.equal(sent, 1)
 })
 
 serialTest('registro con username ocupado conserva 409', { concurrency: false }, async () => {
+  let queryCount = 0
   const restore = patchPrisma({
-    'user.findUnique': async () => null,
-    '$queryRaw': async () => [{ id: 704 }],
+    '$queryRaw': async () => {
+      queryCount += 1
+      return queryCount === 1 ? [] : [{ id: 704 }]
+    },
   })
   try {
-    await assert.rejects(() => registerUser({ username: 'Ocupado', email: 'new@example.com', password: 'secret123' }), (error) => error.statusCode === 409)
+    await assert.rejects(() => registerUser({ username: 'Ocupado', email: 'new@example.com', password: 'secret123' }), (error) => error.statusCode === 409 && error.code === 'USERNAME_TAKEN')
   } finally { restore() }
 })
 
-serialTest('si email y username chocan prevalece la respuesta genérica del email', { concurrency: false }, async () => {
-  const restore = patchPrisma({ 'user.findUnique': async () => ({ id: 705, email: 'existing@example.com' }) })
+serialTest('si email y username chocan prevalece el conflicto de email', { concurrency: false }, async () => {
+  const restore = patchPrisma({ '$queryRaw': async () => [{ id: 705, email: 'existing@example.com' }] })
   try {
-    await assert.rejects(() => registerUser({ username: 'Ocupado', email: 'existing@example.com', password: 'secret123' }), (error) => error.statusCode === 202 && error.code === 'REGISTRATION_GENERIC')
+    await assert.rejects(() => registerUser({ username: 'Ocupado', email: 'existing@example.com', password: 'secret123' }), (error) => error.statusCode === 409 && error.code === 'EMAIL_TAKEN' && error.field === 'email')
   } finally { restore() }
 })

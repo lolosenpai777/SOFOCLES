@@ -1,8 +1,8 @@
-import { loginHandler, registerHandler, verifyEmailHandler, verifyEmailCodeHandler, resendVerificationHandler, forgotPasswordHandler, resetPasswordHandler, changePasswordHandler } from '../controllers/auth.controller.js'
+import { loginHandler, registerHandler, checkAvailabilityHandler, verifyEmailHandler, verifyEmailCodeHandler, resendVerificationHandler, forgotPasswordHandler, resetPasswordHandler, changePasswordHandler } from '../controllers/auth.controller.js'
 import { meHandler } from '../controllers/user.controller.js'
 import { requireAuth } from '../middlewares/auth.middleware.js'
-import { validateBody } from '../middlewares/validate-schema.middleware.js'
-import { loginSchema, registerSchema, tokenSchema, verifyEmailCodeSchema, resendVerificationSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from '../schemas/auth.schema.js'
+import { validateBody, validateQuery } from '../middlewares/validate-schema.middleware.js'
+import { loginSchema, registerSchema, availabilityQuerySchema, tokenSchema, verifyEmailCodeSchema, resendVerificationSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from '../schemas/auth.schema.js'
 
 export async function authRoutes(fastify) {
   fastify.post(
@@ -11,13 +11,18 @@ export async function authRoutes(fastify) {
       preValidation: validateBody(registerSchema),
       config: {
         rateLimit: {
-          max: 10,
-          timeWindow: '1 minute',
+          max: 15,
+          timeWindow: '15 minutes',
         },
       },
     },
     registerHandler,
   )
+
+  fastify.get('/auth/check-availability', {
+    preValidation: validateQuery(availabilityQuerySchema),
+    config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+  }, checkAvailabilityHandler)
 
   fastify.post('/auth/verificar-correo', { preValidation: validateBody(tokenSchema) }, verifyEmailHandler)
   // TODO: after deployment, wait 48h and verify there are no active LINK tokens before removing this legacy route.

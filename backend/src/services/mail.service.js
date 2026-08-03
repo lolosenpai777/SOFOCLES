@@ -12,6 +12,8 @@ export function createOpaqueToken() {
 }
 
 const resend = env.resend.apiKey ? new Resend(env.resend.apiKey) : null
+const existingAccountNoticeSentAt = new Map()
+const EXISTING_ACCOUNT_NOTICE_INTERVAL_MS = 2 * 60 * 60 * 1000
 
 async function sendEmail({ to, subject, text, html }) {
   if (!configured()) {
@@ -55,4 +57,25 @@ export async function sendVerificationCodeEmail({ to, code }) {
     text: `Tu código de verificación es: ${code}\n\nEste código caduca en 15 minutos.`,
     html: `<p>Tu código de verificación es:</p><p><strong>${code}</strong></p><p>Este código caduca en 15 minutos.</p>`,
   })
+}
+
+export async function sendExistingAccountNotice({ to, send = sendEmail }) {
+  const destination = String(to ?? '').trim().toLowerCase()
+  const now = Date.now()
+  const lastSentAt = existingAccountNoticeSentAt.get(destination)
+  if (lastSentAt && now - lastSentAt < EXISTING_ACCOUNT_NOTICE_INTERVAL_MS) return false
+
+  existingAccountNoticeSentAt.set(destination, now)
+  try {
+    await send({
+      to,
+      subject: 'Intento de registro en Sofocles',
+      text: 'Alguien intentó registrarse con tu correo en Sofocles. Si fuiste tú, ya tienes una cuenta: inicia sesión. Si no fuiste tú, puedes ignorar este mensaje.',
+      html: '<p>Alguien intentó registrarse con tu correo en Sofocles.</p><p>Si fuiste tú, ya tienes una cuenta: inicia sesión.</p><p>Si no fuiste tú, puedes ignorar este mensaje.</p>',
+    })
+    return true
+  } catch (error) {
+    existingAccountNoticeSentAt.delete(destination)
+    throw error
+  }
 }

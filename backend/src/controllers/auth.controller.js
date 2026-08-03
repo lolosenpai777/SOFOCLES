@@ -1,29 +1,43 @@
-import { authenticateUser, registerUser, verifyEmail, verifyEmailCode, resendVerification, requestPasswordReset, resetPassword, changePassword } from '../services/auth.service.js'
+import { authenticateUser, registerUser, verifyEmail, verifyEmailCode, resendVerification, requestPasswordReset, resetPassword, changePassword, checkRegistrationAvailability } from '../services/auth.service.js'
+
+export function signAuthToken(reply, user) {
+  return reply.jwtSign({
+    sub: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    moderationRole: user.moderationRole,
+    emailVerified: Boolean(user.emailVerified),
+    needsUsernameSetup: Boolean(user.needsUsernameSetup),
+  })
+}
 
 export async function registerHandler(request, reply) {
   try {
     await registerUser(request.body)
-    return reply.code(202).send({ mensaje: 'Si el registro puede continuar, recibirás un correo de verificación.' })
+    return reply.code(202).send({ mensaje: 'Cuenta creada. Revisa tu correo e ingresa el código para activar tu cuenta.' })
   } catch (error) {
     const statusCode = error.statusCode ?? 500
 
-    return reply.code(statusCode).send({
-      mensaje: error.message || 'Error al registrar usuario',
-    })
+    const payload = { mensaje: error.message || 'Error al registrar usuario' }
+    if (error.code) payload.code = error.code
+    if (error.field) {
+      payload.field = error.field
+      payload.message = payload.mensaje
+    }
+    return reply.code(statusCode).send(payload)
   }
+}
+
+export async function checkAvailabilityHandler(request, reply) {
+  const result = await checkRegistrationAvailability(request.query.field, request.query.value)
+  return reply.send(result)
 }
 
 export async function loginHandler(request, reply) {
   try {
     const user = await authenticateUser(request.body)
-  const token = await reply.jwtSign({
-      sub: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-    moderationRole: user.moderationRole,
-    emailVerified: user.emailVerified,
-  })
+    const token = await signAuthToken(reply, user)
 
     return reply.send({
       mensaje: 'Login exitoso',
@@ -53,8 +67,9 @@ export async function verifyEmailHandler(request, reply) {
 
 export async function verifyEmailCodeHandler(request, reply) {
   try {
-    await verifyEmailCode(request.body.email, request.body.code)
-    return reply.send({ mensaje: 'Correo verificado correctamente' })
+    const user = await verifyEmailCode(request.body.email, request.body.code)
+    const token = await signAuthToken(reply, user)
+    return reply.send({ mensaje: 'Correo verificado correctamente', token, usuario: user })
   } catch (error) {
     return reply.code(error.statusCode ?? 400).send({ error: error.message || 'El código de verificación no es válido.' })
   }

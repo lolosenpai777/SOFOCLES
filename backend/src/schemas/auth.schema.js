@@ -33,6 +33,11 @@ export const verifyEmailCodeSchema = z.object({
 
 export const resendVerificationSchema = z.object({ email: emailSchema })
 
+export const availabilityQuerySchema = z.object({
+  field: z.enum(['username', 'email']),
+  value: z.string().trim().min(1).max(128),
+})
+
 export const forgotPasswordSchema = z.object({ email: emailSchema })
 export const resetPasswordSchema = z.object({ token: z.string().trim().min(20).max(200), password: passwordSchema.min(8) })
 export const changePasswordSchema = z.object({ currentPassword: z.string().min(1), newPassword: passwordSchema.min(8) })

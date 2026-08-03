@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import clienteAxios from './api/clienteAxios'
 import FeedScreen from './styles/FeedScreen.jsx'
 import AdminReports from './components/AdminReports.jsx'
@@ -36,6 +36,10 @@ function App() {
   const [nombreUsuario, setNombreUsuario] = useState('')
   const [emailRegistro, setEmailRegistro] = useState('')
   const [passwordRegistro, setPasswordRegistro] = useState('')
+  const [registerFieldErrors, setRegisterFieldErrors] = useState({})
+  const [availability, setAvailability] = useState({ username: null, email: null })
+  const [availabilityTouched, setAvailabilityTouched] = useState({ username: false, email: false })
+  const availabilityRequestId = useRef({ username: 0, email: 0 })
 
   // Estado para mensajes de error y éxito
   const [errorMsg, setErrorMsg] = useState('')
@@ -68,6 +72,42 @@ function App() {
     }
     setPathname(window.location.pathname)
   }, [])
+
+  useEffect(() => {
+    const fields = [
+      { field: 'username', value: nombreUsuario },
+      { field: 'email', value: emailRegistro },
+    ]
+    const timers = []
+
+    for (const { field, value } of fields) {
+      const requestId = ++availabilityRequestId.current[field]
+      if (!availabilityTouched[field] || !value.trim()) {
+        setAvailability((current) => ({ ...current, [field]: null }))
+        continue
+      }
+
+      setAvailability((current) => ({ ...current, [field]: { checking: true } }))
+      const timer = window.setTimeout(async () => {
+        try {
+          const { data } = await clienteAxios.get('/auth/check-availability', {
+            params: { field, value },
+          })
+          if (requestId === availabilityRequestId.current[field]) {
+            setAvailability((current) => ({ ...current, [field]: { available: data.available } }))
+          }
+        } catch (error) {
+          console.error('No se pudo comprobar disponibilidad:', error)
+          if (requestId === availabilityRequestId.current[field]) {
+            setAvailability((current) => ({ ...current, [field]: null }))
+          }
+        }
+      }, 500)
+      timers.push(timer)
+    }
+
+    return () => timers.forEach((timer) => window.clearTimeout(timer))
+  }, [availabilityTouched, emailRegistro, nombreUsuario])
 
   useEffect(() => {
     if (!isVerification) return
@@ -172,6 +212,7 @@ function App() {
   const registro = async (e) => {
     e.preventDefault()
     setErrorMsg('')
+    setRegisterFieldErrors({})
 
     try {
       const respuesta = await clienteAxios.post("/auth/registro", {
@@ -186,14 +227,16 @@ function App() {
       setPasswordRegistro('')
       setVerificationEmail(emailRegistro.trim())
       setVerificationCode('')
-      setVerificationNotice('')
+      setVerificationNotice('Cuenta creada. Revisa tu correo e ingresa el código para activar tu cuenta.')
 
       // Cerramos el modal de registro y abrimos la ventana de éxito
       setModalActivo(null)
       setMostrarVerificacion(true)
     } catch (error) {
       console.error('Error al registrar en el templo:', error)
-      setErrorMsg(error.response?.data?.mensaje || 'Error al crear la cuenta')
+      const payload = error.response?.data || {}
+      setRegisterFieldErrors(payload.field ? { [payload.field]: payload.message || payload.mensaje } : {})
+      setErrorMsg(payload.field ? '' : payload.mensaje || 'Error al crear la cuenta')
     }
   }
 
@@ -231,12 +274,14 @@ function App() {
     setVerificationNotice('')
     setVerificandoCodigo(true)
     try {
-      await clienteAxios.post('/auth/verify-email', { email: verificationEmail, code: verificationCode })
+      const { data } = await clienteAxios.post('/auth/verify-email', { email: verificationEmail, code: verificationCode })
+      localStorage.setItem('sofocles_token', data.token)
+      setUsuarioAutenticado(data.usuario)
       setMostrarVerificacion(false)
       setVerificationCode('')
       setVerificationNotice('')
       setAuthNotice('Correo verificado correctamente. Ya puedes iniciar sesión.')
-      setModalActivo('login')
+      navigateTo('/', { replace: true })
     } catch (error) {
       console.error(error)
       setVerificationNotice(error.response?.data?.error || 'No se pudo verificar el código.')
@@ -467,9 +512,18 @@ function App() {
                   placeholder="Ejemplo: SalveCesar17"
                   className="Input-Olimpo"
                   value={nombreUsuario}
-                  onChange={(e) => setNombreUsuario(e.target.value)}
+                  onChange={(e) => {
+                    setNombreUsuario(e.target.value)
+                    setRegisterFieldErrors((current) => ({ ...current, username: '' }))
+                    setAvailability((current) => ({ ...current, username: null }))
+                  }}
+                  onBlur={() => setAvailabilityTouched((current) => ({ ...current, username: true }))}
                   required
                 />
+                {registerFieldErrors.username && <p className="text-xs text-red-400 mt-1">{registerFieldErrors.username}</p>}
+                {availability.username?.checking && <p className="text-xs text-slate-400 mt-1">Comprobando disponibilidad…</p>}
+                {availability.username?.available === true && <p className="text-xs text-emerald-400 mt-1">✓ Username disponible</p>}
+                {availability.username?.available === false && <p className="text-xs text-red-400 mt-1">✗ Ese username ya está en uso</p>}
               </div>
               <div className="Form-Grupo">
                 <label>Correo Electrónico</label>
@@ -478,9 +532,25 @@ function App() {
                   placeholder="Ejemplo: romanos@sofocles.com"
                   className="Input-Olimpo"
                   value={emailRegistro}
-                  onChange={(e) => setEmailRegistro(e.target.value)}
+                  onChange={(e) => {
+                    setEmailRegistro(e.target.value)
+                    setRegisterFieldErrors((current) => ({ ...current, email: '' }))
+                    setAvailability((current) => ({ ...current, email: null }))
+                  }}
+                  onBlur={() => setAvailabilityTouched((current) => ({ ...current, email: true }))}
                   required
                 />
+                {registerFieldErrors.email && (
+                  <div className="text-xs text-red-400 mt-1 flex flex-col gap-1">
+                    <span>{registerFieldErrors.email}</span>
+                    <button type="button" className="underline text-amber-300 text-left" onClick={() => { setErrorMsg(''); setModalActivo('login') }}>
+                      Iniciar sesión o recuperar contraseña
+                    </button>
+                  </div>
+                )}
+                {availability.email?.checking && <p className="text-xs text-slate-400 mt-1">Comprobando disponibilidad…</p>}
+                {availability.email?.available === true && <p className="text-xs text-emerald-400 mt-1">✓ Correo disponible</p>}
+                {availability.email?.available === false && <p className="text-xs text-red-400 mt-1">✗ Ya existe una cuenta con este correo</p>}
               </div>
               <div className="Form-Grupo">
                 <label>Contraseña</label>
@@ -529,8 +599,10 @@ function App() {
       {mostrarVerificacion && (
         <div className="Overlay-Modal">
           <div className="Card-Formulario Modal-Animacion text-center flex flex-col items-center gap-4 p-8">
-            <h2 className="text-xl font-black text-amber-400 uppercase">Verifica tu correo</h2>
-            <p className="text-sm text-slate-300">Enviamos un código de seis dígitos a {verificationEmail}.</p>
+            <div className="text-5xl" aria-hidden="true">✉️</div>
+            <h2 className="text-2xl font-black text-amber-400 uppercase">¡Cuenta creada!</h2>
+            <p className="text-sm text-slate-300">Revisa tu correo e ingresa el código para activar tu cuenta.</p>
+            <p className="text-sm text-slate-400">Enviamos un código de seis dígitos a {verificationEmail}.</p>
             {verificationNotice && <p className="text-sm text-slate-300">{verificationNotice}</p>}
             <form className="w-full flex flex-col gap-3" onSubmit={verificarCodigo}>
               <input className="Input-Olimpo text-center tracking-[0.4em]" inputMode="numeric" maxLength={6} pattern="[0-9]{6}" value={verificationCode} onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, ''))} placeholder="000000" required />

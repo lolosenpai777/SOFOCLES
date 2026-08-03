@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
 import { prisma } from '../config/prisma.js'
 import { env } from '../config/env.js'
-import { createOpaqueToken, sendSecurityEmail, sendVerificationCodeEmail } from './mail.service.js'
+import { createOpaqueToken, sendSecurityEmail, sendVerificationCodeEmail, sendExistingAccountNotice } from './mail.service.js'
 import { ensureUserCanAuthenticate } from './suspension.service.js'
 import { normalizeUsername } from '../schemas/shared/username.schema.js'
 import { findUsernameConflict } from './username.service.js'
@@ -24,14 +24,6 @@ function errorWithStatus(message, statusCode, code) {
   return error
 }
 
-function genericRegistrationError() {
-  return errorWithStatus(
-    'Si el registro puede continuar, recibirás un correo de verificación.',
-    202,
-    'REGISTRATION_GENERIC',
-  )
-}
-
 export async function registerUser({ username, email, password }) {
   const cleanUsername = normalizeUsername(username)
   const cleanEmail = normalizeEmail(email)
@@ -49,11 +41,17 @@ export async function registerUser({ username, email, password }) {
     throw error
   }
 
-  const existingUser = await prisma.user.findUnique({ where: { email: cleanEmail } })
+  const existingUsers = await prisma.$queryRaw`SELECT id, email FROM "users" WHERE LOWER("email") = ${cleanEmail} LIMIT 1`
+  const existingUser = existingUsers[0] || null
   const existingUsername = existingUser ? null : await findUsernameConflict(cleanUsername)
 
-  if (existingUser) throw genericRegistrationError()
-  if (existingUsername) throw errorWithStatus('El username ya está en uso', 409)
+  if (existingUser) {
+    await sendExistingAccountNotice({ to: existingUser.email })
+    const error = errorWithStatus('Ya existe una cuenta con este correo. Inicia sesión o recupera tu contraseña.', 409, 'EMAIL_TAKEN')
+    error.field = 'email'
+    throw error
+  }
+  if (existingUsername) throw errorWithStatus('El username ya está en uso', 409, 'USERNAME_TAKEN')
 
   const passwordHash = await bcrypt.hash(cleanPassword, 10)
 
@@ -78,6 +76,16 @@ export async function registerUser({ username, email, password }) {
   await issueVerificationCode(user)
 
   return user
+}
+
+export async function checkRegistrationAvailability(field, value) {
+  if (field === 'username') {
+    return { available: !(await findUsernameConflict(value)) }
+  }
+
+  const cleanEmail = normalizeEmail(value)
+  const rows = await prisma.$queryRaw`SELECT id FROM "users" WHERE LOWER("email") = ${cleanEmail} LIMIT 1`
+  return { available: rows.length === 0 }
 }
 
 export async function issueVerificationCode(user) {
@@ -157,11 +165,15 @@ export async function verifyEmailCode(email, code) {
     throw invalid()
   }
 
-  await prisma.$transaction([
-    prisma.user.update({ where: { id: record.userId }, data: { emailVerified: true, emailVerifiedAt: new Date() } }),
+  const [verifiedUser] = await prisma.$transaction([
+    prisma.user.update({
+      where: { id: record.userId },
+      data: { emailVerified: true, emailVerifiedAt: new Date() },
+      select: { id: true, username: true, email: true, role: true, moderationRole: true, emailVerified: true, needsUsernameSetup: true },
+    }),
     prisma.emailVerificationToken.update({ where: { id: record.id }, data: { usedAt: new Date(), attemptCount: 0, lockedUntil: null } }),
   ])
-  return true
+  return verifiedUser
 }
 
 export async function resendVerification(email) {
