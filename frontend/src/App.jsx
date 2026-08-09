@@ -32,7 +32,7 @@ function App() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  // Estados para Registro (¡Nuevos!)
+  // Estados para Registro
   const [nombreUsuario, setNombreUsuario] = useState('')
   const [emailRegistro, setEmailRegistro] = useState('')
   const [passwordRegistro, setPasswordRegistro] = useState('')
@@ -48,18 +48,21 @@ function App() {
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(null)
   const [cargandoSesion, setCargandoSesion] = useState(true)
   const [pathname, setPathname] = useState(window.location.pathname)
+
   const query = new URLSearchParams(window.location.search)
   const resetToken = query.get('token')
   const isReset = pathname.includes('restablecer-contrasena') && resetToken
   const isVerification = pathname.includes('verificar-correo') && resetToken
   const isOAuthCallback = pathname === '/oauth/callback' || pathname === '/oauth/callback/'
   const oauthCode = query.get('code')
+
   const [newPassword, setNewPassword] = useState('')
   const [authNotice, setAuthNotice] = useState('')
   const [verificationEmail, setVerificationEmail] = useState('')
   const [verificationCode, setVerificationCode] = useState('')
   const [verificationNotice, setVerificationNotice] = useState('')
   const [verificandoCodigo, setVerificandoCodigo] = useState(false)
+
   const adminRoute = parseAdminRoute(pathname)
 
   const navigateTo = useCallback((nextPath, options = {}) => {
@@ -111,7 +114,8 @@ function App() {
 
   useEffect(() => {
     if (!isVerification) return
-    clienteAxios.post('/auth/verificar-correo', { token: resetToken })
+    clienteAxios
+      .post('/auth/verificar-correo', { token: resetToken })
       .then(() => setAuthNotice('Correo verificado. Ya puedes iniciar sesión.'))
       .catch(() => setAuthNotice('El enlace de verificación no es válido o expiró.'))
   }, [isVerification, resetToken])
@@ -119,8 +123,11 @@ function App() {
   useEffect(() => {
     const oauthError = query.get('oauthError')
     const oauthLinked = query.get('oauthLinked')
+
     if (oauthError === 'SOCIAL_EMAIL_REQUIRES_PASSWORD') {
-      setErrorMsg('Ya existe una cuenta con ese correo. Inicia sesión con tu contraseña y vincula la cuenta desde tu perfil.')
+      setErrorMsg(
+        'Ya existe una cuenta con ese correo. Inicia sesión con tu contraseña y vincula la cuenta desde tu perfil.'
+      )
     } else if (oauthError === 'LAST_LOGIN_METHOD') {
       setErrorMsg('No puedes desvincular tu único método de acceso. Establece una contraseña primero.')
     } else if (oauthError) {
@@ -132,7 +139,8 @@ function App() {
 
   useEffect(() => {
     if (!isOAuthCallback || !oauthCode) return
-    clienteAxios.post('/auth/oauth/exchange', { code: oauthCode })
+    clienteAxios
+      .post('/auth/oauth/exchange', { code: oauthCode })
       .then(({ data }) => {
         localStorage.setItem('sofocles_token', data.token)
         setUsuarioAutenticado(data.usuario)
@@ -185,10 +193,10 @@ function App() {
     setErrorMsg('')
 
     try {
-      const respuesta = await clienteAxios.post("/auth/login", {
+      const respuesta = await clienteAxios.post('/auth/login', {
         email,
         password,
-      });
+      })
 
       localStorage.setItem('sofocles_token', respuesta.data.token)
       setUsuarioAutenticado(respuesta.data.usuario)
@@ -208,18 +216,18 @@ function App() {
     }
   }
 
-  // Función de Registro (¡Nueva!)
+  // Función de Registro
   const registro = async (e) => {
     e.preventDefault()
     setErrorMsg('')
     setRegisterFieldErrors({})
 
     try {
-      const respuesta = await clienteAxios.post("/auth/registro", {
+      await clienteAxios.post('/auth/registro', {
         username: nombreUsuario,
         email: emailRegistro,
         password: passwordRegistro,
-      });
+      })
 
       // Limpiamos los campos del registro
       setNombreUsuario('')
@@ -248,24 +256,22 @@ function App() {
   const solicitarRecuperacion = async () => {
     const recoveryEmail = window.prompt('Escribe tu correo para recibir el enlace de recuperación:')
     if (!recoveryEmail) return
-    try { await clienteAxios.post('/auth/recuperar-contrasena', { email: recoveryEmail }); setErrorMsg('Revisa tu correo si la cuenta existe.') }
-    catch { setErrorMsg('No se pudo solicitar la recuperación.') }
+    try {
+      await clienteAxios.post('/auth/recuperar-contrasena', { email: recoveryEmail })
+      setErrorMsg('Revisa tu correo si la cuenta existe.')
+    } catch {
+      setErrorMsg('No se pudo solicitar la recuperación.')
+    }
   }
 
   const restablecerContrasena = async (event) => {
     event.preventDefault()
-    try { await clienteAxios.post('/auth/restablecer-contrasena', { token: resetToken, password: newPassword }); setAuthNotice('Contraseña actualizada. Ya puedes iniciar sesión.') }
-    catch (error) { setAuthNotice(error.response?.data?.error || 'No fue posible actualizar la contraseña.') }
-  }
-
-  if (cargandoSesion) {
-    return (
-      <div className="Olimpo-Contenedor min-h-screen flex items-center justify-center">
-        <div className="text-sm uppercase tracking-[0.35em]" style={{ color: 'var(--text-muted)' }}>
-          Cargando sesión...
-        </div>
-      </div>
-    )
+    try {
+      await clienteAxios.post('/auth/restablecer-contrasena', { token: resetToken, password: newPassword })
+      setAuthNotice('Contraseña actualizada. Ya puedes iniciar sesión.')
+    } catch (error) {
+      setAuthNotice(error.response?.data?.error || 'No fue posible actualizar la contraseña.')
+    }
   }
 
   const verificarCodigo = async (event) => {
@@ -274,7 +280,10 @@ function App() {
     setVerificationNotice('')
     setVerificandoCodigo(true)
     try {
-      const { data } = await clienteAxios.post('/auth/verify-email', { email: verificationEmail, code: verificationCode })
+      const { data } = await clienteAxios.post('/auth/verify-email', {
+        email: verificationEmail,
+        code: verificationCode,
+      })
       localStorage.setItem('sofocles_token', data.token)
       setUsuarioAutenticado(data.usuario)
       setMostrarVerificacion(false)
@@ -305,8 +314,26 @@ function App() {
     setUsuarioAutenticado((current) => ({ ...current, ...updatedUser, needsUsernameSetup: false }))
   }
 
+  if (cargandoSesion) {
+    return (
+      <div className="Olimpo-Contenedor min-h-screen flex items-center justify-center">
+        <div className="text-sm uppercase tracking-[0.35em]" style={{ color: 'var(--text-muted)' }}>
+          Cargando sesión...
+        </div>
+      </div>
+    )
+  }
+
   if (isOAuthCallback) {
-    return <div className="Olimpo-Contenedor"><div className="Auth-Scene"><div className="Auth-Panel"><p className="Auth-Panel__meta">Completando inicio de sesión...</p></div></div></div>
+    return (
+      <div className="Olimpo-Contenedor">
+        <div className="Auth-Scene">
+          <div className="Auth-Panel">
+            <p className="Auth-Panel__meta">Completando inicio de sesión...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (usuarioAutenticado) {
@@ -348,8 +375,52 @@ function App() {
     )
   }
 
-  if (isReset) return <div className="Olimpo-Contenedor"><div className="Auth-Scene"><form className="Auth-Panel" onSubmit={restablecerContrasena}><div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}><img src="/logosofo.png" alt="Sófocles" /></div><h1 className="sr-only">Nueva contraseña</h1><div className="Form-Grupo"><label>Nueva contraseña</label><input className="Input-Olimpo" type="password" minLength="8" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mínimo 8 caracteres"/></div><button className="Btn-Primario" type="submit">Actualizar contraseña</button>{authNotice && <p className="Auth-Panel__meta">{authNotice}</p>}</form></div></div>
-  if (isVerification) return <div className="Olimpo-Contenedor"><div className="Auth-Scene"><div className="Auth-Panel"><div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}><img src="/logosofo.png" alt="Sófocles" /></div><h1 className="sr-only">Verificación</h1><p className="Auth-Panel__meta">{authNotice || 'Verificando correo…'}</p></div></div></div>
+  if (isReset) {
+    return (
+      <div className="Olimpo-Contenedor">
+        <div className="Auth-Scene">
+          <form className="Auth-Panel" onSubmit={restablecerContrasena}>
+            <div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}>
+              <img src="/logosofo.png" alt="Sófocles" />
+            </div>
+            <h1 className="sr-only">Nueva contraseña</h1>
+            <div className="Form-Grupo">
+              <label>Nueva contraseña</label>
+              <input
+                className="Input-Olimpo"
+                type="password"
+                minLength="8"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 8 caracteres"
+              />
+            </div>
+            <button className="Btn-Primario" type="submit">
+              Actualizar contraseña
+            </button>
+            {authNotice && <p className="Auth-Panel__meta">{authNotice}</p>}
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  if (isVerification) {
+    return (
+      <div className="Olimpo-Contenedor">
+        <div className="Auth-Scene">
+          <div className="Auth-Panel">
+            <div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}>
+              <img src="/logosofo.png" alt="Sófocles" />
+            </div>
+            <h1 className="sr-only">Verificación</h1>
+            <p className="Auth-Panel__meta">{authNotice || 'Verificando correo…'}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="Olimpo-Contenedor">
@@ -358,66 +429,118 @@ function App() {
       <div className="Red-Geometrica" />
 
       <main className="Auth-Scene">
-        <section className="Auth-Panel">
-          <div className="Logo-Stage">
-            <div className="Logo-Stage__mark">
-              <img src="/logosofo.png" alt="Sófocles" />
+        <section className="Home-Layout">
+          <div className="Home-Panel Home-Panel--copy">
+            <span className="Home-Kicker">Templo social contemporáneo</span>
+            <div className="Logo-Stage Home-Branding">
+              <div className="Logo-Stage__mark Home-Branding__mark">
+                <img src="/logosofo.png" alt="Sófocles" />
+              </div>
+              <p className="Home-Headline">Una página de inicio más editorial, más limpia y con presencia real.</p>
+              <p className="Home-Subcopy">
+                Accede con tu cuenta, crea una nueva identidad o entra con Google y Discord desde una interfaz más
+                clara y visual.
+              </p>
             </div>
-            <p className="Auth-Panel__meta">
-              Una red visual más serena, centrada en la marca y pensada como un espacio de presencia.
-            </p>
+
+            <div className="Home-Metrics">
+              <article className="Home-MetricCard">
+                <strong>Login</strong>
+                <span>Acceso directo y rápido</span>
+              </article>
+              <article className="Home-MetricCard">
+                <strong>Register</strong>
+                <span>Altas con verificación por correo</span>
+              </article>
+              <article className="Home-MetricCard">
+                <strong>OAuth</strong>
+                <span>Google y Discord integrados</span>
+              </article>
+            </div>
+
+            <div className="Auth-Panel__actions Auth-Panel__actions--hero Home-Actions">
+              {usuarioAutenticado ? (
+                <button className="Btn-Primario" onClick={cerrarSesion}>
+                  Cerrar sesión
+                </button>
+              ) : (
+                <>
+                  <button
+                    className="Btn-Secundario"
+                    onClick={() => {
+                      setErrorMsg('')
+                      setModalActivo('login')
+                    }}
+                  >
+                    Iniciar sesión
+                  </button>
+                  <button
+                    className="Btn-Primario"
+                    onClick={() => {
+                      setErrorMsg('')
+                      setModalActivo('registro')
+                    }}
+                  >
+                    Registrar
+                  </button>
+                </>
+              )}
+            </div>
+
+            {errorMsg && <p className="Auth-Panel__meta text-red-600">{errorMsg}</p>}
           </div>
 
-          <div className="Auth-Panel__actions Auth-Panel__actions--hero">
-            {usuarioAutenticado ? (
-              <button className="Btn-Primario" onClick={cerrarSesion}>
-                Cerrar sesión
-              </button>
-            ) : (
-              <>
-                <button
-                  className="Btn-Secundario"
-                  onClick={() => {
-                    setErrorMsg('')
-                    setModalActivo('login')
-                  }}
-                >
-                  Iniciar sesión
-                </button>
-                <button
-                  className="Btn-Primario"
-                  onClick={() => {
-                    setErrorMsg('')
-                    setModalActivo('registro')
-                  }}
-                >
-                  Registrar
-                </button>
-              </>
-            )}
-          </div>
+          <aside className="Home-Panel Home-Panel--visual">
+            <div className="Home-PreviewCard">
+              <p className="Home-PreviewCard__eyebrow">Experiencia de entrada</p>
+              <h2 className="Home-PreviewCard__title">
+                Login y registro con contraste, jerarquía y foco en conversión.
+              </h2>
+              <p className="Home-PreviewCard__text">
+                La nueva portada separa mejor la marca, los accesos y la propuesta visual para que el primer impacto
+                sea más claro.
+              </p>
+              <div className="Home-PreviewCard__chips">
+                <span>Glass UI</span>
+                <span>Marca centrada</span>
+                <span>Accesos directos</span>
+              </div>
+            </div>
 
-          {errorMsg && <p className="Auth-Panel__meta text-red-600">{errorMsg}</p>}
+            <div className="Home-InfoGrid">
+              <article>
+                <strong>1</strong>
+                <span>Abre login o registro desde la portada</span>
+              </article>
+              <article>
+                <strong>2</strong>
+                <span>Usa OAuth o correo con validación</span>
+              </article>
+              <article>
+                <strong>3</strong>
+                <span>Entra al feed con una sesión persistente</span>
+              </article>
+            </div>
+          </aside>
         </section>
       </main>
 
       {/* MODAL DE LOGIN */}
-      {modalActivo === "login" && (
+      {modalActivo === 'login' && (
         <div className="Overlay-Modal">
-          <div className="Card-Formulario Modal-Animacion">
+          <div className="Card-Formulario Card-Formulario--auth Card-Formulario--login Modal-Animacion">
             <button className="Btn-Cerrar" onClick={() => setModalActivo(null)}>
               ✕
             </button>
 
-            <div className="text-center">
+            <div className="Auth-CardHero text-center">
               <div className="Logo-Lockup Logo-Lockup--compact justify-center mb-1">
                 <div className="Logo-Marca Logo-Marca--compact">
                   <img src="/logosofo.png" alt="Sófocles" />
                 </div>
               </div>
-              <p className="text-xs text-slate-400">
-                Ingresa al templo de la red
-              </p>
+              <p className="Auth-CardHero__eyebrow">Acceso inmediato</p>
+              <p className="Auth-CardHero__title">Ingresa al templo de la red</p>
             </div>
 
             {errorMsg && (
@@ -457,12 +580,29 @@ function App() {
               </button>
             </form>
 
-            <div className="flex flex-col gap-2 pt-2">
-              <button type="button" className="Btn-Secundario w-full" onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/google` }}>
-                Continuar con Google
+            <div className="Auth-CardSocial flex flex-row items-center justify-center gap-4 pt-2">
+              <button
+                type="button"
+                className="Btn-Social-Icon"
+                aria-label="Continuar con Google"
+                title="Continuar con Google"
+                onClick={() => {
+                  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/google`
+                }}
+              >
+                <img src="/google-178-svgrepo-com.svg" alt="Google" className="w-6 h-6 object-contain" />
               </button>
-              <button type="button" className="Btn-Secundario w-full" onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/discord` }}>
-                Continuar con Discord
+
+              <button
+                type="button"
+                className="Btn-Social-Icon"
+                aria-label="Continuar con Discord"
+                title="Continuar con Discord"
+                onClick={() => {
+                  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/discord`
+                }}
+              >
+                <img src="/discord-svgrepo-com.svg" alt="Discord" className="w-6 h-6 object-contain" />
               </button>
             </div>
 
@@ -480,22 +620,21 @@ function App() {
       )}
 
       {/* MODAL DE REGISTRO */}
-      {modalActivo === "registro" && (
+      {modalActivo === 'registro' && (
         <div className="Overlay-Modal">
-          <div className="Card-Formulario Modal-Animacion">
+          <div className="Card-Formulario Card-Formulario--auth Card-Formulario--register Modal-Animacion">
             <button className="Btn-Cerrar" onClick={() => setModalActivo(null)}>
               ✕
             </button>
 
-            <div className="text-center">
+            <div className="Auth-CardHero text-center">
               <div className="Logo-Lockup Logo-Lockup--compact justify-center mb-1">
                 <div className="Logo-Marca Logo-Marca--compact">
                   <img src="/logosofo.png" alt="Sófocles" />
                 </div>
               </div>
-              <p className="text-xs text-slate-400">
-                Forja tu identidad en el orden
-              </p>
+              <p className="Auth-CardHero__eyebrow">Crear cuenta</p>
+              <p className="Auth-CardHero__title">Forja tu identidad en el orden</p>
             </div>
 
             {errorMsg && (
@@ -520,11 +659,20 @@ function App() {
                   onBlur={() => setAvailabilityTouched((current) => ({ ...current, username: true }))}
                   required
                 />
-                {registerFieldErrors.username && <p className="text-xs text-red-400 mt-1">{registerFieldErrors.username}</p>}
-                {availability.username?.checking && <p className="text-xs text-slate-400 mt-1">Comprobando disponibilidad…</p>}
-                {availability.username?.available === true && <p className="text-xs text-emerald-400 mt-1">✓ Username disponible</p>}
-                {availability.username?.available === false && <p className="text-xs text-red-400 mt-1">✗ Ese username ya está en uso</p>}
+                {registerFieldErrors.username && (
+                  <p className="text-xs text-red-400 mt-1">{registerFieldErrors.username}</p>
+                )}
+                {availability.username?.checking && (
+                  <p className="text-xs text-slate-400 mt-1">Comprobando disponibilidad…</p>
+                )}
+                {availability.username?.available === true && (
+                  <p className="text-xs text-emerald-400 mt-1">✓ Username disponible</p>
+                )}
+                {availability.username?.available === false && (
+                  <p className="text-xs text-red-400 mt-1">✗ Ese username ya está en uso</p>
+                )}
               </div>
+
               <div className="Form-Grupo">
                 <label>Correo Electrónico</label>
                 <input
@@ -543,15 +691,29 @@ function App() {
                 {registerFieldErrors.email && (
                   <div className="text-xs text-red-400 mt-1 flex flex-col gap-1">
                     <span>{registerFieldErrors.email}</span>
-                    <button type="button" className="underline text-amber-300 text-left" onClick={() => { setErrorMsg(''); setModalActivo('login') }}>
+                    <button
+                      type="button"
+                      className="underline text-amber-300 text-left"
+                      onClick={() => {
+                        setErrorMsg('')
+                        setModalActivo('login')
+                      }}
+                    >
                       Iniciar sesión o recuperar contraseña
                     </button>
                   </div>
                 )}
-                {availability.email?.checking && <p className="text-xs text-slate-400 mt-1">Comprobando disponibilidad…</p>}
-                {availability.email?.available === true && <p className="text-xs text-emerald-400 mt-1">✓ Correo disponible</p>}
-                {availability.email?.available === false && <p className="text-xs text-red-400 mt-1">✗ Ya existe una cuenta con este correo</p>}
+                {availability.email?.checking && (
+                  <p className="text-xs text-slate-400 mt-1">Comprobando disponibilidad…</p>
+                )}
+                {availability.email?.available === true && (
+                  <p className="text-xs text-emerald-400 mt-1">✓ Correo disponible</p>
+                )}
+                {availability.email?.available === false && (
+                  <p className="text-xs text-red-400 mt-1">✗ Ya existe una cuenta con este correo</p>
+                )}
               </div>
+
               <div className="Form-Grupo">
                 <label>Contraseña</label>
                 <input
@@ -563,6 +725,7 @@ function App() {
                   required
                 />
               </div>
+
               <button
                 type="submit"
                 className="Btn-Primario w-full py-3 rounded-xl font-bold tracking-wider mt-2 cursor-pointer transition-all active:scale-95"
@@ -571,16 +734,39 @@ function App() {
               </button>
             </form>
 
-            <div className="flex flex-col gap-2 pt-2">
-              <button type="button" className="Btn-Secundario w-full" onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/google` }}>
-                Continuar con Google
+            <div className="Auth-CardSocial flex flex-row items-center justify-center gap-4 pt-2">
+              <button
+                type="button"
+                className="Btn-Social-Icon"
+                aria-label="Continuar con Google"
+                title="Continuar con Google"
+                onClick={() => {
+                  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/google`
+                }}
+              >
+                <img src="/google-178-svgrepo-com.svg" alt="Google" className="w-6 h-6 object-contain" />
               </button>
-              <button type="button" className="Btn-Secundario w-full" onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/discord` }}>
-                Continuar con Discord
+
+              <button
+                type="button"
+                className="Btn-Social-Icon"
+                aria-label="Continuar con Discord"
+                title="Continuar con Discord"
+                onClick={() => {
+                  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/discord`
+                }}
+              >
+                <img src="/discord-svgrepo-com.svg" alt="Discord" className="w-6 h-6 object-contain" />
               </button>
             </div>
 
-            <button className="Enlace-Simple border-none bg-none cursor-pointer" type="button" onClick={solicitarRecuperacion}>¿Olvidaste tu contraseña?</button>
+            <button
+              className="Enlace-Simple border-none bg-none cursor-pointer"
+              type="button"
+              onClick={solicitarRecuperacion}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
 
             <button
               className="Enlace-Simple border-none bg-none cursor-pointer"
@@ -595,27 +781,55 @@ function App() {
         </div>
       )}
 
-      {/* VENTANA EMERGENTE: ¡USUARIO FORJADO EN EL OLIMPO! */}
+      {/* VENTANA EMERGENTE: VERIFICACIÓN CÓDIGO */}
       {mostrarVerificacion && (
         <div className="Overlay-Modal">
           <div className="Card-Formulario Modal-Animacion text-center flex flex-col items-center gap-4 p-8">
-            <div className="text-5xl" aria-hidden="true">✉️</div>
+            <div className="text-5xl" aria-hidden="true">
+              ✉️
+            </div>
             <h2 className="text-2xl font-black text-amber-400 uppercase">¡Cuenta creada!</h2>
             <p className="text-sm text-slate-300">Revisa tu correo e ingresa el código para activar tu cuenta.</p>
             <p className="text-sm text-slate-400">Enviamos un código de seis dígitos a {verificationEmail}.</p>
             {verificationNotice && <p className="text-sm text-slate-300">{verificationNotice}</p>}
+
             <form className="w-full flex flex-col gap-3" onSubmit={verificarCodigo}>
-              <input className="Input-Olimpo text-center tracking-[0.4em]" inputMode="numeric" maxLength={6} pattern="[0-9]{6}" value={verificationCode} onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, ''))} placeholder="000000" required />
-              <button type="submit" disabled={verificandoCodigo} className="Btn-Primario w-full py-3 rounded-xl font-bold disabled:cursor-not-allowed disabled:opacity-60">
+              <input
+                className="Input-Olimpo text-center tracking-[0.4em]"
+                inputMode="numeric"
+                maxLength={6}
+                pattern="[0-9]{6}"
+                value={verificationCode}
+                onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                required
+              />
+              <button
+                type="submit"
+                disabled={verificandoCodigo}
+                className="Btn-Primario w-full py-3 rounded-xl font-bold disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 {verificandoCodigo ? 'Verificando…' : 'Verificar correo'}
               </button>
             </form>
-            <button onClick={reenviarCodigo} className="Enlace-Simple border-none bg-none cursor-pointer">Reenviar código</button>
-            <button onClick={() => { setMostrarVerificacion(false); setModalActivo('login') }} className="Enlace-Simple border-none bg-none cursor-pointer">Volver al inicio de sesión</button>
+
+            <button onClick={reenviarCodigo} className="Enlace-Simple border-none bg-none cursor-pointer">
+              Reenviar código
+            </button>
+            <button
+              onClick={() => {
+                setMostrarVerificacion(false)
+                setModalActivo('login')
+              }}
+              className="Enlace-Simple border-none bg-none cursor-pointer"
+            >
+              Volver al inicio de sesión
+            </button>
           </div>
         </div>
       )}
 
+      {/* VENTANA EMERGENTE: ÉXITO */}
       {mostrarExito && (
         <div className="Overlay-Modal">
           <div className="Card-Formulario Modal-Animacion border border-amber-500/30 text-center flex flex-col items-center gap-6 p-8">
@@ -626,9 +840,8 @@ function App() {
                 ¡Usuario Forjado en el Olimpo!
               </h2>
               <p className="text-sm text-slate-300 leading-relaxed">
-                Tu alma ha sido registrada con éxito en los registros de
-                **Sófocles**. Tu camino hacia el nuevo orden social ha
-                comenzado.
+                Tu alma ha sido registrada con éxito en los registros de **Sófocles**. Tu camino hacia el nuevo orden
+                social ha comenzado.
               </p>
             </div>
 
@@ -637,7 +850,7 @@ function App() {
             <button
               onClick={() => {
                 setMostrarExito(false)
-                setModalActivo('login') // Lo manda directo a loguearse
+                setModalActivo('login')
               }}
               className="Btn-Primario w-full py-3 rounded-xl font-bold tracking-wider cursor-pointer transition-all active:scale-95 shadow-lg shadow-amber-500/10"
             >
@@ -647,7 +860,7 @@ function App() {
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

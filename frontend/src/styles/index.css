@@ -46,21 +46,16 @@ html,
 body,
 #root {
   min-height: 100%;
-}
-
-body {
   margin: 0;
   padding: 0;
   font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: radial-gradient(circle at top left, rgba(99, 207, 154, 0.14), transparent 24%), linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   color: var(--text-primary);
-  -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
   background: var(--accent-soft);
-  color: var(--text-primary);
 }
 
 /* --- ACCESIBILIDAD BÁSICA (Foco Visible) --- */
@@ -99,12 +94,12 @@ body {
 /* Auras ambientales en tonos verde clarito y musgo sutil */
 .Aura-Apolo-Cyan {
   @apply absolute top-[-10%] left-[10%] w-[500px] h-[500px] rounded-full blur-[130px] pointer-events-none z-0;
-  background-color: rgba(187, 209, 172, 0.2); /* Verde clarito / salvia */
+  background-color: rgba(187, 209, 172, 0.2);
 }
 
 .Aura-Afrodita-Magenta {
   @apply absolute bottom-[10%] right-[5%] w-[600px] h-[600px] rounded-full blur-[150px] pointer-events-none z-0;
-  background-color: rgba(206, 222, 194, 0.25); /* Verde arena / musgo claro */
+  background-color: rgba(206, 222, 194, 0.25);
 }
 
 .Red-Geometrica {
@@ -119,23 +114,21 @@ body {
 
 /* --- GLASSMORPHISM PARA ENTORNOS CLAROS --- */
 .Banner-Olimpo {
-  @apply relative z-10 w-full max-w-7xl mx-auto rounded-[28px] p-6 flex flex-col items-center justify-center gap-5 text-center;
+  @apply relative z-10 w-full max-w-7xl mx-auto rounded-[28px] p-6 flex flex-col items-center justify-center gap-5 text-center font-sans;
   background: linear-gradient(135deg, var(--surface-strong), var(--surface-muted));
   border: 1px solid var(--border);
   box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(24px) saturate(160%);
 }
 
-/* Contenedor de las acciones centrado */
 .Banner-Olimpo__actions {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
   width: auto !important;
-  
-  /* AQUÍ ESTÁ LA MAGIA PARA BAJARLOS */
   margin: 0 auto !important;
-  margin-top: 1.5rem !important; /* Juega con este valor (ej. 1rem o 2rem) hasta que te guste */
+  margin-top: 1.5rem !important;
+  @apply flex-wrap gap-3;
 }
 
 .Banner-Olimpo--feed {
@@ -153,39 +146,36 @@ body {
 .Banner-Olimpo__mark img {
   width: 100%;
   height: auto;
-  display: center;
+  display: block;
+  margin: 0 auto;
   filter: drop-shadow(0 18px 28px rgba(2, 6, 23, 0.14));
 }
 
 .Banner-Olimpo__copy {
-  @apply flex flex-col gap-2 max-w-3xl;
+  @apply flex flex-col gap-2 max-w-3xl font-sans;
 }
 
 .Banner-Olimpo__eyebrow {
-  @apply text-[10px] uppercase tracking-[0.45em] font-black text-emerald-700/70;
+  @apply text-[10px] uppercase tracking-[0.45em] font-black text-emerald-700/70 font-sans;
 }
 
 .Banner-Olimpo__title {
-  @apply text-2xl md:text-4xl font-extrabold tracking-tight text-stone-900;
+  @apply text-2xl md:text-4xl font-extrabold tracking-tight text-stone-900 font-sans;
   letter-spacing: -0.03em;
 }
 
 .Banner-Olimpo__subtitle {
-  @apply text-sm md:text-base leading-relaxed text-stone-600 max-w-2xl;
+  @apply text-sm md:text-base leading-relaxed text-stone-600 max-w-2xl font-sans;
 }
 
 .Banner-Olimpo__profile-link {
-  @apply self-start mt-2 text-left text-xs uppercase tracking-[0.28em] cursor-pointer border-none bg-transparent p-0;
+  @apply self-start mt-2 text-left text-xs uppercase tracking-[0.28em] cursor-pointer border-none bg-transparent p-0 font-sans;
   color: var(--accent-strong);
 }
 
 .Banner-Olimpo__profile-link:hover {
   color: var(--accent);
   text-decoration: underline;
-}
-
-.Banner-Olimpo__actions {
-  @apply flex flex-wrap items-center justify-between gap-3;
 }
 
 .Banner-Olimpo__action-group {
@@ -208,7 +198,7 @@ html.theme-dark .Banner-Olimpo__eyebrow {
 
 .Auth-Panel__actions--hero .Btn-Secundario,
 .Auth-Panel__actions--hero .Btn-Primario {
-  @apply px-5 py-3 rounded-[18px] text-sm font-semibold tracking-[0.18em] uppercase transition-all duration-300 cursor-pointer;
+  @apply px-5 py-3 rounded-[18px] text-sm font-semibold tracking-[0.18em] uppercase transition-all duration-300 cursor-pointer font-sans;
   min-height: 3.25rem;
 }
 
@@ -249,46 +239,15 @@ html.theme-dark .Auth-Panel__actions--hero .Btn-Primario {
   box-shadow: 0 16px 34px rgba(16, 185, 129, 0.22);
 }
 
-/* --- LOGO GLASS / BUBBLE WORDMARK --- */
-/* --- CONTENEDOR DEL LOGO (CENTRADO EN EL BANNER) --- */
+/* --- LOGO Y CENTRADO EN INICIO --- */
 .Logo-Lockup {
   display: inline-flex;
-  flex-direction: column; /* Apila el emblema y el texto o los centra */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
-  margin: 0 auto; /* Asegura centrado horizontal en flex/grid */
+  margin: 0 auto;
   text-align: center;
-}
-
-.Logo-Lockup--compact {
-  gap: 0.3rem;
-}
-
-/* Quitamos la caja/cuadro rígido (.Logo-Marca) para que el logo respire libremente */
-.Logo-Marca {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  padding: 0;
-  width: clamp(10rem, 22vw, 15rem);
-  height: auto;
-}
-
-.Logo-Marca--compact {
-  width: clamp(7rem, 16vw, 9rem);
-}
-
-.Logo-Marca img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 10px 22px rgba(2, 6, 23, 0.12));
 }
 
 .Logo-Stage {
@@ -309,34 +268,285 @@ html.theme-dark .Auth-Panel__actions--hero .Btn-Primario {
   filter: drop-shadow(0 22px 40px rgba(2, 6, 23, 0.16));
 }
 
-.Logo-Stage__caption {
-  max-width: 34rem;
-  color: var(--text-secondary);
-  font-size: 0.92rem;
-  line-height: 1.6;
-}
-
 .Auth-Scene {
   @apply relative z-10 min-h-screen flex items-center justify-center px-4 py-10;
 }
 
+.Home-Layout {
+  @apply relative z-10 w-full max-w-7xl mx-auto grid gap-6 lg:grid-cols-[1.08fr_0.92fr] items-stretch;
+}
+
+.Home-Panel {
+  @apply rounded-[34px] p-7 md:p-10 flex flex-col gap-6 font-sans;
+  background: linear-gradient(135deg, var(--surface-strong), var(--surface-muted));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  backdrop-filter: blur(28px) saturate(180%);
+}
+
+.Home-Panel--copy {
+  justify-content: center;
+}
+
+.Home-Panel--visual {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.42));
+}
+
+.Home-Kicker {
+  @apply inline-flex self-start rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-[0.38em] font-sans;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+/* LOGO DEL INICIO COMPLETAMENTE CENTRADO */
+.Home-Branding {
+  @apply flex flex-col items-center justify-center text-center gap-5 w-full mx-auto;
+}
+
+.Home-Branding .Logo-Stage__mark {
+  width: min(64vw, 330px);
+  margin: 0 auto;
+}
+
+.Home-Headline {
+  @apply text-3xl md:text-5xl font-black leading-[0.98] tracking-tight max-w-xl font-sans;
+  letter-spacing: -0.045em;
+  color: var(--text-primary);
+}
+
+.Home-Subcopy {
+  @apply text-sm md:text-base leading-relaxed max-w-2xl font-sans;
+  color: var(--text-secondary);
+}
+
+.Home-Metrics {
+  @apply grid gap-3 sm:grid-cols-3 font-sans;
+}
+
+.Home-MetricCard {
+  @apply rounded-2xl px-4 py-4 flex flex-col gap-1 text-left font-sans;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36);
+}
+
+.Home-MetricCard strong {
+  @apply text-xs uppercase tracking-[0.32em] font-black font-sans;
+  color: var(--accent-strong);
+}
+
+.Home-MetricCard span {
+  @apply text-sm leading-snug font-sans;
+  color: var(--text-secondary);
+}
+
+.Home-Actions {
+  @apply justify-start;
+}
+
+.Home-PreviewCard {
+  @apply rounded-[30px] p-6 md:p-7 flex flex-col gap-4 h-full justify-between font-sans;
+  background:
+    radial-gradient(circle at top right, rgba(61, 107, 86, 0.18), transparent 34%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.52));
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), 0 18px 40px rgba(22, 35, 54, 0.08);
+}
+
+.Home-PreviewCard__eyebrow {
+  @apply text-[10px] uppercase tracking-[0.4em] font-black font-sans;
+  color: var(--accent-strong);
+}
+
+.Home-PreviewCard__title {
+  @apply text-2xl md:text-3xl font-black leading-tight font-sans;
+  color: var(--text-primary);
+}
+
+.Home-PreviewCard__text {
+  @apply text-sm leading-relaxed font-sans;
+  color: var(--text-secondary);
+}
+
+.Home-PreviewCard__chips {
+  @apply flex flex-wrap gap-2;
+}
+
+.Home-PreviewCard__chips span {
+  @apply rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] font-sans;
+  background: rgba(61, 107, 86, 0.08);
+  color: var(--accent-strong);
+  border: 1px solid rgba(61, 107, 86, 0.12);
+}
+
+.Home-InfoGrid {
+  @apply grid gap-3 sm:grid-cols-3 font-sans;
+}
+
+.Home-InfoGrid article {
+  @apply rounded-2xl p-4 flex flex-col gap-2 font-sans;
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.64);
+}
+
+.Home-InfoGrid strong {
+  @apply text-xs font-black uppercase tracking-[0.35em] font-sans;
+  color: var(--accent-strong);
+}
+
+.Home-InfoGrid span {
+  @apply text-sm leading-snug font-sans;
+  color: var(--text-secondary);
+}
+
 .Auth-Panel {
-  @apply w-full max-w-2xl rounded-[32px] p-8 md:p-10 flex flex-col gap-7 text-center;
+  @apply w-full max-w-2xl rounded-[32px] p-8 md:p-10 flex flex-col gap-7 text-center font-sans;
   background: linear-gradient(135deg, var(--surface-strong), var(--surface-muted));
   border: 1px solid var(--border);
   box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(28px) saturate(180%);
 }
 
+.Card-Formulario--auth {
+  @apply gap-5 font-sans;
+  max-width: 34rem;
+  max-height: min(80vh, 42rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.Card-Formulario--login {
+  background:
+    radial-gradient(circle at top left, rgba(61, 107, 86, 0.12), transparent 32%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.82));
+}
+
+.Card-Formulario--register {
+  background:
+    radial-gradient(circle at top right, rgba(61, 107, 86, 0.14), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.82));
+}
+
+.Auth-CardHero {
+  @apply flex flex-col gap-2 items-center font-sans;
+}
+
+.Auth-CardHero__eyebrow {
+  @apply text-[10px] uppercase tracking-[0.42em] font-black font-sans;
+  color: var(--accent-strong);
+}
+
+.Auth-CardHero__title {
+  @apply text-xl md:text-2xl font-black leading-tight font-sans;
+  color: var(--text-primary);
+}
+
+/* CONTENEDOR Y BOTONES SOCIALES DE GOOGLE Y DISCORD */
+.Auth-CardSocial {
+  @apply flex flex-row items-center justify-center gap-4 pt-2;
+}
+
+.Btn-Social-Icon {
+  @apply inline-flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 cursor-pointer;
+  background: linear-gradient(135deg, var(--surface-muted), rgba(255, 255, 255, 0.2));
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 20px rgba(22, 35, 54, 0.06);
+  backdrop-filter: blur(12px);
+}
+
+.Btn-Social-Icon:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: var(--accent-soft);
+  border-color: rgba(61, 107, 86, 0.3);
+  box-shadow: 0 12px 24px rgba(61, 107, 86, 0.2);
+}
+
+.Btn-Social-Icon:active {
+  transform: scale(0.95);
+}
+
+html.theme-dark .Btn-Social-Icon {
+  background: linear-gradient(135deg, rgba(15, 24, 42, 0.8), rgba(30, 41, 59, 0.6));
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+html.theme-dark .Btn-Social-Icon:hover {
+  background: rgba(99, 207, 154, 0.18);
+  border-color: var(--accent);
+}
+
+html.theme-dark .Home-Panel,
+html.theme-dark .Home-PreviewCard,
+html.theme-dark .Home-MetricCard,
+html.theme-dark .Home-InfoGrid article {
+  background: linear-gradient(160deg, rgba(10, 18, 32, 0.88), rgba(15, 24, 42, 0.62));
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+html.theme-dark .Home-Headline,
+html.theme-dark .Home-PreviewCard__title,
+html.theme-dark .Auth-CardHero__title {
+  color: var(--text-primary);
+}
+
+html.theme-dark .Home-Subcopy,
+html.theme-dark .Home-MetricCard span,
+html.theme-dark .Home-PreviewCard__text,
+html.theme-dark .Home-InfoGrid span {
+  color: var(--text-secondary);
+}
+
+html.theme-dark .Home-Kicker,
+html.theme-dark .Home-PreviewCard__eyebrow,
+html.theme-dark .Auth-CardHero__eyebrow,
+html.theme-dark .Home-MetricCard strong,
+html.theme-dark .Home-InfoGrid strong {
+  color: var(--accent);
+}
+
+html.theme-dark .Card-Formulario--login,
+html.theme-dark .Card-Formulario--register {
+  background:
+    radial-gradient(circle at top left, rgba(99, 207, 154, 0.12), transparent 30%),
+    linear-gradient(135deg, rgba(8, 15, 27, 0.95), rgba(14, 22, 39, 0.9));
+}
+
+@media (max-width: 1024px) {
+  .Home-Layout {
+    @apply grid-cols-1;
+  }
+
+  .Home-Panel--visual {
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .Home-Headline {
+    @apply text-2xl;
+  }
+
+  .Home-Metrics,
+  .Home-InfoGrid {
+    @apply grid-cols-1;
+  }
+
+  .Card-Formulario--auth {
+    max-width: 100%;
+    max-height: 84vh;
+  }
+}
+
 .Auth-Panel__actions {
-  @apply flex flex-col sm:flex-row gap-3 justify-center;
+  @apply flex flex-col sm:flex-row gap-3 justify-center font-sans;
 }
 
 .Auth-Panel__meta {
   color: var(--text-secondary);
+  @apply font-sans;
 }
 
-/* Corrección para los botones del Banner / Header */
 .Header-Action-Button {
   display: inline-flex !important;
   align-items: center !important;
@@ -355,7 +565,7 @@ html.theme-dark .Auth-Panel__actions--hero .Btn-Primario {
 .Header-Action-Button:hover {
   transform: translateY(-2px) scale(1.05) !important;
   background: rgba(255, 255, 255, 0.85) !important;
-  border-color: var(--emerald-vibrant) !important;
+  border-color: var(--accent-strong) !important;
 }
 
 .Header-Action-Button img,
@@ -374,17 +584,20 @@ html.theme-dark .Logo-Marca img {
 }
 
 .Controles-Acceso {
-  @apply flex flex-wrap items-center justify-center gap-3;
+  @apply flex flex-wrap items-center justify-center gap-4 font-sans;
 }
 
-/* --- LOGO SOFOCLES (TEXTO CENTRADO Y FLUIDO) --- */
+.Controles-Acceso button {
+  @apply px-6 py-2.5 rounded-xl font-bold tracking-wider text-xs uppercase transition-all duration-300 active:scale-95 cursor-pointer font-sans;
+}
+
 .Logo-Sofocles {
   position: relative;
   display: inline-block;
   cursor: pointer;
   font-family: "SF Pro Display", "Avenir Next", "Trebuchet MS", sans-serif !important;
   font-weight: 900;
-  font-size: clamp(2.5rem, 5vw, 4.8rem); /* Un poco más imponente en el centro */
+  font-size: clamp(2.5rem, 5vw, 4.8rem);
   line-height: 1;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -393,16 +606,7 @@ html.theme-dark .Logo-Marca img {
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   -webkit-text-stroke: 1px rgba(255, 255, 255, 0.34);
-  text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.88),
-    0 2px 0 rgba(255, 255, 255, 0.55),
-    0 3px 0 rgba(6, 78, 59, 0.35),
-    0 10px 18px rgba(2, 6, 23, 0.18),
-    0 0 18px rgba(99, 207, 154, 0.24);
-  filter: drop-shadow(0 10px 18px rgba(2, 6, 23, 0.12));
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
 }
-
 .Logo-Sofocles:hover {
   transform: translateY(-2px) scale(1.04);
   filter: drop-shadow(0 14px 26px rgba(2, 6, 23, 0.18)) drop-shadow(0 0 20px rgba(99, 207, 154, 0.45));
@@ -425,16 +629,8 @@ html.theme-dark .Logo-Sofocles {
     0 0 18px rgba(99, 207, 154, 0.18);
 }
 
-.Controles-Acceso {
-  @apply flex gap-4;
-}
-
-.Controles-Acceso button {
-  @apply px-6 py-2.5 rounded-xl font-bold tracking-wider text-xs uppercase transition-all duration-300 active:scale-95 cursor-pointer;
-}
-
 .Btn-Secundario {
-  @apply inline-flex items-center justify-center gap-2 border backdrop-blur-md transition-all duration-300;
+  @apply inline-flex items-center justify-center gap-2 border backdrop-blur-md transition-all duration-300 font-sans;
   border-color: var(--border);
   color: var(--text-primary);
   background: linear-gradient(135deg, var(--surface-muted), rgba(255, 255, 255, 0.2));
@@ -451,7 +647,7 @@ html.theme-dark .Logo-Sofocles {
 }
 
 .Btn-Primario {
-  @apply text-white transition-all duration-300;
+  @apply text-white transition-all duration-300 font-sans;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
   box-shadow: 0 12px 24px rgba(61, 107, 86, 0.2);
 }
@@ -462,15 +658,15 @@ html.theme-dark .Logo-Sofocles {
 }
 
 .Seccion-Hero {
-  @apply relative z-10 w-full max-w-4xl mx-auto my-12 text-center flex flex-col items-center gap-8 px-4;
+  @apply relative z-10 w-full max-w-4xl mx-auto my-12 text-center flex flex-col items-center gap-8 px-4 font-sans;
 }
 
 .Detalle-Corona {
-  @apply text-sm tracking-[0.5em] text-emerald-700/60 uppercase font-bold;
+  @apply text-sm tracking-[0.5em] text-emerald-700/60 uppercase font-bold font-sans;
 }
 
 .Eslogan-Olimpo {
-  @apply text-3xl sm:text-5xl md:text-6xl font-light tracking-wide leading-tight text-stone-800 max-w-3xl;
+  @apply text-3xl sm:text-5xl md:text-6xl font-light tracking-wide leading-tight text-stone-800 max-w-3xl font-sans;
 }
 
 .Texto-Gradiente {
@@ -478,8 +674,7 @@ html.theme-dark .Logo-Sofocles {
 }
 
 .Caja-Conectados {
-  /* Panel central de cristal esmerilado claro */
-  @apply w-full max-w-2xl bg-white/30 border-y border-white/50 py-5 backdrop-blur-xl relative;
+  @apply w-full max-w-2xl bg-white/30 border-y border-white/50 py-5 backdrop-blur-xl relative font-sans;
   box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.4);
 }
 
@@ -498,11 +693,11 @@ html.theme-dark .Logo-Sofocles {
 }
 
 .Texto-Conectados {
-  @apply block font-black tracking-[0.3em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 via-emerald-600 to-stone-500 text-3xl sm:text-4xl md:text-5xl;
+  @apply block font-black tracking-[0.3em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 via-emerald-600 to-stone-500 text-3xl sm:text-4xl md:text-5xl font-sans;
 }
 
 .Footer-Olimpo {
-  @apply relative z-10 w-full max-w-7xl mx-auto rounded-t-[28px] p-8 text-center mb-16 md:mb-0;
+  @apply relative z-10 w-full max-w-7xl mx-auto rounded-t-[28px] p-8 text-center mb-16 md:mb-0 font-sans;
   background: linear-gradient(135deg, var(--surface-muted), rgba(255, 255, 255, 0.14));
   border-top: 1px solid var(--border);
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.04);
@@ -510,20 +705,19 @@ html.theme-dark .Logo-Sofocles {
 }
 
 .Footer-Olimpo h3 {
-  @apply text-xs tracking-[0.4em] uppercase bg-gradient-to-r from-emerald-700 to-stone-600 bg-clip-text text-transparent font-extrabold mb-3;
+  @apply text-xs tracking-[0.4em] uppercase bg-gradient-to-r from-emerald-700 to-stone-600 bg-clip-text text-transparent font-extrabold mb-3 font-sans;
 }
 
 .Footer-Olimpo p {
-  @apply text-sm text-stone-600 max-w-2xl mx-auto font-light leading-relaxed;
+  @apply text-sm text-stone-600 max-w-2xl mx-auto font-light leading-relaxed font-sans;
 }
 
 .Overlay-Modal {
-  @apply fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/10 backdrop-blur-sm;
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/10 backdrop-blur-sm overflow-hidden;
 }
 
-/* Tarjeta del formulario estilo cristal translúcido limpio */
 .Card-Formulario {
-  @apply relative z-10 w-full max-w-[420px] rounded-[28px] p-8 md:p-10 flex flex-col gap-6;
+  @apply relative z-10 w-full max-w-[420px] rounded-[28px] p-8 md:p-10 flex flex-col gap-6 font-sans;
   background: linear-gradient(135deg, var(--surface-strong), var(--surface-muted));
   border: 1px solid var(--border);
   box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.32);
@@ -546,20 +740,19 @@ html.theme-dark .Logo-Sofocles {
 }
 
 .Btn-Cerrar {
-  @apply absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-stone-200/40 text-stone-600 hover:text-stone-900 hover:bg-stone-200/70 transition-all duration-200 text-sm font-semibold cursor-pointer border-none;
+  @apply absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-stone-200/40 text-stone-600 hover:text-stone-900 hover:bg-stone-200/70 transition-all duration-200 text-sm font-semibold cursor-pointer border-none font-sans;
 }
 
 .Form-Grupo {
-  @apply flex flex-col gap-1.5 text-left;
+  @apply flex flex-col gap-1.5 text-left font-sans;
 }
 
 .Form-Grupo label {
-  @apply text-[10px] font-bold tracking-[0.15em] uppercase text-stone-500 pl-1;
+  @apply text-[10px] font-bold tracking-[0.15em] uppercase text-stone-500 pl-1 font-sans;
 }
 
-/* Inputs de cristal integrados con la estética clara */
 .Input-Olimpo {
-  @apply w-full px-4 py-3 rounded-xl text-sm transition-all duration-300;
+  @apply w-full px-4 py-3 rounded-xl text-sm transition-all duration-300 font-sans;
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.8);
   color: var(--text-primary);
@@ -586,15 +779,14 @@ html.theme-dark .Input-Olimpo {
   @apply text-xs text-stone-500 hover:text-emerald-700 transition-colors duration-200 text-center block mt-2 cursor-pointer bg-transparent border-none font-sans font-medium;
 }
 
-/* --- BARRA DE NAVEGACIÓN INFERIOR MÓVIL --- */
 .Nav-Inferior-Olimpo {
-  @apply fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around p-2.5 md:hidden;
+  @apply fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around p-2.5 md:hidden font-sans;
   @apply bg-white/70 border-t border-white/80 backdrop-blur-2xl transition-all duration-300;
   box-shadow: 0 -8px 25px rgba(135, 152, 126, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .Btn-Nav-Item {
-  @apply flex flex-col items-center gap-1 px-4 py-1.5 rounded-2xl text-stone-500 font-medium text-[11px] transition-all duration-200 cursor-pointer;
+  @apply flex flex-col items-center gap-1 px-4 py-1.5 rounded-2xl text-stone-500 font-medium text-[11px] transition-all duration-200 cursor-pointer font-sans;
 }
 
 .Btn-Nav-Item:hover {
@@ -609,7 +801,6 @@ html.theme-dark .Input-Olimpo {
   @apply absolute top-1 right-3 w-2 h-2 rounded-full bg-emerald-600 animate-pulse;
 }
 
-/* --- ANIMACIÓN SKELETON (CARGA) --- */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -621,17 +812,16 @@ html.theme-dark .Input-Olimpo {
 }
 
 .Skeleton-Card {
-  @apply w-full bg-white/40 border border-white/60 rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-xl;
+  @apply w-full bg-white/40 border border-white/60 rounded-2xl p-6 flex flex-col gap-4 backdrop-blur-xl font-sans;
   box-shadow: 0 8px 24px rgba(135, 152, 126, 0.03);
 }
 
-/* --- TOASTS DE CONFIRMACIÓN --- */
 .Toast-Contenedor {
-  @apply fixed bottom-20 left-1/2 -translate-x-1/2 z-50 md:bottom-8 md:right-8 md:left-auto md:translate-x-0 transition-all duration-300;
+  @apply fixed bottom-20 left-1/2 -translate-x-1/2 z-50 md:bottom-8 md:right-8 md:left-auto md:translate-x-0 transition-all duration-300 font-sans;
 }
 
 .Toast-Olimpo {
-  @apply flex items-center gap-3 px-5 py-3 rounded-2xl border border-white/80 bg-white/90 shadow-xl backdrop-blur-2xl text-sm font-semibold text-stone-800;
+  @apply flex items-center gap-3 px-5 py-3 rounded-2xl border border-white/80 bg-white/90 shadow-xl backdrop-blur-2xl text-sm font-semibold text-stone-800 font-sans;
   box-shadow: 0 12px 30px rgba(135, 152, 126, 0.15);
 }
 
