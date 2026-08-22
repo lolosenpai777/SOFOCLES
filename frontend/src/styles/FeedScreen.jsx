@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import clienteAxios from "../api/clienteAxios";
 import AvatarDisplay from "../components/AvatarDisplay";
 import GiphySearch from "../components/GiphySearch";
+import FluidGlassCard from "../components/ui/FluidGlassCard";
 import "./FeedScreen.css";
 import PerfilModal from "./PerfilModal";
 import ReportPostModal from "../components/ReportPostModal";
@@ -765,94 +766,102 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
       <div className="Aura-Afrodita-Magenta" />
       <div className="Red-Geometrica" />
       
-      <div className="Banner-Olimpo__mark">
-        <img src="/logosofo.png" alt="Sófocles" />
-      </div>
-
-      <header className="Banner-Olimpo Banner-Olimpo--feed">
-        <div className="Banner-Olimpo__actions">
-          <div className="Banner-Olimpo__action-group flex items-center justify-center gap-3">
-            
-            {/* 1. Botón Perfil */}
-            {usuarioAutenticado && (
-              <button
-                type="button"
-                className="Header-Action-Button"
-                onClick={() =>
-                  setPerfilSeleccionado({
-                    id: miId,
-                    username: usuarioAutenticado.username,
-                  })
-                }
-                title={`Ver mi perfil (${usuarioAutenticado.username})`}
-              >
-                <img src="/user-svgrepo-com.svg" alt="Mi Perfil" />
-              </button>
-            )}
-
-            {/* 2. Botón Notificaciones */}
-            <button
-              type="button"
-              className="Header-Action-Button relative"
-              onClick={async () => {
-                const nuevoEstado = !mostrarNotificacionesPanel;
-                setMostrarNotificacionesPanel(nuevoEstado);
-                if (nuevoEstado) await obtenerNotificaciones();
-              }}
-              title="Notificaciones"
-            >
-              <img src="/bell-svgrepo-com.svg" alt="Notificaciones" />
-              {notificaciones.filter((n) => !n.read && !n.leida).length > 0 && (
-                <span className="Insignia-Notificacion" aria-hidden="true" />
-              )}
-            </button>
-
-            {/* 3. Botón Admin / Moderación */}
-            {tieneAccesoModeracion && (
-              <button
-                type="button"
-                className="Header-Action-Button Header-Action-Button--admin"
-                onClick={onOpenAdminReports}
-                title="Panel de moderación"
-              >
-                <img src="/shield-alt-svgrepo-com.svg" alt="Panel de Moderación" />
-              </button>
-            )}
-
-            {/* 4. Botón Modo Claro / Oscuro */}
-            {modoOscuro ? (
-              <button
-                type="button"
-                className="Header-Action-Button"
-                onClick={() => setModoOscuro(false)}
-                title="Volver al modo claro"
-              >
-                <img src="/sun-svgrepo-com.svg" alt="Modo claro" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="Header-Action-Button"
-                onClick={() => setModoOscuro(true)}
-                title="Activar modo oscuro"
-              >
-                <img src="/cloud-moon-svgrepo-com.svg" alt="Modo oscuro" />
-              </button>
-            )}
-
-            {/* 5. Botón Cerrar Sesión */}
-            <button
-              type="button"
-              className="Header-Action-Button"
-              onClick={cerrarSesion}
-              title="Cerrar sesión"
-            >
-              <img src="/user-xmark-svgrepo-com.svg" alt="Cerrar sesión" />
-            </button>
-
-          </div>
+      <div className="Banner-Contenedor-Wrapper">
+        <div className="Banner-Olimpo__mark">
+          <img src="/logosofo.png" alt="Sófocles" className="sofocles-logo" />
         </div>
-      </header>
+
+        <FluidGlassCard
+          as="header"
+          className="Banner-Olimpo Banner-Olimpo--feed"
+          mode="cube"
+          thickness={5}
+          chromaticAberration={0.1}
+        >
+          <div className="Banner-Olimpo__actions">
+            <div className="Banner-Olimpo__action-group Banner-Olimpo__action-group--left flex items-center justify-center gap-3">
+              {/* 1. Botón Perfil */}
+              {usuarioAutenticado && (
+                <button
+                  type="button"
+                  className="Header-Action-Button"
+                  onClick={() =>
+                    setPerfilSeleccionado({
+                      id: miId,
+                      username: usuarioAutenticado.username,
+                    })
+                  }
+                  title={`Ver mi perfil (${usuarioAutenticado.username})`}
+                >
+                  <img src="/user-svgrepo-com.svg" alt="Mi Perfil" />
+                </button>
+              )}
+
+              {/* 2. Botón Notificaciones */}
+              <button
+                type="button"
+                className="Header-Action-Button relative"
+                onClick={async () => {
+                  const nuevoEstado = !mostrarNotificacionesPanel;
+                  setMostrarNotificacionesPanel(nuevoEstado);
+                  if (nuevoEstado) await obtenerNotificaciones();
+                }}
+                title="Notificaciones"
+              >
+                <img src="/bell-svgrepo-com.svg" alt="Notificaciones" />
+                {notificaciones.filter((n) => !n.read && !n.leida).length > 0 && (
+                  <span className="Insignia-Notificacion" aria-hidden="true" />
+                )}
+              </button>
+            </div>
+
+            <div className="Banner-Olimpo__action-group Banner-Olimpo__action-group--right flex items-center justify-center gap-3">
+              {/* 3. Botón Admin / Moderación */}
+              {tieneAccesoModeracion && (
+                <button
+                  type="button"
+                  className="Header-Action-Button Header-Action-Button--admin"
+                  onClick={onOpenAdminReports}
+                  title="Panel de moderación"
+                >
+                  <img src="/shield-alt-svgrepo-com.svg" alt="Panel de Moderación" />
+                </button>
+              )}
+
+              {/* 4. Botón Modo Claro / Oscuro */}
+              {modoOscuro ? (
+                <button
+                  type="button"
+                  className="Header-Action-Button"
+                  onClick={() => setModoOscuro(false)}
+                  title="Volver al modo claro"
+                >
+                  <img src="/sun-svgrepo-com.svg" alt="Modo claro" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="Header-Action-Button"
+                  onClick={() => setModoOscuro(true)}
+                  title="Activar modo oscuro"
+                >
+                  <img src="/cloud-moon-svgrepo-com.svg" alt="Modo oscuro" />
+                </button>
+              )}
+
+              {/* 5. Botón Cerrar Sesión */}
+              <button
+                type="button"
+                className="Header-Action-Button"
+                onClick={cerrarSesion}
+                title="Cerrar sesión"
+              >
+                <img src="/user-xmark-svgrepo-com.svg" alt="Cerrar sesión" />
+              </button>
+            </div>
+          </div>
+        </FluidGlassCard>
+      </div>
 
       {/* MODAL DE NOTIFICACIONES */}
       {mostrarNotificacionesPanel && (
@@ -951,7 +960,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
       <main className="Cuerpo-Feed">
         {/* Editor de Post */}
         <section className="Columna-Editor">
-          <div className="Card-Formulario-Feed">
+          <FluidGlassCard as="div" className="Card-Formulario-Feed" mode="cube" thickness={5} chromaticAberration={0.1}>
             <h2 className="Titulo-Seccion">¿Qué idea ronda tu mente hoy?</h2>
 
             {errorMsg && (
@@ -1089,7 +1098,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
                 </button>
               </div>
             </form>
-          </div>
+          </FluidGlassCard>
         </section>
 
         {/* Línea de Tiempo */}
@@ -1210,7 +1219,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
 
           {/* Usuarios Encontrados */}
           {usuariosEncontrados.length > 0 && (
-            <div className="Lista-Usuarios mb-4">
+            <FluidGlassCard as="div" className="Lista-Usuarios mb-4" mode="cube" thickness={5} chromaticAberration={0.1}>
               {usuariosEncontrados.map((usuario) => {
                 const uId = usuario._id || usuario.id;
                 if (uId === miId) return null;
@@ -1233,7 +1242,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
                   </div>
                 );
               })}
-            </div>
+            </FluidGlassCard>
           )}
 
           {/* Renderizado del Feed */}
@@ -1281,7 +1290,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
                 const loSigo = siguiendo.includes(autorId);
 
                 return (
-                  <article key={pId} className="Card-Post Modal-Animacion">
+                  <FluidGlassCard as="article" key={pId} className="Card-Post Modal-Animacion" mode="cube" thickness={5} chromaticAberration={0.1}>
                     <header className="Header-Post">
                       <div className="Acciones-Post flex items-center w-full">
                         <button
@@ -1452,7 +1461,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
                         )}
                       </div>
                     </div>
-                  </article>
+                  </FluidGlassCard>
                 );
               })}
               {nextCursor && (

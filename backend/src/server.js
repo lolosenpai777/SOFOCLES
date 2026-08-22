@@ -1,12 +1,14 @@
 import { buildApp } from './app.js'
 import { env } from './config/env.js'
 import { prisma } from './config/prisma.js'
+import { ensureDefaultAdmin } from './services/bootstrap-users.service.js'
 
 const app = buildApp()
 
 async function start() {
   try {
     await prisma.$connect()
+    await ensureDefaultAdmin()
     await app.listen({ port: env.port, host: '0.0.0.0' })
   } catch (error) {
     app.log.error(error)

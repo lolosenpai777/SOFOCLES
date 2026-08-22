@@ -38,10 +38,101 @@ body, button, input, textarea, select {
   transition: background 0.4s ease, color 0.4s ease;
 }
 
-.Olimpo-Contenedor.modo-oscuro .Card-Post {
-  background: rgba(15, 23, 42, 0.65) !important;
-  backdrop-filter: blur(28px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+/* ==========================================================================
+   FLUID GLASS (REACT BITS INSPIRATION: mode=cube, thickness=5, chromaticAberration=0.1)
+   ========================================================================== */
+.fluid-glass-card,
+.Card-Post,
+.Card-Formulario-Feed,
+.Lista-Usuarios {
+  position: relative;
+  isolation: isolate;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  border-radius: 28px !important;
+  overflow: hidden;
+  will-change: transform;
+  transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateZ(0);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.fluid-glass-card:hover,
+.Card-Post:hover {
+  transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateZ(4px);
+  box-shadow: 
+    0 24px 50px -10px rgba(0, 0, 0, 0.5),
+    0 0 25px -5px rgba(62, 207, 142, 0.2),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Chromatic Aberration Prismatic Dispersion Border (RGB split) */
+.fluid-glass__chromatic {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    -1.5px 0 3px rgba(0, 240, 255, calc(var(--chromatic-aberration, 0.1) * 2.8)),
+    1.5px 0 3px rgba(255, 0, 128, calc(var(--chromatic-aberration, 0.1) * 2.8)),
+    0 -1.5px 3px rgba(62, 207, 142, calc(var(--chromatic-aberration, 0.1) * 3)),
+    0 1.5px 3px rgba(201, 162, 75, calc(var(--chromatic-aberration, 0.1) * 2.5));
+  opacity: 0.75;
+  transition: opacity 0.3s ease, box-shadow 0.3s ease;
+}
+
+.fluid-glass-card:hover .fluid-glass__chromatic {
+  opacity: 1;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.18),
+    -2px 0 6px rgba(0, 240, 255, 0.4),
+    2px 0 6px rgba(255, 0, 128, 0.4),
+    0 -2px 6px rgba(62, 207, 142, 0.45),
+    0 2px 6px rgba(201, 162, 75, 0.35);
+}
+
+/* Liquid Refractive Specular Sheen (follows mouse cursor) */
+.fluid-glass__specular {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    circle 280px at var(--fluid-x, 50%) var(--fluid-y, 50%),
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(62, 207, 142, 0.1) 30%,
+    rgba(0, 240, 255, 0.05) 55%,
+    transparent 75%
+  );
+  opacity: 0.6;
+  mix-blend-mode: screen;
+  transition: opacity 0.35s ease;
+}
+
+.fluid-glass-card:hover .fluid-glass__specular {
+  opacity: 1;
+}
+
+/* 5px Refractive Glass Bevel Layer */
+.fluid-glass__bevel {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.35),
+    inset 0 0 var(--glass-thickness, 5px) rgba(255, 255, 255, 0.06),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Content wrapper ensuring clicks and inputs work above glass effects */
+.fluid-glass__content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
 }
 
 .Olimpo-Contenedor .Banner-Olimpo,
@@ -62,14 +153,64 @@ body, button, input, textarea, select {
   border-radius: 28px;
 }
 
+/* Botones de acción del Banner (Frutiger Aero Glass) */
+.Header-Action-Button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  padding: 0 !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 8px 20px rgba(0, 0, 0, 0.25) !important;
+  cursor: pointer !important;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative !important;
+}
+
+.Header-Action-Button img,
+.Header-Action-Button svg {
+  width: 22px !important;
+  height: 22px !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) !important;
+  transition: transform 0.25s ease !important;
+}
+
+.Header-Action-Button:hover {
+  transform: translateY(-3px) scale(1.08) !important;
+  background: rgba(62, 207, 142, 0.2) !important;
+  border-color: rgba(62, 207, 142, 0.5) !important;
+  box-shadow: 0 12px 28px rgba(62, 207, 142, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+}
+
+.Header-Action-Button:hover img,
+.Header-Action-Button:hover svg {
+  transform: scale(1.12) !important;
+}
+
+.Header-Action-Button:active {
+  transform: scale(0.94) !important;
+}
+
+.Header-Action-Button--admin:hover {
+  background: rgba(201, 162, 75, 0.25) !important;
+  border-color: rgba(201, 162, 75, 0.6) !important;
+  box-shadow: 0 12px 28px rgba(201, 162, 75, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
+}
+
 /* Adaptación para modo oscuro */
 .Olimpo-Contenedor.modo-oscuro .Header-Action-Button {
-  background: rgba(15, 23, 42, 0.75) !important;
-  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 .Olimpo-Contenedor.modo-oscuro .Header-Action-Button img {
-  filter: brightness(0) invert(1) !important;
+  filter: brightness(0) invert(1) drop-shadow(0 2px 4px rgba(0,0,0,0.5)) !important;
 }
 
 /* --- Modo Oscuro iOS Glass --- */
@@ -996,36 +1137,54 @@ html.theme-dark .Noti-Empty {
           drop-shadow(0px 0px 20px rgba(52, 211, 153, 0.9));
 }
 
-/* Contenedor del logo */
-/* Contenedor del logo: pegado arriba y empujando el banner */
+/* Contenedor relativo para el Banner y su logo flotante */
+.Banner-Contenedor-Wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 80rem;
+  margin: 3.5rem auto 1.5rem;
+  padding-top: 0.5rem;
+}
+
+/* El logo está centrado y exactamente la mitad por encima del borde superior del banner */
 .Banner-Olimpo__mark {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
   width: 100% !important;
-  position: relative !important;
-  z-index: 30 !important;
-  
-  /* --- AQUI QUITAMOS EL HUECO ARRIBA --- */
-  margin-top: 0.5rem !important; /* Poca distancia con el techo */
-  margin-bottom: -3.5rem !important; /* Solapa el banner sin dejar espacio vacío */
+  position: absolute !important;
+  top: 0.5rem !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 12 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
 }
 
-/* Logo un toque más pequeño y compacto */
-.Banner-Olimpo__mark img {
-  width: 100% !important;
-  max-width: 280px !important; /* Un poco más pequeño y elegante */
+/* Logo con acabado de cristal y brillo Frutiger Aero */
+.Banner-Olimpo__mark img,
+.sofocles-logo {
+  width: min(52vw, 290px) !important;
   height: auto !important;
   display: block !important;
-  
-  filter: drop-shadow(0 10px 20px rgba(2, 6, 23, 0.4)) 
-          drop-shadow(0px 0px 14px rgba(16, 185, 129, 0.35)) !important;
-  
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.45)) 
+          drop-shadow(0px 0px 18px rgba(62, 207, 142, 0.35)) !important;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease !important;
+  cursor: pointer;
+  pointer-events: auto !important;
 }
 
-.Banner-Olimpo__mark img:hover {
-  transform: scale(1.05) !important;
+.Banner-Olimpo__mark img:hover,
+.sofocles-logo:hover {
+  transform: scale(1.06) translateY(-3px) !important;
+  filter: drop-shadow(0 18px 36px rgba(0, 0, 0, 0.55)) 
+          drop-shadow(0px 0px 24px rgba(62, 207, 142, 0.6)) !important;
+}
+
+.Banner-Olimpo.Banner-Olimpo--feed {
+  overflow: visible !important;
+  padding-top: 2.25rem !important;
+  min-height: 84px !important;
 }
 
 /* Sófocles product palette: no secondary SaaS colors in the feed. */
