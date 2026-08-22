@@ -24,7 +24,7 @@
 }
 
 body, button, input, textarea, select {
-  font-family: var(--font-apple, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif) !important;
+  font-family: var(--font-body) !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.012em;
@@ -115,7 +115,6 @@ body, button, input, textarea, select {
 }
 
 .Olimpo-Contenedor.modo-oscuro .Btn-Secundario,
-.Olimpo-Contenedor.modo-oscuro .Btn-Accion-Post,
 .Olimpo-Contenedor.modo-oscuro .Btn-Modal-Cancelar {
   background: rgba(15, 23, 42, 0.85);
   color: #e2e8f0;
@@ -123,14 +122,12 @@ body, button, input, textarea, select {
 }
 
 .Olimpo-Contenedor.modo-oscuro .Btn-Secundario:hover,
-.Olimpo-Contenedor.modo-oscuro .Btn-Accion-Post:hover,
 .Olimpo-Contenedor.modo-oscuro .Btn-Modal-Cancelar:hover {
   background: rgba(30, 41, 59, 0.95);
   color: #ffffff;
 }
 
 .Olimpo-Contenedor.modo-oscuro .Btn-Secundario img,
-.Olimpo-Contenedor.modo-oscuro .Btn-Accion-Post img,
 .Olimpo-Contenedor.modo-oscuro .Btn-Nav-Item img {
   filter: brightness(0) invert(1);
   opacity: 0.95;
@@ -486,78 +483,6 @@ html.theme-dark .comentarios-composer__input {
   100% { transform: scale(1) rotate(0deg); }
 }
 
-.Btn-Accion-Post {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 9999px;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  background: rgba(255, 255, 255, 0.7);
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.Btn-Accion-Post:hover {
-  background: var(--mint-light);
-  border-color: rgba(16, 185, 129, 0.5);
-  color: #047857;
-  transform: translateY(-2px);
-}
-
-.Btn-Accion-Post.Eliminar:hover {
-  background: #fef2f2;
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #dc2626;
-}
-
-.Btn-Like-Post,
-.Btn-Comentario-Post {
-  @apply mt-2 inline-flex items-center gap-2 w-fit rounded-full px-3.5 py-2 cursor-pointer transition-all duration-300;
-  border: 1px solid rgba(16, 185, 129, 0.22);
-  background: rgba(255, 255, 255, 0.65);
-  color: var(--text-secondary);
-}
-
-.Btn-Like-Post:hover,
-.Btn-Comentario-Post:hover {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.4);
-  color: var(--emerald-strong);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15);
-}
-
-.Btn-Like-Post.Activo {
-  background: linear-gradient(135deg, var(--emerald-vibrant) 0%, var(--emerald-strong) 100%) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  color: #ffffff !important;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.35) !important;
-}
-
-.Btn-Like-Post.Activo .Icono-Like,
-.Btn-Like-Post.Activo svg {
-  animation: heartPulse 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.28) both;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
-}
-
-.Olimpo-Contenedor.modo-oscuro .Btn-Like-Post,
-.Olimpo-Contenedor.modo-oscuro .Btn-Comentario-Post {
-  background: rgba(6, 78, 59, 0.46);
-  border-color: rgba(52, 211, 153, 0.32);
-  color: #ecfdf5;
-}
-
-.Olimpo-Contenedor.modo-oscuro .Btn-Like-Post:hover,
-.Olimpo-Contenedor.modo-oscuro .Btn-Comentario-Post:hover {
-  background: rgba(5, 150, 105, 0.38);
-  border-color: rgba(110, 231, 183, 0.45);
-  color: #f0fdf4;
-}
-
 .Contador-Likes {
   @apply text-xs font-semibold;
 }
@@ -765,7 +690,10 @@ html.theme-dark .Noti-Empty {
 }
 
 .Titulo-Modal {
-  @apply text-lg font-bold tracking-tight;
+  @apply font-bold tracking-tight;
+  font-family: var(--font-display);
+  font-size: var(--type-h2-size);
+  line-height: var(--type-h2-line);
   color: var(--text-primary);
 }
 
@@ -904,6 +832,11 @@ html.theme-dark .Noti-Empty {
   animation: postEntrance 450ms cubic-bezier(.16, 1, .3, 1) both;
 }
 
+.Lista-Posts .Card-Post:nth-child(2) { animation-delay: 70ms; }
+.Lista-Posts .Card-Post:nth-child(3) { animation-delay: 140ms; }
+.Lista-Posts .Card-Post:nth-child(4) { animation-delay: 210ms; }
+.Lista-Posts .Card-Post:nth-child(n+5) { animation-delay: 280ms; }
+
 .Lista-Posts .Card-Post:first-child {
   /* Mantiene la misma transparencia y estilo cristal que las demás */
   background: inherit !important;
@@ -943,7 +876,7 @@ html.theme-dark .Noti-Empty {
 @media (prefers-reduced-motion: reduce) {
   .Card-Post,
   .Modal-Overlay .Modal-Confirmacion,
-  .Btn-Like-Post.Activo .Icono-Like {
+  .icon-btn.active .Icono-Like {
     animation: none !important;
     transition: none !important;
   }
@@ -1028,7 +961,7 @@ html.theme-dark .Noti-Empty {
    ========================================================================== */
 
 .sofocles-logo {
-  font-family: 'Fredoka', 'Quicksand', 'Nunito', sans-serif; /* Fuentes redonditas y amigables */
+  font-family: var(--font-display);
   font-weight: 800;
   font-size: 2.2rem;
   letter-spacing: 0.5px;
@@ -1093,4 +1026,293 @@ html.theme-dark .Noti-Empty {
 
 .Banner-Olimpo__mark img:hover {
   transform: scale(1.05) !important;
+}
+
+/* Sófocles product palette: no secondary SaaS colors in the feed. */
+.Olimpo-Contenedor.modo-oscuro,
+.Olimpo-Contenedor {
+  background: var(--bg-deep);
+  color: var(--marble);
+}
+.Olimpo-Contenedor .Banner-Olimpo,
+.Olimpo-Contenedor .Card-Post,
+.Olimpo-Contenedor .Card-Formulario-Feed,
+.Olimpo-Contenedor .Lista-Usuarios,
+.Olimpo-Contenedor .Modal-Confirmacion,
+.Olimpo-Contenedor .comentarios-composer,
+.Olimpo-Contenedor .comentarios-lista__item {
+  background: var(--bg-panel);
+  border-color: rgba(201, 162, 75, .2);
+  color: var(--marble);
+}
+.Olimpo-Contenedor .Card-Post { transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
+.Olimpo-Contenedor .Card-Post:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,0,0,.22); }
+.Olimpo-Contenedor .Input-Olimpo-Feed:focus,
+.Olimpo-Contenedor textarea:focus { border-color: var(--jade); box-shadow: 0 0 0 3px rgba(62,207,142,.16); transition: border-color 180ms ease, box-shadow 180ms ease; }
+.Olimpo-Contenedor .Card-Post.featured { border-top: 2px solid var(--gold); }
+.Olimpo-Contenedor .Contador-Likes:empty { display: none; }
+.Olimpo-Contenedor .Header-Action-Button { border-color: rgba(201,162,75,.2); }
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex: 0 0 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 150ms, color 150ms;
+}
+.icon-btn:hover { background: rgba(62, 207, 142, 0.12); color: var(--jade); }
+.icon-btn.active { color: var(--jade); }
+.icon-btn.danger:hover { background: rgba(224, 90, 90, 0.12); color: #E05A5A; }
+.icon-btn .Contador-Likes { position: absolute; right: -4px; bottom: -2px; font-size: 10px; line-height: 1; }
+.Olimpo-Contenedor .Card-Post {
+  background: #12241f !important;
+  border: 1px solid rgba(201, 162, 75, .17) !important;
+}
+.Olimpo-Contenedor .post-avatar-button > div {
+  border: 2px solid var(--gold) !important;
+  border-radius: 50% !important;
+}
+.Olimpo-Contenedor .Title-Post-Display {
+  font-family: var(--font-display) !important;
+  color: var(--marble) !important;
+}
+.Olimpo-Contenedor .post-author-name,
+.Olimpo-Contenedor .post-author-handle,
+.Olimpo-Contenedor .Contenido-Post {
+  font-family: var(--font-body) !important;
+}
+.Olimpo-Contenedor .post-author-name { color: var(--marble); }
+.Olimpo-Contenedor .Fecha-Post { font-family: var(--font-body) !important; font-style: italic; opacity: .65; }
+.Olimpo-Contenedor .Imagen-Post {
+  border: 1px solid rgba(201, 162, 75, .18);
+  border-radius: 6px;
+}
+.Olimpo-Contenedor .post-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 12px;
+}
+.Olimpo-Contenedor .post-actions-social,
+.Olimpo-Contenedor .post-actions-management {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.Olimpo-Contenedor .post-actions-management {
+  margin-left: 24px;
+  padding-left: 20px;
+  border-left: 1px solid rgba(201, 162, 75, .17);
+  gap: 8px;
+}
+.Olimpo-Contenedor .post-actions-management:empty { display: none; }
+.Olimpo-Contenedor .post-actions-row .icon-btn {
+  color: rgba(240, 234, 214, .7);
+}
+.Olimpo-Contenedor .post-actions-row .icon-btn:hover,
+.Olimpo-Contenedor .post-actions-row .icon-btn.active { color: var(--gold); }
+.Olimpo-Contenedor .post-action-icon {
+  font-size: 19px;
+  line-height: 1;
+  font-variation-settings: 'FILL' 0, 'wght' 350, 'GRAD' 0, 'opsz' 20;
+}
+.Olimpo-Contenedor .post-actions-row .icon-btn.active .post-action-icon {
+  font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 20;
+}
+@media (max-width: 520px) {
+  .Olimpo-Contenedor .post-actions-management { margin-left: 12px; padding-left: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .Olimpo-Contenedor .Card-Post:hover,
+  .Olimpo-Contenedor .icon-btn:active { transform: none; animation: none; }
+}
+
+/* Post component contract: display is reserved for identity and titles. */
+.Card-Post { font-family: var(--font-body); padding: 16px; transition: transform 150ms ease, box-shadow 150ms ease; }
+.Card-Post:hover { transform: translateY(-1px); }
+.Header-Post { min-height: 40px; }
+.Avatar-Usuario { width: 40px; height: 40px; border-radius: 50%; }
+.post-author-name { font-family: var(--font-display); font-size: 16px; line-height: 1.2; font-weight: 600; color: var(--marble); }
+.post-author-handle { color: var(--muted); font-family: var(--font-body); font-size: 13px; line-height: 1.2; }
+.Fecha-Post { margin-left: auto; color: var(--muted); font-family: var(--font-mono); font-size: 12px; line-height: 1.2; }
+.Contenido-Post { max-width: 640px; padding-left: 0; color: var(--marble); font-family: var(--font-body); font-size: 15px; line-height: 1.6; }
+.Cuerpo-Post-Contenido { font-family: var(--font-body); }
+.Cuerpo-Post-Contenido a, .Cuerpo-Post-Contenido .hashtag, .Cuerpo-Post-Contenido .mention { color: var(--jade); }
+.Cuerpo-Post-Contenido a:hover, .Cuerpo-Post-Contenido .hashtag:hover, .Cuerpo-Post-Contenido .mention:hover { text-decoration: underline; }
+@media (min-width: 768px) { .Card-Post { padding: 20px 24px; } .Contenido-Post { font-size: 16px; } }
+@media (prefers-reduced-motion: reduce) { .Card-Post:hover, .icon-btn { transition: none; } }
+
+/* Final specificity overrides for the branded feed container. */
+.Olimpo-Contenedor .Card-Post {
+  font-family: var(--font-body);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.Olimpo-Contenedor .Card-Post:hover { transform: translateY(-1px); }
+.Olimpo-Contenedor .Card-Post .Contenido-Post,
+.Olimpo-Contenedor .Card-Post .Cuerpo-Post-Contenido { font-family: var(--font-body); }
+@media (min-width: 768px) {
+  .Olimpo-Contenedor .Card-Post { padding: 20px 24px; }
+  .Olimpo-Contenedor .Card-Post .Contenido-Post { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .Olimpo-Contenedor .Card-Post:hover { transform: none; }
+}
+
+/* Autocomplete de menciones: popover legible en el sistema verde/dorado. */
+.Menciones-Autocomplete {
+  background: #12241f !important;
+  border: 1px solid rgba(201, 162, 75, .28) !important;
+  color: var(--marble);
+  font-family: var(--font-body);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .22);
+}
+.Menciones-Autocomplete__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--marble) !important;
+  cursor: pointer;
+  font: 400 14px/1.35 var(--font-body);
+  text-align: left;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.Menciones-Autocomplete__item:hover,
+.Menciones-Autocomplete__item:focus-visible {
+  background: rgba(62, 207, 142, .12);
+  color: var(--jade) !important;
+}
+.Menciones-Autocomplete__hint {
+  color: var(--muted);
+  font: 500 10px/1 var(--font-mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.Menciones-Autocomplete__state {
+  margin: 4px 6px;
+  color: var(--muted);
+  font: 400 13px/1.4 var(--font-body);
+}
+.Menciones-Autocomplete__state--error { color: #E7A4A4; }
+
+html:not(.theme-dark) .Menciones-Autocomplete {
+  background: #FFFFFF !important;
+  border-color: rgba(201, 162, 75, .35) !important;
+  color: #24352F;
+  box-shadow: 0 12px 28px rgba(36, 53, 47, .12);
+}
+html:not(.theme-dark) .Menciones-Autocomplete__item { color: #24352F !important; }
+html:not(.theme-dark) .Menciones-Autocomplete__item:hover,
+html:not(.theme-dark) .Menciones-Autocomplete__item:focus-visible {
+  background: rgba(62, 207, 142, .12);
+  color: #246044 !important;
+}
+html:not(.theme-dark) .Menciones-Autocomplete__hint,
+html:not(.theme-dark) .Menciones-Autocomplete__state { color: #5B7168; }
+
+/* Fila de acciones: mismo eje horizontal de la card y contadores inline. */
+.Olimpo-Contenedor .post-actions-row {
+  width: 100%;
+  padding-inline: 0;
+  gap: 24px;
+}
+.Olimpo-Contenedor .post-actions-social {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.Olimpo-Contenedor .post-actions-social .icon-btn,
+.Olimpo-Contenedor .post-actions-management .icon-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  color: rgba(240, 234, 214, .7);
+}
+.Olimpo-Contenedor .post-actions-social .action-with-count {
+  width: auto;
+  min-width: 36px;
+  padding-inline: 3px;
+  gap: 5px;
+}
+.Olimpo-Contenedor .post-actions-social .Contador-Likes {
+  position: static;
+  color: currentColor;
+  font: 600 12px/1 var(--font-body);
+}
+.Olimpo-Contenedor .post-actions-management {
+  margin-left: auto;
+  padding-left: 24px;
+  border-left: 1px solid rgba(201, 162, 75, .15);
+  gap: 8px;
+}
+.Olimpo-Contenedor .post-actions-management .icon-btn { color: rgba(240, 234, 214, .7); }
+.Olimpo-Contenedor .post-actions-row .icon-btn:hover,
+.Olimpo-Contenedor .post-actions-row .icon-btn.active { color: var(--gold); }
+.Olimpo-Contenedor .post-action-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  line-height: 1;
+  font-variation-settings: 'FILL' 0, 'wght' 350, 'GRAD' 0, 'opsz' 20;
+}
+.Olimpo-Contenedor .post-actions-row .icon-btn.active .post-action-icon {
+  font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 20;
+}
+@media (max-width: 520px) {
+  .Olimpo-Contenedor .post-actions-social { gap: 12px; }
+  .Olimpo-Contenedor .post-actions-management { padding-left: 12px; }
+}
+
+/* Consolidated component contract: typography and interaction tokens. */
+.Olimpo-Contenedor .Card-Post {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid var(--muted) !important;
+  font-family: var(--font-body);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.Olimpo-Contenedor .Card-Post.featured { border-top: 2px solid var(--gold) !important; }
+.Olimpo-Contenedor .Card-Post:hover {
+  border-color: var(--muted) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px var(--bg-deep) !important;
+}
+.Olimpo-Contenedor .Header-Post { min-height: 40px; }
+.Olimpo-Contenedor .Header-Post > .Acciones-Post { min-width: 0; gap: 12px; }
+.Olimpo-Contenedor .Header-Post .Avatar-Usuario,
+.Olimpo-Contenedor .Header-Post .Avatar-Usuario > div { width: 40px; height: 40px; border-radius: 50%; }
+.Olimpo-Contenedor .post-author-meta { display: flex; min-width: 0; flex-wrap: wrap; align-items: baseline; column-gap: 8px; row-gap: 3px; }
+.Olimpo-Contenedor .post-author-name { font-family: var(--font-display); font-size: 16px; line-height: 1.2; font-weight: 600; color: var(--marble); }
+.Olimpo-Contenedor .post-author-handle { color: var(--muted); font-family: var(--font-body); font-size: 13px; line-height: 1.2; }
+.Olimpo-Contenedor .Fecha-Post { margin-left: auto; color: var(--muted); font-family: var(--font-mono); font-size: 12px; line-height: 1.2; }
+.Olimpo-Contenedor .Cuerpo-Post-Contenido { font-family: var(--font-body); }
+.Olimpo-Contenedor .Title-Post-Display { margin: 0 0 8px; color: var(--marble); font-family: var(--font-body); font-size: 18px; font-weight: 600; }
+.Olimpo-Contenedor .Contenido-Post { max-width: 640px; margin: 0; padding: 0; color: var(--marble); font-family: var(--font-body); font-size: 15px; line-height: 1.6; }
+.Olimpo-Contenedor .hashtag, .Olimpo-Contenedor .mention { color: var(--jade); }
+.Olimpo-Contenedor .hashtag:hover, .Olimpo-Contenedor .mention:hover { text-decoration: underline; }
+.Olimpo-Contenedor .Post-acciones { gap: 16px; margin-top: 0; }
+.Olimpo-Contenedor .Icono-Like,
+.Olimpo-Contenedor .Icono-Accion-Post { width: 18px; height: 18px; }
+.Olimpo-Contenedor .Contador-Likes:empty { display: none; }
+@media (min-width: 768px) {
+  .Olimpo-Contenedor .Card-Post { padding: 20px 24px; }
+  .Olimpo-Contenedor .Contenido-Post { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .Olimpo-Contenedor .Card-Post:hover { transform: none; }
 }

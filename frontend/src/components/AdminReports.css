@@ -97,3 +97,179 @@ html.theme-dark .AdminReportsPage__shell {
     gap: 1rem;
   }
 }
+
+/* Moderation workspace: neutral by default, semantic color only for priority. */
+.AdminReportsPage__shell {
+  gap: 1.25rem;
+  background: var(--surface-strong);
+  box-shadow: 0 22px 52px rgba(31, 27, 21, 0.1);
+}
+
+.AdminReportsPage .Titulo-Modal,
+.AdminReportsPage .Texto-Modal { color: var(--text-primary) !important; }
+
+.AdminReportsPage__summary article {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--surface-strong), var(--surface-muted));
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, .28);
+  backdrop-filter: blur(12px) saturate(140%);
+}
+
+.AdminReportsPage__summary article::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .11;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
+}
+
+.AdminReportsPage__summary article > * { position: relative; z-index: 1; }
+.AdminReportsPage__summary strong { color: var(--color-gold-bright); }
+.AdminReportsPage__count { position: static; display: inline-flex; align-items: center; }
+
+.AdminReportsPage__header h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  letter-spacing: -0.03em;
+}
+
+.AdminReportsPage__header p {
+  margin: .35rem 0 0;
+  color: var(--text-secondary);
+  font-size: .9rem;
+}
+
+.AdminReportsPage__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.AdminReportsPage__summary article {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  min-height: 6.3rem;
+  justify-content: center;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .38);
+}
+
+.AdminReportsPage__summary span,
+.AdminReportsPage__section-heading p,
+.AdminReportsPage__count {
+  color: var(--text-muted);
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.AdminReportsPage__summary strong {
+  color: var(--text-primary);
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.AdminReportsPage__layout {
+  grid-template-columns: minmax(250px, .7fr) minmax(0, 1.3fr);
+}
+
+.AdminReportsPage__section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .75rem;
+}
+
+.AdminReportsPage__section-heading h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.AdminReportsPage__section-heading p { margin: .2rem 0 0; text-transform: none; letter-spacing: 0; }
+.AdminReportsPage__count { padding: .35rem .55rem; border: 1px solid var(--border); border-radius: 999px; }
+
+.AdminReportsPage__column--cases { padding-right: .5rem; }
+.Cases-List { display: flex; flex-direction: column; gap: .55rem; }
+
+.Admin-CaseCard {
+  width: 100%;
+  padding: .9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .28);
+  color: var(--text-primary);
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease, opacity 300ms ease;
+}
+
+.Admin-CaseCard:hover,
+.Admin-CaseCard.is-selected {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-stone) 55%, var(--border));
+  box-shadow: 0 10px 24px rgba(31, 27, 21, .09);
+}
+
+.Admin-CaseCard.is-selected { box-shadow: inset 3px 0 0 var(--color-gold), 0 10px 24px rgba(31, 27, 21, .09); }
+.Admin-CaseCard__topline { display: flex; align-items: center; justify-content: space-between; margin-bottom: .42rem; color: var(--text-muted); font-size: .72rem; }
+.Admin-CaseCard__meta { display: flex; gap: .65rem; margin-top: .45rem; color: var(--text-secondary); font-size: .75rem; }
+.Admin-CaseCard__notice { margin-top: .5rem; color: #9a6b16; font-size: .72rem; }
+.Admin-CaseCard__resolved { margin-top: .5rem; color: var(--text-secondary); font-size: .72rem; }
+.Admin-Priority { padding: .22rem .48rem; border-radius: 999px; font-size: .66rem; font-weight: 700; }
+.Admin-Priority--high { color: #991b1b; background: #fee2e2; }
+.Admin-Priority--medium { color: #92400e; background: #fef3c7; }
+.Admin-Priority--low { color: #475569; background: #e2e8f0; }
+
+.AdminReportsPage__empty {
+  display: flex;
+  min-height: 12rem;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: .75rem;
+  padding: 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.AdminReportsPage__empty span {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--color-gold);
+}
+
+@media (max-width: 640px) {
+  .AdminReportsPage__summary { grid-template-columns: 1fr; }
+  .AdminReportsPage__summary article { min-height: 4.7rem; }
+  .AdminReportsPage__shell { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .Admin-CaseCard { transition: opacity 300ms ease; }
+  .Admin-CaseCard:hover,
+  .Admin-CaseCard.is-selected { transform: none; }
+}
+
+/* Final brand overrides must remain after the base card declarations above. */
+.AdminReportsPage .Titulo-Modal,
+.AdminReportsPage .Texto-Modal { color: var(--text-primary) !important; }
+.AdminReportsPage__summary article {
+  background: linear-gradient(135deg, var(--surface-strong), var(--surface-muted));
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, .28);
+}
+.AdminReportsPage__summary strong { color: var(--color-gold-bright); }
+.AdminReportsPage__count { position: static; display: inline-flex; align-items: center; }

@@ -30,7 +30,7 @@ services:
       - redis_data:/data
 
   backend:
-    image: node:22-alpine
+    image: node:22
     container_name: mi_backend
     working_dir: /app/backend
     restart: unless-stopped

@@ -29,6 +29,13 @@ function actionToLabel(actionType) {
   return actionType
 }
 
+function priorityMeta(score) {
+  const value = Number(score) || 0
+  if (value >= 60) return { label: 'Alta', tone: 'high' }
+  if (value >= 30) return { label: 'Media', tone: 'medium' }
+  return { label: 'Baja', tone: 'low' }
+}
+
 function collectPostImageUrls(post) {
   if (!post) return []
 
@@ -326,12 +333,22 @@ export default function AdminReports({
       ? postContent
       : `${postContent.slice(0, PREVIEW_COLLAPSED_CHARS)}...`
   const previewImages = collectPostImageUrls(selectedPost)
-  const queueItems = queueTab === 'pending' ? pendingCases : resolvedCases
+  const queueItems = queueTab === 'pending'
+    ? pendingCases
+    : resolvedCases.filter((item) => queueTab === 'dismissed' ? item.status === 'DISMISSED' : item.status === 'RESOLVED')
   const latestResolvedAction =
     selectedCase?.latestAction ??
     (Array.isArray(selectedCase?.actions) && selectedCase.actions.length > 0
       ? selectedCase.actions[0]
       : null)
+  const pendingCount = pendingCases.length
+  const resolvedTodayCount = resolvedCases.filter((item) => {
+    if (!item.latestAction?.createdAt) return false
+    return new Date(item.latestAction.createdAt).toDateString() === new Date().toDateString()
+  }).length
+  const averagePriority = pendingCases.length
+    ? Math.round(pendingCases.reduce((sum, item) => sum + (Number(item.priorityScore) || 0), 0) / pendingCases.length)
+    : 0
 
   return (
     <div className="AdminReportsPage">
@@ -353,9 +370,18 @@ export default function AdminReports({
           </div>
         </header>
 
+        <section className="AdminReportsPage__summary" aria-label="Resumen de moderación">
+          <article><span>Casos pendientes</span><strong>{pendingCount}</strong></article>
+          <article><span>Resueltos hoy</span><strong>{resolvedTodayCount}</strong></article>
+          <article><span>Prioridad promedio</span><strong>{averagePriority}</strong></article>
+        </section>
+
         <div className="AdminReportsPage__layout">
           <aside className="AdminReportsPage__column AdminReportsPage__column--cases">
-            <h3 className="text-sm font-semibold mb-2">Cola de casos</h3>
+            <div className="AdminReportsPage__section-heading">
+              <div><h3>Cola de casos</h3><p>{queueTab === 'pending' ? 'Requieren una decisión' : 'Historial reciente'}</p></div>
+              <span className="AdminReportsPage__count">{queueItems.length}</span>
+            </div>
             <div className="AdminReportsPage__tabs">
               <button
                 type="button"
@@ -371,12 +397,22 @@ export default function AdminReports({
               >
                 Resueltos
               </button>
+              <button
+                type="button"
+                className={`Btn-Secundario ${queueTab === 'dismissed' ? 'is-active' : ''}`}
+                onClick={() => setQueueTab('dismissed')}
+              >
+                Descartados
+              </button>
             </div>
             {loading ? (
               <div>Cargando casos...</div>
             ) : queueItems.length === 0 ? (
-              <div className="rounded-2xl p-3 border" style={{ borderColor: 'var(--border)' }}>
-                {queueTab === 'pending' ? 'No hay casos pendientes.' : 'No hay casos resueltos.'}
+              <div className="AdminReportsPage__empty">
+                <span aria-hidden="true">✓</span>
+                {queueTab === 'pending'
+                  ? 'No hay casos pendientes.'
+                  : queueTab === 'dismissed' ? 'No hay casos descartados.' : 'No hay casos resueltos.'}
               </div>
             ) : (
               <div className="Cases-List">
@@ -384,9 +420,15 @@ export default function AdminReports({
                   <button
                     type="button"
                     key={item.id}
-                    className={`Admin-Card text-left ${selectedCaseId === item.id ? 'ring-2 ring-emerald-500' : ''}`}
+                    className={`Admin-Card Admin-CaseCard text-left ${selectedCaseId === item.id ? 'is-selected' : ''}`}
                     onClick={() => selectCase(item.id)}
                   >
+                    <div className="Admin-CaseCard__topline">
+                      <span>#{item.id}</span>
+                      <span className={`Admin-Priority Admin-Priority--${priorityMeta(item.priorityScore).tone}`}>
+                        {priorityMeta(item.priorityScore).label}
+                      </span>
+                    </div>
                     <strong className="block text-sm">#{item.id} · {item.post?.title || 'Publicación sin título'}</strong>
                     <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
                       Estado: {statusToLabel(item.status)} · Prioridad: {item.priorityScore} · Reportes: {item.reportsCount}

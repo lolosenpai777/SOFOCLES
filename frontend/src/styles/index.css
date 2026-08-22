@@ -2,38 +2,71 @@
 
 :root {
   color-scheme: light;
-  --bg-primary: #f4efe7;
-  --bg-secondary: #f9f6ef;
-  --surface: rgba(255, 255, 255, 0.72);
-  --surface-strong: rgba(255, 255, 255, 0.9);
-  --surface-muted: rgba(255, 255, 255, 0.58);
-  --border: rgba(255, 255, 255, 0.78);
-  --text-primary: #17212b;
-  --text-secondary: #51606f;
-  --text-muted: #728093;
-  --accent: #3d6b56;
-  --accent-strong: #2d5b46;
-  --accent-soft: rgba(61, 107, 86, 0.16);
-  --accent-contrast: #f8fffb;
+  --bg-deep: #0A1F1D;
+  --bg-panel: rgba(15, 46, 43, 0.7);
+  --jade: #3ECF8E;
+  --gold: #C9A24B;
+  --marble: #EDE7DA;
+  --muted: #7FA39C;
+  --color-ink: #17212b;
+  --color-surface: #f4efe7;
+  --color-surface-soft: #ebe2d3;
+  --color-stone: #9d8b73;
+  --color-gold: #b48a4a;
+  --color-gold-bright: #d9b66e;
+  --color-mint: #3d6b56;
+  --font-display: "Fraunces", serif;
+  --font-body: "Inter", -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --type-h1-size: clamp(1.75rem, 4vw, 2.5rem);
+  --type-h1-line: .96;
+  --type-h2-size: clamp(1.8rem, 3vw, 2.6rem);
+  --type-h2-line: 1.05;
+  --type-h3-size: 1.15rem;
+  --type-h3-line: 1.2;
+  --type-body-size: .95rem;
+  --type-body-line: 1.55;
+  --type-caption-size: .72rem;
+  --type-caption-line: 1.35;
+  --bg-primary: var(--bg-deep);
+  --bg-secondary: var(--bg-deep);
+  --surface: var(--bg-panel);
+  --surface-strong: var(--bg-panel);
+  --surface-muted: rgba(15, 46, 43, 0.48);
+  --border: rgba(201, 162, 75, 0.2);
+  --text-primary: var(--marble);
+  --text-secondary: var(--muted);
+  --text-muted: var(--muted);
+  --accent: var(--jade);
+  --accent-strong: var(--jade);
+  --accent-soft: rgba(62, 207, 142, 0.14);
+  --accent-contrast: var(--bg-deep);
   --shadow: 0 24px 60px rgba(24, 39, 53, 0.12);
   --shadow-soft: 0 14px 35px rgba(22, 35, 54, 0.08);
 }
 
 html.theme-dark {
   color-scheme: dark;
-  --bg-primary: #07111d;
-  --bg-secondary: #0d1727;
-  --surface: rgba(10, 18, 32, 0.78);
-  --surface-strong: rgba(15, 24, 42, 0.9);
-  --surface-muted: rgba(19, 29, 47, 0.72);
-  --border: rgba(255, 255, 255, 0.14);
-  --text-primary: #f5f7fb;
-  --text-secondary: #c8d2e3;
-  --text-muted: #90a1b8;
-  --accent: #63cf9a;
-  --accent-strong: #4fd28d;
-  --accent-soft: rgba(99, 207, 154, 0.2);
-  --accent-contrast: #03150f;
+  --color-ink: var(--marble);
+  --color-surface: var(--bg-deep);
+  --color-surface-soft: #0F2E2B;
+  --color-stone: var(--muted);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold);
+  --color-mint: var(--jade);
+  --bg-primary: var(--bg-deep);
+  --bg-secondary: var(--bg-deep);
+  --surface: var(--bg-panel);
+  --surface-strong: var(--bg-panel);
+  --surface-muted: rgba(15, 46, 43, 0.48);
+  --border: rgba(201, 162, 75, 0.2);
+  --text-primary: var(--marble);
+  --text-secondary: var(--muted);
+  --text-muted: var(--muted);
+  --accent: var(--jade);
+  --accent-strong: var(--jade);
+  --accent-soft: rgba(62, 207, 142, 0.14);
+  --accent-contrast: var(--bg-deep);
   --shadow: 0 24px 70px rgba(1, 8, 14, 0.4);
   --shadow-soft: 0 12px 30px rgba(1, 6, 12, 0.33);
 }
@@ -48,10 +81,137 @@ body,
   min-height: 100%;
   margin: 0;
   padding: 0;
-  font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-body);
   background: radial-gradient(circle at top left, rgba(99, 207, 154, 0.14), transparent 24%), linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   color: var(--text-primary);
   text-rendering: optimizeLegibility;
+}
+
+body { position: relative; isolation: isolate; }
+#root { position: relative; z-index: 0; isolation: isolate; }
+
+/* Aurora global: capa fija, no interactiva y siempre detrás del contenido. */
+.AuroraBackground {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg-deep);
+}
+.AuroraBackground__layer {
+  position: absolute;
+  width: 150vw;
+  height: 150vh;
+  border-radius: 45%;
+  filter: blur(120px);
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+.AuroraBackground__layer--green {
+  top: -72vh;
+  left: -72vw;
+  background: radial-gradient(ellipse at center, rgba(62, 207, 142, .24) 0%, rgba(20, 150, 103, .14) 32%, transparent 68%);
+}
+.AuroraBackground__layer--gold {
+  top: -72vh;
+  left: -72vw;
+  transform: translate3d(82vw, 94vh, 0);
+  background: radial-gradient(ellipse at center, rgba(201, 162, 75, .11) 0%, rgba(201, 162, 75, .06) 30%, transparent 66%);
+}
+.AuroraBackground__layer--depth {
+  top: -38vh;
+  left: -38vw;
+  width: 110vw;
+  height: 110vh;
+  filter: blur(100px);
+  background: radial-gradient(ellipse at center, rgba(201, 162, 75, .07) 0%, transparent 62%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .AuroraBackground__layer--green {
+    animation: auroraGreen 32s ease-in-out infinite alternate;
+  }
+  .AuroraBackground__layer--gold {
+    animation: auroraGoldCross 38s ease-in-out infinite alternate;
+  }
+  .AuroraBackground__layer--depth {
+    animation: auroraDepth 17s ease-in-out infinite alternate;
+  }
+}
+@keyframes auroraGreen {
+  0% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(34vw, 16vh, 0); }
+  50% { transform: translate3d(68vw, 48vh, 0); }
+  75% { transform: translate3d(46vw, 72vh, 0); }
+  100% { transform: translate3d(82vw, 94vh, 0); }
+}
+@keyframes auroraGoldCross {
+  0% { transform: translate3d(82vw, 94vh, 0); }
+  25% { transform: translate3d(56vw, 70vh, 0); }
+  50% { transform: translate3d(28vw, 44vh, 0); }
+  75% { transform: translate3d(12vw, 20vh, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+@keyframes auroraDepth {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(18vw, 8vh, 0); }
+  50% { transform: translate3d(34vw, 22vh, 0); }
+  75% { transform: translate3d(12vw, 34vh, 0); }
+}
+@media (max-width: 640px) {
+  .AuroraBackground__layer { filter: blur(72px); }
+  .AuroraBackground__layer--depth { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .AuroraBackground__layer,
+  .AuroraBackground__layer--gold { transform: translate3d(38vw, 30vh, 0); }
+}
+
+/* Aceternity Aurora: movimiento amplio de gradiente, adaptado a Sófocles. */
+@theme inline {
+  --animate-aurora: aurora 60s linear infinite;
+
+  @keyframes aurora {
+    from { background-position: 50% 50%, 50% 50%; }
+    to { background-position: 350% 50%, 350% 50%; }
+  }
+}
+.AuroraBackground__aceternity-layer {
+  position: absolute;
+  inset: -12px;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(100deg, rgba(10, 31, 29, .95) 0%, rgba(10, 31, 29, .95) 7%, transparent 10%, transparent 12%, rgba(10, 31, 29, .95) 16%),
+    repeating-linear-gradient(100deg, #25845f 8%, #3ECF8E 19%, rgba(20, 150, 103, .9) 30%, rgba(201, 162, 75, .32) 42%, #25845f 55%);
+  background-size: 300% 200%, 300% 200%;
+  background-position: 50% 50%, 50% 50%;
+  opacity: .48;
+  filter: blur(12px);
+  will-change: background-position;
+}
+.AuroraBackground--radial .AuroraBackground__aceternity-layer {
+  -webkit-mask-image: radial-gradient(ellipse at 50% 45%, black 12%, transparent 78%);
+  mask-image: radial-gradient(ellipse at 50% 45%, black 12%, transparent 78%);
+}
+@media (prefers-color-scheme: light) {
+  html:not(.theme-dark) .AuroraBackground__aceternity-layer {
+    opacity: .2;
+    background-image:
+      repeating-linear-gradient(100deg, rgba(244, 241, 232, .9) 0%, rgba(244, 241, 232, .9) 7%, transparent 10%, transparent 12%, rgba(244, 241, 232, .9) 16%),
+      repeating-linear-gradient(100deg, #25845f 8%, #3ECF8E 19%, rgba(20, 150, 103, .8) 30%, rgba(201, 162, 75, .24) 42%, #25845f 55%);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .AuroraBackground__aceternity-layer { animation: aurora 60s linear infinite; }
+}
+@media (max-width: 640px) {
+  .AuroraBackground__aceternity-layer { filter: blur(8px); opacity: .38; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .AuroraBackground__aceternity-layer {
+    animation: none !important;
+    background-position: 50% 50%, 50% 50%;
+  }
 }
 
 ::selection {
@@ -68,6 +228,17 @@ body,
   background: radial-gradient(circle at top left, rgba(110, 184, 145, 0.18), transparent 26%), linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   color: var(--text-primary);
   isolation: isolate;
+}
+
+.Olimpo-Contenedor::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
 }
 
 .Olimpo-Contenedor .text-stone-800,
@@ -595,7 +766,7 @@ html.theme-dark .Logo-Marca img {
   position: relative;
   display: inline-block;
   cursor: pointer;
-  font-family: "SF Pro Display", "Avenir Next", "Trebuchet MS", sans-serif !important;
+  font-family: var(--font-display) !important;
   font-weight: 900;
   font-size: clamp(2.5rem, 5vw, 4.8rem);
   line-height: 1;
@@ -816,19 +987,720 @@ html.theme-dark .Input-Olimpo {
   box-shadow: 0 8px 24px rgba(135, 152, 126, 0.03);
 }
 
-.Toast-Contenedor {
-  @apply fixed bottom-20 left-1/2 -translate-x-1/2 z-50 md:bottom-8 md:right-8 md:left-auto md:translate-x-0 transition-all duration-300 font-sans;
+/* Dirección visual: piedra, metal y profundidad sin perder la ligereza del glass. */
+.Home-Panel,
+.Home-PreviewCard {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  --spotlight-x: 50%;
+  --spotlight-y: 50%;
+  transition: transform 350ms cubic-bezier(.16, 1, .3, 1), box-shadow 350ms ease;
 }
 
-.Toast-Olimpo {
-  @apply flex items-center gap-3 px-5 py-3 rounded-2xl border border-white/80 bg-white/90 shadow-xl backdrop-blur-2xl text-sm font-semibold text-stone-800 font-sans;
-  box-shadow: 0 12px 30px rgba(135, 152, 126, 0.15);
+.Home-Panel::before,
+.Home-PreviewCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle 180px at var(--spotlight-x) var(--spotlight-y), rgba(217, 182, 110, 0.18), transparent 72%);
 }
 
-.Toast-Exito {
-  @apply border-emerald-500/30 text-emerald-900;
+.Home-Panel > *,
+.Home-PreviewCard > * {
+  position: relative;
+  z-index: 1;
 }
 
-.Toast-Error {
-  @apply border-red-500/30 text-red-900;
+.Home-Panel::after,
+.Home-PreviewCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(120deg, transparent 20%, rgba(217, 182, 110, 0.68), transparent 65%);
+  background-size: 220% 100%;
+  animation: borderShimmer 7s linear infinite;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
+
+.Home-Panel:hover,
+.Home-PreviewCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 28px 68px rgba(24, 39, 53, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.38);
+}
+
+.Home-Kicker,
+.Home-Branding,
+.Home-Metrics,
+.Home-Actions,
+.Home-PreviewCard,
+.Home-InfoGrid {
+  animation: riseIn 650ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.Home-Kicker { animation-delay: 0ms; }
+.Home-Branding { animation-delay: 90ms; }
+.Home-Metrics { animation-delay: 170ms; }
+.Home-Actions { animation-delay: 250ms; }
+.Home-PreviewCard { animation-delay: 140ms; }
+.Home-InfoGrid { animation-delay: 230ms; }
+
+.Home-Headline,
+.Title-Post-Display,
+.Banner-Olimpo__title {
+  font-family: var(--font-display);
+}
+
+.Home-Headline { font-size: var(--type-h1-size); line-height: var(--type-h1-line); }
+.AdminReportsPage .Titulo-Modal,
+.AdminUsersPage .Titulo-Modal,
+.Home-PreviewCard__title { font-family: var(--font-display); font-size: var(--type-h2-size); line-height: var(--type-h2-line); }
+.Titulo-Modal { font-family: var(--font-display); }
+.Texto-Modal, .Home-Subcopy, .Home-PreviewCard__text { font-size: var(--type-body-size); line-height: var(--type-body-line); }
+.AdminReportsPage__summary span, .AdminReportsPage__section-heading p, .AdminReportsPage__count { font-size: var(--type-caption-size); line-height: var(--type-caption-line); }
+
+.Home-Branding__mark img,
+.Logo-Marca img {
+  filter: sepia(.42) saturate(.82) hue-rotate(350deg) brightness(1.06) drop-shadow(0 18px 26px rgba(61, 43, 22, .2));
+}
+
+.Home-Headline { text-wrap: balance; }
+
+.Home-Panel--support {
+  align-items: center;
+  justify-content: center;
+  min-height: 18rem;
+  text-align: center;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, .12));
+}
+
+.Home-Panel--support .Home-PreviewCard,
+.Home-Panel--support .Home-InfoGrid { display: none; }
+
+.Home-SupportMark {
+  color: var(--color-gold);
+  font-size: 2.6rem;
+  opacity: .8;
+}
+
+.Home-SupportText {
+  max-width: 18rem;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.Home-MetricCard,
+.Home-InfoGrid article {
+  transition: transform 250ms ease, border-color 250ms ease, background 250ms ease;
+}
+
+.Home-MetricCard:hover,
+.Home-InfoGrid article:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--color-gold) 38%, transparent);
+}
+
+.Home-PreviewCard { --spotlight-x: 50%; --spotlight-y: 50%; }
+
+.Modal-Animacion {
+  animation-duration: 420ms;
+}
+
+.Overlay-Modal { animation: backdropIn 220ms ease-out both; }
+
+/* Los overlays fijos no usan backdrop-filter para evitar jank en Safari/iOS. */
+.Overlay-Modal,
+.Modal-Overlay { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+
+.Input-Olimpo:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 22%, transparent), 0 8px 24px rgba(61, 107, 86, 0.1);
+  transform: translateY(-1px);
+}
+
+.Btn-Primario:disabled { cursor: wait; opacity: 0.68; }
+
+.Siguiendo::after {
+  content: " ✓";
+  color: var(--color-gold-bright);
+  animation: checkPop 350ms cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes borderShimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -20% 0; }
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes checkPop {
+  from { opacity: 0; transform: scale(.6); }
+  70% { transform: scale(1.18); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .Home-Panel:hover,
+  .Home-PreviewCard:hover,
+  .Home-MetricCard:hover,
+  .Home-InfoGrid article:hover,
+  .Input-Olimpo:focus { transform: none; }
+}
+
+/* Auth and landing layout corrections. */
+.Home-Layout { display: block; max-width: 560px; }
+.Home-Panel--visual { display: none; }
+.Home-Panel--copy { width: 100%; }
+.Home-Metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.Home-MetricCard { padding: .65rem .7rem; text-align: center; align-items: center; }
+.Home-MetricCard strong { font-size: .65rem; }
+.Home-MetricCard span { font-size: .72rem; }
+.Home-Actions .Btn-Primario { order: 2; min-width: 10rem; }
+.Home-Actions .Btn-Secundario { order: 1; background: transparent; border-color: transparent; box-shadow: none; }
+.Home-Panel--copy .Home-Actions { order: 1; }
+.Home-Panel--copy .Home-Metrics { order: 2; }
+.Card-Formulario--auth .Logo-Lockup { display: none; }
+.Card-Formulario--auth { max-height: calc(100vh - 2rem); overflow: visible; padding: 1.5rem 1.75rem; gap: 1rem; }
+.Card-Formulario--auth .Auth-CardHero { position: relative; z-index: 2; }
+.Card-Formulario--auth .Form-Grupo { gap: .35rem; }
+.Card-Formulario--auth .Input-Olimpo { padding-top: .65rem; padding-bottom: .65rem; }
+.Card-Formulario--auth .Auth-CardSocial { padding-top: 0; }
+.Card-Formulario--auth .Btn-Cerrar { z-index: 4; }
+
+/* Landing metric cards: keep their computed colors on the actual card surface. */
+.Home-Metrics .Home-MetricCard {
+  background: var(--bg-panel);
+}
+.Home-Metrics .Home-MetricCard strong { color: var(--marble); }
+.Home-Metrics .Home-MetricCard span { color: var(--muted); }
+
+/* Login inputs: explicit normal and Chrome autofill states. */
+.Card-Formulario--login .Input-Olimpo {
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--bg-panel);
+  border: 1px solid rgba(201, 162, 75, 0.2);
+  color: var(--marble);
+}
+.Card-Formulario--login input:-webkit-autofill,
+.Card-Formulario--login input:-webkit-autofill:hover,
+.Card-Formulario--login input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-panel) inset !important;
+  -webkit-text-fill-color: var(--marble) !important;
+  caret-color: var(--marble) !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+.Card-Formulario--auth {
+  box-sizing: border-box;
+  background: var(--bg-panel) !important;
+  color: var(--marble);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(201, 162, 75, 0.2);
+  max-width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.Auth-Dialog-Content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1001 !important;
+  width: min(34rem, calc(100vw - 2rem));
+  margin: 0;
+  translate: -50% -50%;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  animation: none !important;
+  pointer-events: auto;
+}
+.Overlay-Modal:has(.Card-Formulario--login) {
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+body:has(.Overlay-Modal .Card-Formulario--login) { overflow-x: hidden; }
+
+.Home-Headline,
+.Home-PreviewCard__title,
+.Titulo-Modal,
+.ProfilePage__identity-copy h1,
+.ProfilePage__posts h2,
+.Logo-Sofocles {
+  font-family: var(--font-display) !important;
+  font-optical-sizing: auto;
+}
+
+.AdminReportsPage__summary,
+.AdminReportsPage__count,
+.Admin-CaseCard__topline,
+.Admin-CaseCard__meta,
+.Admin-CaseCard__resolved {
+  font-family: var(--font-mono);
+}
+
+.Home-MetricCard strong { color: var(--marble) !important; }
+.Home-MetricCard span { color: var(--muted) !important; }
+
+/* Modal stack: the overlay owns the viewport and fully occludes the hero. */
+.Olimpo-Contenedor:has(.Overlay-Modal) { overflow: visible; }
+.Overlay-Modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000 !important;
+  background: rgba(10, 31, 29, 0.75) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  overflow: auto !important;
+}
+.Overlay-Modal > * { position: relative; z-index: 1001; }
+
+/* Sonner uses the product tokens while keeping its built-in auto-dismiss. */
+.sofocles-toast { border-color: rgba(201, 162, 75, .2) !important; box-shadow: 0 12px 28px rgba(0, 0, 0, .24) !important; }
+.sofocles-toast--success [data-icon] svg { color: var(--jade) !important; }
+
+/* Login glass panel: profundidad y legibilidad sin salir de la paleta Sófocles. */
+.Overlay-Modal:has(+ .Auth-Dialog-Content)::before {
+  content: "SÓFOCLES";
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  z-index: 0;
+  transform: translateX(-50%);
+  color: var(--gold);
+  opacity: .08;
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 14vw, 10rem);
+  font-weight: 600;
+  letter-spacing: .18em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.Overlay-Modal:has(+ .Auth-Dialog-Content) {
+  background:
+    radial-gradient(circle at 50% -20%, rgba(201, 162, 75, .14), transparent 60%),
+    rgba(10, 31, 29, .75) !important;
+}
+.Card-Formulario--login.Auth-Dialog-Content {
+  width: min(440px, calc(100vw - 32px));
+  padding: 32px;
+  background: rgba(15, 46, 43, .6) !important;
+  border: 1px solid rgba(201, 162, 75, .07);
+  border-radius: 24px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, .5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.Card-Formulario--login .Auth-CardHero { margin: 4px 0 32px; gap: 8px; }
+.Card-Formulario--login .Auth-CardHero__eyebrow { letter-spacing: .15em; }
+.Card-Formulario--login .Auth-CardHero__title { font-size: 24px; line-height: 32px; }
+.Card-Formulario--login form { gap: 24px; }
+.Card-Formulario--login .Form-Grupo { gap: 8px; }
+.Card-Formulario--login .Btn-Cerrar .material-symbols-outlined { font-size: 18px; }
+.Card-Formulario--login .Btn-Cerrar {
+  background: rgba(255, 255, 255, .05);
+  color: rgba(240, 234, 214, .72);
+  transition: background-color 200ms ease, color 200ms ease, transform 200ms ease;
+}
+.Card-Formulario--login .Btn-Cerrar:hover {
+  background: rgba(201, 162, 75, .12);
+  color: var(--gold);
+  transform: scale(1.05);
+}
+.Card-Formulario--login .Input-Olimpo {
+  background: #12241f;
+  border: 1px solid rgba(240, 234, 214, .14);
+  border-radius: 10px;
+  color: var(--marble);
+}
+.Card-Formulario--login .Input-Olimpo:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 0 15px rgba(201, 162, 75, .2);
+}
+.Card-Formulario--login .Btn-Primario {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 8px 20px rgba(0, 0, 0, .18);
+  transition: filter 200ms ease, box-shadow 200ms ease;
+}
+.Card-Formulario--login .Btn-Primario:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 0 20px rgba(201, 162, 75, .2);
+  filter: brightness(1.08);
+}
+.login-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0; color: rgba(240, 234, 214, .5); }
+.login-divider span { flex: 1; height: 1px; background: rgba(240, 234, 214, .1); }
+.login-divider b { font: 600 10px/1 var(--font-mono); letter-spacing: .12em; }
+.Card-Formulario--login .Auth-CardSocial { flex-direction: column; align-items: stretch; gap: 12px; }
+.Card-Formulario--login .Enlace-Simple { color: rgba(240, 234, 214, .65); transition: color 200ms ease; }
+.Card-Formulario--login .Enlace-Simple:hover { color: var(--gold); }
+
+/* Registro: misma jerarquía visual del login, sin compartir estado ni lógica. */
+.Card-Formulario--register.Auth-Dialog-Content {
+  width: min(440px, calc(100vw - 32px));
+  padding: 32px;
+  background: rgba(15, 46, 43, .6) !important;
+  border: 1px solid rgba(201, 162, 75, .07);
+  border-radius: 24px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, .5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.Card-Formulario--register .Auth-CardHero { margin: 4px 0 32px; gap: 8px; }
+.Card-Formulario--register .Auth-CardHero__eyebrow { color: var(--gold); letter-spacing: .15em; }
+.Card-Formulario--register .Auth-CardHero__title,
+.Card-Formulario--register .Form-Grupo label { color: var(--marble); }
+.Card-Formulario--register form { gap: 24px; }
+.Card-Formulario--register .Form-Grupo { gap: 8px; }
+.Card-Formulario--register .Btn-Cerrar {
+  background: rgba(255, 255, 255, .05);
+  color: rgba(240, 234, 214, .72);
+  transition: background-color 200ms ease, color 200ms ease, transform 200ms ease;
+}
+.Card-Formulario--register .Btn-Cerrar:hover { background: rgba(201, 162, 75, .12); color: var(--gold); transform: scale(1.05); }
+.Card-Formulario--register .Input-Olimpo {
+  background: #12241f;
+  border: 1px solid rgba(240, 234, 214, .14);
+  border-radius: 10px;
+  color: var(--marble);
+}
+.Card-Formulario--register .Input-Olimpo:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 0 15px rgba(201, 162, 75, .2);
+}
+.Card-Formulario--register .Btn-Primario {
+  background: linear-gradient(135deg, #25845f, var(--jade));
+  border: 1px solid var(--gold);
+  color: var(--marble);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 8px 20px rgba(0, 0, 0, .18);
+}
+.Card-Formulario--register .Btn-Primario:hover { filter: brightness(1.08); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 0 20px rgba(201, 162, 75, .2); }
+.Card-Formulario--register .Auth-CardSocial { flex-direction: column; align-items: stretch; gap: 12px; }
+.Card-Formulario--register .Enlace-Simple { color: rgba(240, 234, 214, .65); transition: color 200ms ease; }
+.Card-Formulario--register .Enlace-Simple:hover { color: var(--gold); }
+
+/* Contrato único para botones OAuth en login y registro. */
+.Auth-Social-Button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 16px !important;
+  gap: 10px !important;
+  border-radius: 9999px !important;
+  border-width: 1px !important;
+  font: 600 14px/1 var(--font-body) !important;
+  transition: filter 200ms ease, transform 200ms ease, background-color 200ms ease !important;
+}
+.Auth-Social-Button img {
+  width: 24px !important;
+  height: 24px !important;
+  flex: 0 0 24px;
+  object-fit: contain;
+}
+.Auth-Social-Button.social-google {
+  background: #fff !important;
+  border-color: rgba(0, 0, 0, .12) !important;
+  color: #1F2937 !important;
+}
+.Auth-Social-Button.social-discord {
+  background: #5865F2 !important;
+  border-color: #5865F2 !important;
+  color: #fff !important;
+}
+.Auth-Social-Button.social-google:hover { filter: brightness(.96); transform: translateY(-1px); }
+.Auth-Social-Button.social-discord:hover { background: #4752C4 !important; filter: none; transform: translateY(-1px); }
+
+/* Navbar editorial: elevación verde nivel 1 y un único set de iconos. */
+.Olimpo-Contenedor .Banner-Olimpo.Banner-Olimpo--feed {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 64px;
+  padding: 12px 20px;
+  border-radius: 0;
+  background: #12241f;
+  border: 0;
+  border-bottom: 1px solid rgba(201, 162, 75, .15);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .14);
+  backdrop-filter: blur(16px);
+}
+.Olimpo-Contenedor .Banner-Olimpo__mark {
+  width: auto;
+  margin: 0;
+  flex: 0 0 auto;
+}
+.Olimpo-Contenedor .Banner-Olimpo__mark .Logo-Sofocles {
+  color: var(--gold);
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.35rem, 2.5vw, 1.8rem);
+  font-weight: 600;
+  letter-spacing: .18em;
+  line-height: 1;
+  text-shadow: 0 1px 8px rgba(201, 162, 75, .12);
+  -webkit-text-fill-color: currentColor;
+  -webkit-text-stroke: 0;
+  background: none;
+}
+.Olimpo-Contenedor .Banner-Olimpo__mark .Logo-Sofocles:hover { transform: none; filter: none; }
+.Olimpo-Contenedor .Banner-Olimpo__actions { margin: 0 0 0 auto !important; }
+.Olimpo-Contenedor .Banner-Olimpo__action-group { gap: 8px !important; }
+.Olimpo-Contenedor .Header-Action-Button {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: rgba(240, 234, 214, .7) !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  transition: color 200ms ease-out, background-color 200ms ease-out, border-color 200ms ease-out !important;
+}
+.Olimpo-Contenedor .Header-Action-Button:hover {
+  transform: none !important;
+  color: var(--gold) !important;
+  background: rgba(201, 162, 75, .1) !important;
+  border-color: rgba(201, 162, 75, .2) !important;
+}
+.Olimpo-Contenedor .Header-Action-Button .material-symbols-outlined {
+  font-size: 20px;
+  font-variation-settings: 'FILL' 0, 'wght' 350, 'GRAD' 0, 'opsz' 20;
+}
+.Olimpo-Contenedor .Header-Action-Button:hover .material-symbols-outlined,
+.Olimpo-Contenedor .Header-Action-Button--admin .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+/* Navbar final: una sola barra visible que contiene logo y acciones. */
+.Olimpo-Contenedor > .Banner-Olimpo.Banner-Olimpo--feed {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 50 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 112px !important;
+  margin: 0 !important;
+  padding: 12px 24px !important;
+  gap: 10px !important;
+  background: #12241f !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(201, 162, 75, .15) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18) !important;
+  backdrop-filter: blur(16px) !important;
+}
+.Olimpo-Contenedor > .Banner-Olimpo.Banner-Olimpo--feed > .Banner-Olimpo__mark {
+  display: flex !important;
+  align-items: center !important;
+  width: auto !important;
+  min-width: max-content !important;
+  margin: 0 !important;
+  justify-content: center !important;
+}
+.Olimpo-Contenedor > .Banner-Olimpo.Banner-Olimpo--feed > .Banner-Olimpo__mark img {
+  display: block;
+  width: min(52vw, 220px);
+  height: auto;
+  filter: sepia(.42) saturate(.82) hue-rotate(350deg) brightness(1.06) drop-shadow(0 8px 14px rgba(0, 0, 0, .2));
+}
+.Olimpo-Contenedor > .Banner-Olimpo.Banner-Olimpo--feed .Logo-Sofocles {
+  color: var(--gold) !important;
+  background: none !important;
+  -webkit-text-fill-color: var(--gold) !important;
+  -webkit-text-stroke: 0 !important;
+  opacity: 1 !important;
+}
+
+/* El logotipo no usa el antiguo bisel/relieve 3D en ningún tema. */
+.Logo-Sofocles {
+  background: none !important;
+  color: var(--gold) !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: currentColor !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+}
+.Logo-Sofocles:hover {
+  transform: none !important;
+  filter: none !important;
+}
+
+/* Modo claro disponible: tratamiento propio, sin reutilizar superficies oscuras. */
+html:not(.theme-dark) {
+  color-scheme: light;
+  --bg-deep: #F4F1E8;
+  --bg-panel: rgba(255, 255, 255, .88);
+  --marble: #24352F;
+  --muted: #5B7168;
+  --border: rgba(36, 53, 47, .16);
+  --text-primary: #24352F;
+  --text-secondary: #5B7168;
+  --text-muted: #71847C;
+  --surface: rgba(255, 255, 255, .88);
+  --surface-strong: #FFFFFF;
+  --surface-muted: #E8EEE9;
+  --shadow: 0 24px 60px rgba(36, 53, 47, .12);
+  --shadow-soft: 0 14px 35px rgba(36, 53, 47, .1);
+}
+html:not(.theme-dark) body,
+html:not(.theme-dark) #root {
+  background: #F4F1E8;
+  color: var(--text-primary);
+}
+html:not(.theme-dark) .Olimpo-Contenedor {
+  background: radial-gradient(circle at top left, rgba(62, 207, 142, .1), transparent 28%), #F4F1E8;
+  color: var(--text-primary);
+}
+html:not(.theme-dark) .Olimpo-Contenedor > .Banner-Olimpo.Banner-Olimpo--feed {
+  background: rgba(255, 255, 255, .94) !important;
+  border-bottom-color: rgba(201, 162, 75, .35) !important;
+  box-shadow: 0 8px 24px rgba(36, 53, 47, .1) !important;
+}
+html:not(.theme-dark) .Olimpo-Contenedor > .Banner-Olimpo.Banner-Olimpo--feed .Logo-Sofocles {
+  color: #356B53 !important;
+  -webkit-text-fill-color: #356B53 !important;
+}
+html:not(.theme-dark) .Olimpo-Contenedor .Header-Action-Button {
+  color: #356B53 !important;
+  border-color: transparent !important;
+}
+html:not(.theme-dark) .Olimpo-Contenedor .Header-Action-Button:hover {
+  color: #8A671E !important;
+  background: rgba(201, 162, 75, .12) !important;
+  border-color: rgba(201, 162, 75, .28) !important;
+}
+html:not(.theme-dark) .Olimpo-Contenedor .Card-Post,
+html:not(.theme-dark) .Olimpo-Contenedor .Card-Formulario-Feed,
+html:not(.theme-dark) .Olimpo-Contenedor .Lista-Usuarios,
+html:not(.theme-dark) .Olimpo-Contenedor .comentarios-composer,
+html:not(.theme-dark) .Olimpo-Contenedor .comentarios-lista__item {
+  background: #FFFFFF !important;
+  color: #24352F;
+  border-color: rgba(201, 162, 75, .28) !important;
+  box-shadow: 0 10px 28px rgba(36, 53, 47, .08);
+}
+html:not(.theme-dark) .Olimpo-Contenedor .Card-Post .Title-Post-Display,
+html:not(.theme-dark) .Olimpo-Contenedor .Card-Post .Contenido-Post,
+html:not(.theme-dark) .Olimpo-Contenedor .Card-Post .post-author-name {
+  color: #24352F !important;
+}
+html:not(.theme-dark) .Olimpo-Contenedor .Card-Post .post-author-handle,
+html:not(.theme-dark) .Olimpo-Contenedor .Card-Post .Fecha-Post {
+  color: #5B7168 !important;
+}
+html:not(.theme-dark) .Olimpo-Contenedor .Card-Post .icon-btn {
+  color: rgba(36, 53, 47, .68);
+}
+html:not(.theme-dark) .Olimpo-Contenedor .Input-Olimpo-Feed,
+html:not(.theme-dark) .Olimpo-Contenedor textarea,
+html:not(.theme-dark) .Olimpo-Contenedor input {
+  background: #FFFFFF;
+  color: #24352F;
+  border-color: rgba(36, 53, 47, .2);
+}
+.Logo-Sofocles {
+  color: var(--gold) !important;
+}
+.Olimpo-Contenedor > .Banner-Olimpo.Banner-Olimpo--feed > .Banner-Olimpo__actions {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  margin: 0 !important;
+}
+.Olimpo-Contenedor > .Banner-Olimpo.Banner-Olimpo--feed .Banner-Olimpo__action-group {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* Login visual layer: esmeralda dominante, dorado solo como acento. */
+.Card-Formulario--login.Auth-Dialog-Content {
+  background: var(--bg-deep) !important;
+  border: 1px solid rgba(201, 162, 75, 0.2);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(62, 207, 142, .08);
+  backdrop-filter: blur(16px);
+}
+.Card-Formulario--login .Auth-CardHero__eyebrow { color: var(--gold); }
+.Card-Formulario--login .Auth-CardHero__title,
+.Card-Formulario--login .Form-Grupo label { color: var(--marble); }
+.Card-Formulario--login .Input-Olimpo {
+  background: var(--bg-panel);
+  border: 0;
+  border-bottom: 1px solid var(--gold);
+  border-radius: 0;
+  color: var(--marble);
+  box-shadow: none;
+}
+.Card-Formulario--login .Input-Olimpo:focus {
+  border-color: var(--gold);
+  box-shadow: 0 2px 0 var(--gold);
+}
+.Card-Formulario--login .Btn-Primario {
+  background: linear-gradient(135deg, #25845f, var(--jade));
+  border: 1px solid var(--gold);
+  color: var(--marble);
+  box-shadow: 0 10px 24px rgba(62, 207, 142, .18);
+}
+.Card-Formulario--login .Btn-Cerrar {
+  background: rgba(62, 207, 142, .12);
+  color: var(--marble);
+}
+
+/* DIAGNÓSTICO TEMPORAL: confirmar que Radix Content está visible. */
+/* Aurora de landing/login: ligera, lenta y contenida detrás de la marca. */
+.Olimpo-Contenedor .Aura-Apolo-Cyan,
+.Olimpo-Contenedor .Aura-Afrodita-Magenta {
+  opacity: .16;
+  animation: sophoclesBlob 38s ease-in-out infinite alternate;
+  background: var(--jade);
+}
+.Olimpo-Contenedor .Aura-Afrodita-Magenta { background: var(--gold); animation-delay: -13s; }
+.Olimpo-Contenedor .Red-Geometrica { opacity: .04; }
+.Olimpo-Contenedor:has(.Banner-Olimpo) .Aura-Apolo-Cyan,
+.Olimpo-Contenedor:has(.Banner-Olimpo) .Aura-Afrodita-Magenta { display: none; }
+@keyframes sophoclesBlob { from { transform: translate3d(-2%, -1%, 0) scale(.96); } to { transform: translate3d(4%, 3%, 0) scale(1.08); } }
+
+body, button, input, textarea, select { color: var(--text-primary); }
+:focus-visible { outline: 2px solid var(--jade) !important; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .Olimpo-Contenedor .Aura-Apolo-Cyan,
+  .Olimpo-Contenedor .Aura-Afrodita-Magenta { animation: none; }
+}
+
+/* El color base permanece en body/Aurora; el contenedor deja pasar la capa animada. */
+.Olimpo-Contenedor { background: transparent !important; }
+.Olimpo-Contenedor .Aura-Apolo-Cyan,
+.Olimpo-Contenedor .Aura-Afrodita-Magenta { display: none !important; }

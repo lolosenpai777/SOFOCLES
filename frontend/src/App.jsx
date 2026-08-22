@@ -5,7 +5,9 @@ import AdminReports from './components/AdminReports.jsx'
 import AdminUsersModeration from './components/AdminUsersModeration.jsx'
 import AdminRoute from './components/AdminRoute.jsx'
 import UsernameSetupModal from './components/UsernameSetupModal.jsx'
+import ProfilePage from './components/ProfilePage.jsx'
 import { formatDateWithRelative } from './utils/formatDate'
+import * as Dialog from '@radix-ui/react-dialog'
 
 function parseAdminRoute(pathname) {
   if (pathname === '/admin/users' || pathname === '/admin/users/') {
@@ -25,21 +27,59 @@ function parseAdminRoute(pathname) {
   }
 }
 
+function parseProfileRoute(pathname) {
+  const match = pathname.match(/^\/perfil\/([^/]+)\/?$/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function SocialAuthButtons() {
+  const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'
+
+  return (
+    <div className="Auth-CardSocial flex flex-col items-stretch gap-3 pt-2">
+      <button
+        type="button"
+        className="Btn-Social-Icon Auth-Social-Button social-google"
+        aria-label="Continuar con Google"
+        title="Continuar con Google"
+        onClick={() => { window.location.href = `${apiUrl}/auth/google` }}
+      >
+        <img src="/google-178-svgrepo-com.svg" alt="Google" />
+        <span>Continuar con Google</span>
+      </button>
+
+      <button
+        type="button"
+        className="Btn-Social-Icon Auth-Social-Button social-discord"
+        aria-label="Continuar con Discord"
+        title="Continuar con Discord"
+        onClick={() => { window.location.href = `${apiUrl}/auth/discord` }}
+      >
+        <img src="/discord-svgrepo-com.svg" alt="Discord" />
+        <span>Continuar con Discord</span>
+      </button>
+    </div>
+  )
+}
+
 function App() {
   const [modalActivo, setModalActivo] = useState(null)
 
   // Estados para Login
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
 
   // Estados para Registro
   const [nombreUsuario, setNombreUsuario] = useState('')
   const [emailRegistro, setEmailRegistro] = useState('')
   const [passwordRegistro, setPasswordRegistro] = useState('')
+  const [registroLoading, setRegistroLoading] = useState(false)
   const [registerFieldErrors, setRegisterFieldErrors] = useState({})
   const [availability, setAvailability] = useState({ username: null, email: null })
   const [availabilityTouched, setAvailabilityTouched] = useState({ username: false, email: false })
   const availabilityRequestId = useRef({ username: 0, email: 0 })
+  const spotlightFrame = useRef(null)
 
   // Estado para mensajes de error y éxito
   const [errorMsg, setErrorMsg] = useState('')
@@ -64,6 +104,20 @@ function App() {
   const [verificandoCodigo, setVerificandoCodigo] = useState(false)
 
   const adminRoute = parseAdminRoute(pathname)
+  const profileRoute = parseProfileRoute(pathname)
+
+  const handleSpotlightPointerMove = (event) => {
+    const card = event.currentTarget
+    const rect = card.getBoundingClientRect()
+    const x = `${event.clientX - rect.left}px`
+    const y = `${event.clientY - rect.top}px`
+    if (spotlightFrame.current) cancelAnimationFrame(spotlightFrame.current)
+    spotlightFrame.current = requestAnimationFrame(() => {
+      card.style.setProperty('--spotlight-x', x)
+      card.style.setProperty('--spotlight-y', y)
+      spotlightFrame.current = null
+    })
+  }
 
   const navigateTo = useCallback((nextPath, options = {}) => {
     const { replace = false } = options
@@ -135,6 +189,10 @@ function App() {
     } else if (oauthLinked) {
       setAuthNotice(`Cuenta de ${oauthLinked} vinculada correctamente.`)
     }
+
+    if (oauthError || oauthLinked) {
+      window.history.replaceState({}, '', `${window.location.pathname}${window.location.hash}`)
+    }
   }, [pathname])
 
   useEffect(() => {
@@ -190,7 +248,9 @@ function App() {
   // Función de Login
   const login = async (e) => {
     e.preventDefault()
+    if (loginLoading) return
     setErrorMsg('')
+    setLoginLoading(true)
 
     try {
       const respuesta = await clienteAxios.post('/auth/login', {
@@ -201,8 +261,10 @@ function App() {
       localStorage.setItem('sofocles_token', respuesta.data.token)
       setUsuarioAutenticado(respuesta.data.usuario)
       setModalActivo(null)
+      setLoginLoading(false)
     } catch (error) {
       console.error('Error al conectar con el templo:', error)
+      setLoginLoading(false)
       const payload = error.response?.data
       if (payload?.code === 'ACCOUNT_SUSPENDED') {
         if (payload?.suspendedUntil) {
@@ -219,8 +281,10 @@ function App() {
   // Función de Registro
   const registro = async (e) => {
     e.preventDefault()
+    if (registroLoading) return
     setErrorMsg('')
     setRegisterFieldErrors({})
+    setRegistroLoading(true)
 
     try {
       await clienteAxios.post('/auth/registro', {
@@ -240,8 +304,10 @@ function App() {
       // Cerramos el modal de registro y abrimos la ventana de éxito
       setModalActivo(null)
       setMostrarVerificacion(true)
+      setRegistroLoading(false)
     } catch (error) {
       console.error('Error al registrar en el templo:', error)
+      setRegistroLoading(false)
       const payload = error.response?.data || {}
       setRegisterFieldErrors(payload.field ? { [payload.field]: payload.message || payload.mensaje } : {})
       setErrorMsg(payload.field ? '' : payload.mensaje || 'Error al crear la cuenta')
@@ -336,6 +402,21 @@ function App() {
     )
   }
 
+  if (profileRoute) {
+    return (
+      <ProfilePage
+        username={profileRoute}
+        currentUser={usuarioAutenticado}
+        onBack={() => navigateTo('/')}
+        following={usuarioAutenticado?.following || []}
+        onFollow={usuarioAutenticado ? async (userId) => {
+          const { data } = await clienteAxios.post(`/users/${userId}/follow`)
+          return Boolean(data.siguiendo ?? data.following)
+        } : undefined}
+      />
+    )
+  }
+
   if (usuarioAutenticado) {
     if (usuarioAutenticado.needsUsernameSetup) {
       return <UsernameSetupModal user={usuarioAutenticado} onCompleted={completarUsernameSetup} />
@@ -371,6 +452,7 @@ function App() {
         usuarioAutenticado={usuarioAutenticado}
         cerrarSesion={cerrarSesion}
         onOpenAdminReports={() => navigateTo('/admin/reports')}
+        onOpenProfile={(profile) => navigateTo(`/perfil/${encodeURIComponent(profile.username)}`)}
       />
     )
   }
@@ -430,31 +512,30 @@ function App() {
 
       <main className="Auth-Scene">
         <section className="Home-Layout">
-          <div className="Home-Panel Home-Panel--copy">
-            <span className="Home-Kicker">Templo social contemporáneo</span>
+          <div className="Home-Panel Home-Panel--copy" onPointerMove={handleSpotlightPointerMove}>
+            <span className="Home-Kicker">Una plaza para tus ideas</span>
             <div className="Logo-Stage Home-Branding">
               <div className="Logo-Stage__mark Home-Branding__mark">
                 <img src="/logosofo.png" alt="Sófocles" />
               </div>
-              <p className="Home-Headline">Una página de inicio más editorial, más limpia y con presencia real.</p>
+              <p className="Home-Headline">Donde tus ideas encuentran plaza.</p>
               <p className="Home-Subcopy">
-                Accede con tu cuenta, crea una nueva identidad o entra con Google y Discord desde una interfaz más
-                clara y visual.
+                Publica, conversa y descubre las voces que hacen crecer la conversación.
               </p>
             </div>
 
             <div className="Home-Metrics">
               <article className="Home-MetricCard">
-                <strong>Login</strong>
-                <span>Acceso directo y rápido</span>
+                <strong>Publica</strong>
+                <span>Deja una idea en el ágora</span>
               </article>
               <article className="Home-MetricCard">
-                <strong>Register</strong>
-                <span>Altas con verificación por correo</span>
+                <strong>Conversa</strong>
+                <span>Encuentra tu tribu</span>
               </article>
               <article className="Home-MetricCard">
-                <strong>OAuth</strong>
-                <span>Google y Discord integrados</span>
+                <strong>Descubre</strong>
+                <span>Sigue las voces que importan</span>
               </article>
             </div>
 
@@ -490,20 +571,21 @@ function App() {
             {errorMsg && <p className="Auth-Panel__meta text-red-600">{errorMsg}</p>}
           </div>
 
-          <aside className="Home-Panel Home-Panel--visual">
-            <div className="Home-PreviewCard">
-              <p className="Home-PreviewCard__eyebrow">Experiencia de entrada</p>
+          <aside className="Home-Panel Home-Panel--visual Home-Panel--support" aria-label="Información de acceso">
+            <div className="Home-SupportMark" aria-hidden="true">✦</div>
+            <p className="Home-SupportText">Un espacio sereno para pensar en voz alta y encontrar conversación.</p>
+            <div className="Home-PreviewCard" onPointerMove={handleSpotlightPointerMove}>
+              <p className="Home-PreviewCard__eyebrow">Entra en la conversación</p>
               <h2 className="Home-PreviewCard__title">
-                Login y registro con contraste, jerarquía y foco en conversión.
+                Tu próxima idea merece una audiencia.
               </h2>
               <p className="Home-PreviewCard__text">
-                La nueva portada separa mejor la marca, los accesos y la propuesta visual para que el primer impacto
-                sea más claro.
+                Crea tu cuenta con correo, Google o Discord y empieza a construir tu presencia en Sófocles.
               </p>
               <div className="Home-PreviewCard__chips">
-                <span>Glass UI</span>
-                <span>Marca centrada</span>
-                <span>Accesos directos</span>
+                <span>Comparte</span>
+                <span>Conecta</span>
+                <span>Participa</span>
               </div>
             </div>
 
@@ -526,11 +608,13 @@ function App() {
       </main>
 
       {/* MODAL DE LOGIN */}
-      {modalActivo === 'login' && (
-        <div className="Overlay-Modal">
-          <div className="Card-Formulario Card-Formulario--auth Card-Formulario--login Modal-Animacion">
+      <Dialog.Root open={modalActivo === 'login'} onOpenChange={(open) => !open && setModalActivo(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="Overlay-Modal" />
+          <Dialog.Content className="Card-Formulario Card-Formulario--auth Card-Formulario--login Auth-Dialog-Content">
+            <Dialog.Title className="sr-only">Iniciar sesión</Dialog.Title>
             <button className="Btn-Cerrar" onClick={() => setModalActivo(null)}>
-              ✕
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
             </button>
 
             <div className="Auth-CardHero text-center">
@@ -575,36 +659,19 @@ function App() {
               <button
                 type="submit"
                 className="Btn-Primario w-full py-3 rounded-xl font-bold tracking-wider mt-2 cursor-pointer transition-all active:scale-95"
+                disabled={loginLoading}
               >
-                Ingresar
+                {loginLoading ? 'Entrando…' : 'Ingresar'}
               </button>
             </form>
 
-            <div className="Auth-CardSocial flex flex-row items-center justify-center gap-4 pt-2">
-              <button
-                type="button"
-                className="Btn-Social-Icon"
-                aria-label="Continuar con Google"
-                title="Continuar con Google"
-                onClick={() => {
-                  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/google`
-                }}
-              >
-                <img src="/google-178-svgrepo-com.svg" alt="Google" className="w-6 h-6 object-contain" />
-              </button>
-
-              <button
-                type="button"
-                className="Btn-Social-Icon"
-                aria-label="Continuar con Discord"
-                title="Continuar con Discord"
-                onClick={() => {
-                  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/discord`
-                }}
-              >
-                <img src="/discord-svgrepo-com.svg" alt="Discord" className="w-6 h-6 object-contain" />
-              </button>
+            <div className="login-divider" aria-hidden="true">
+              <span />
+              <b>O</b>
+              <span />
             </div>
+
+            <SocialAuthButtons />
 
             <button
               className="Enlace-Simple border-none bg-none cursor-pointer"
@@ -615,16 +682,18 @@ function App() {
             >
               ¿No tienes una cuenta? Regístrate aquí
             </button>
-          </div>
-        </div>
-      )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       {/* MODAL DE REGISTRO */}
-      {modalActivo === 'registro' && (
-        <div className="Overlay-Modal">
-          <div className="Card-Formulario Card-Formulario--auth Card-Formulario--register Modal-Animacion">
+      <Dialog.Root open={modalActivo === 'registro'} onOpenChange={(open) => !open && setModalActivo(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="Overlay-Modal" />
+          <Dialog.Content className="Card-Formulario Card-Formulario--auth Card-Formulario--register Auth-Dialog-Content">
+            <Dialog.Title className="sr-only">Crear cuenta</Dialog.Title>
             <button className="Btn-Cerrar" onClick={() => setModalActivo(null)}>
-              ✕
+              <span className="material-symbols-outlined" aria-hidden="true">close</span>
             </button>
 
             <div className="Auth-CardHero text-center">
@@ -729,36 +798,19 @@ function App() {
               <button
                 type="submit"
                 className="Btn-Primario w-full py-3 rounded-xl font-bold tracking-wider mt-2 cursor-pointer transition-all active:scale-95"
+                disabled={registroLoading}
               >
-                Crear Cuenta
+                {registroLoading ? 'Creando cuenta…' : 'Crear Cuenta'}
               </button>
             </form>
 
-            <div className="Auth-CardSocial flex flex-row items-center justify-center gap-4 pt-2">
-              <button
-                type="button"
-                className="Btn-Social-Icon"
-                aria-label="Continuar con Google"
-                title="Continuar con Google"
-                onClick={() => {
-                  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/google`
-                }}
-              >
-                <img src="/google-178-svgrepo-com.svg" alt="Google" className="w-6 h-6 object-contain" />
-              </button>
-
-              <button
-                type="button"
-                className="Btn-Social-Icon"
-                aria-label="Continuar con Discord"
-                title="Continuar con Discord"
-                onClick={() => {
-                  window.location.href = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'}/auth/discord`
-                }}
-              >
-                <img src="/discord-svgrepo-com.svg" alt="Discord" className="w-6 h-6 object-contain" />
-              </button>
+            <div className="login-divider" aria-hidden="true">
+              <span />
+              <b>O</b>
+              <span />
             </div>
+
+            <SocialAuthButtons />
 
             <button
               className="Enlace-Simple border-none bg-none cursor-pointer"
@@ -777,14 +829,14 @@ function App() {
             >
               ¿Ya tienes cuenta? Inicia sesión aquí
             </button>
-          </div>
-        </div>
-      )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       {/* VENTANA EMERGENTE: VERIFICACIÓN CÓDIGO */}
       {mostrarVerificacion && (
-        <div className="Overlay-Modal">
-          <div className="Card-Formulario Modal-Animacion text-center flex flex-col items-center gap-4 p-8">
+        <div className="Overlay-Modal" onMouseDown={() => setMostrarVerificacion(false)}>
+          <div className="Card-Formulario Modal-Animacion text-center flex flex-col items-center gap-4 p-8" onMouseDown={(event) => event.stopPropagation()}>
             <div className="text-5xl" aria-hidden="true">
               ✉️
             </div>

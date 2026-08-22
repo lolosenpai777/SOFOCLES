@@ -266,7 +266,7 @@ function PerfilModal({ usuario, miId, siguiendo, manejarSeguir, cerrarModal }) {
                   )}
 
                   {/* Estadísticas */}
-                  <div className="grid grid-cols-3 gap-2 p-3 bg-emerald-50/60 rounded-2xl border border-emerald-900/10 text-center">
+                  <div className="Profile-Stats grid grid-cols-3 gap-2 p-3 rounded-2xl text-center">
                     <div>
                       <p className="text-base font-bold text-emerald-800">
                         {perfilData.postsCount || 0}
