@@ -614,23 +614,124 @@ html.theme-dark .comentarios-composer__input {
 }
 
 /* ==========================================================================
-   6. BOTONES DE INTERACCIÓN CON PULSO DE CORAZÓN 💚
+   6. BOTONES DE INTERACCIÓN, SIN CÍRCULO HOVER, CLICABLES Y CORAZÓN VERDE PERMANENTE
    ========================================================================== */
-@keyframes heartPulse {
-  0% { transform: scale(1); }
-  25% { transform: scale(1.28) rotate(-6deg); }
-  50% { transform: scale(0.92) rotate(3deg); }
-  75% { transform: scale(1.1) rotate(-1deg); }
-  100% { transform: scale(1) rotate(0deg); }
+
+/* Botón base limpio sin círculo de fondo */
+.Olimpo-Contenedor .post-actions-social .icon-btn,
+.Olimpo-Contenedor .post-actions-management .icon-btn,
+.icon-btn,
+.Btn-Compartir-Post,
+.Btn-Like-Post,
+.Btn-Comentario-Post {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  padding: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: none !important;
+  color: rgba(240, 234, 214, 0.7) !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s ease !important;
 }
 
-.Contador-Likes {
-  @apply text-xs font-semibold;
+/* Escala al pasar el mouse (sin círculo de fondo) */
+.Olimpo-Contenedor .post-actions-social .icon-btn:hover,
+.Olimpo-Contenedor .post-actions-management .icon-btn:hover,
+.icon-btn:hover,
+.Btn-Compartir-Post:hover,
+.Btn-Like-Post:hover,
+.Btn-Comentario-Post:hover {
+  background: transparent !important;
+  color: var(--emerald-vibrant, #10b981) !important;
+  transform: scale(1.15) !important;
 }
 
+.Olimpo-Contenedor .post-actions-social .icon-btn:active,
+.Olimpo-Contenedor .post-actions-management .icon-btn:active,
+.icon-btn:active,
+.Btn-Compartir-Post:active,
+.Btn-Like-Post:active,
+.Btn-Comentario-Post:active {
+  transform: scale(0.9) !important;
+}
+
+/* Íconos SVG internos */
+.Olimpo-Contenedor .post-action-icon,
 .Icono-Like,
-.Icono-Comentario {
-  @apply h-4 w-4 object-contain;
+.Icono-Comentario,
+.Btn-Compartir-Post img,
+.Btn-Compartir-Post svg {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 22px !important;
+  object-fit: contain !important;
+  stroke: currentColor !important;
+  transition: all 0.25s ease !important;
+}
+
+/* Color verde esmeralda para el SVG de compartir */
+.Btn-Compartir-Post img,
+.Btn-Compartir-Post svg {
+  filter: invert(61%) sepia(85%) saturate(390%) hue-rotate(113deg) brightness(96%) contrast(90%);
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Compartir-Post img,
+.Olimpo-Contenedor.modo-oscuro .Btn-Compartir-Post svg {
+  filter: invert(80%) sepia(35%) saturate(880%) hue-rotate(105deg) brightness(102%) contrast(98%);
+}
+
+/* Animación de pulso al dar like */
+@keyframes greenHeartPulse {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0px rgba(16, 185, 129, 0));
+  }
+  30% {
+    transform: scale(1.4) rotate(-8deg);
+    filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.8));
+  }
+  60% {
+    transform: scale(0.85) rotate(4deg);
+  }
+  80% {
+    transform: scale(1.15) rotate(-2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* ESTADO ACTIVO PERMANENTE: CORAZÓN LLENO Y VERDE ESMERALDA (#10b981) */
+.Olimpo-Contenedor .post-actions-row .icon-btn.active,
+.Olimpo-Contenedor .post-actions-social .icon-btn.active,
+.Olimpo-Contenedor .Btn-Like-Post.Activo,
+.Olimpo-Contenedor .Btn-Like-Post.active,
+.icon-btn.active,
+.icon-btn.Activo {
+  color: #10b981 !important;
+}
+
+.Olimpo-Contenedor .post-actions-row .icon-btn.active .post-action-icon,
+.Olimpo-Contenedor .post-actions-row .icon-btn.active .Icono-Like,
+.Olimpo-Contenedor .Btn-Like-Post.Activo .Icono-Like,
+.Olimpo-Contenedor .Btn-Like-Post.active .Icono-Like,
+.icon-btn.active .Icono-Like,
+.icon-btn.active .post-action-icon {
+  color: #10b981 !important;
+  stroke: #10b981 !important;
+  fill: #10b981 !important;
+  font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 20 !important;
+  animation: greenHeartPulse 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both !important;
+}
+
+.icon-btn.danger:hover {
+  color: #f87171 !important;
+  background: transparent !important;
 }
 
 /* ==========================================================================
@@ -857,13 +958,12 @@ html.theme-dark .Noti-Empty {
   @apply rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700;
 }
 
-/* Normalización de tamaños para botones generales */
 .Btn-Secundario,
 .Btn-Primario-Feed {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  height: 40px !important; /* Altura idéntica garantizada */
+  height: 40px !important;
   padding: 0 18px !important;
   font-size: 0.75rem !important;
   font-weight: 700 !important;
@@ -872,8 +972,6 @@ html.theme-dark .Noti-Empty {
   white-space: nowrap !important;
   box-sizing: border-box !important;
 }
-
-
 
 .Btn-Secundario {
   @apply px-4 py-1.5 rounded-2xl text-xs font-semibold tracking-wider uppercase
@@ -927,40 +1025,6 @@ html.theme-dark .Noti-Empty {
 }
 
 /* ==========================================================================
-   9. NAVEGACIÓN INFERIOR ESTILO DOCK iOS
-   ========================================================================== */
-.Nav-Inferior-Olimpo {
-  @apply fixed bottom-3 left-4 right-4 z-40 flex items-center justify-around p-2 md:hidden;
-  @apply bg-white/70 border border-white/80 backdrop-blur-2xl transition-all duration-300;
-  border-radius: 26px;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-.Btn-Nav-Item {
-  @apply flex flex-col items-center gap-1 px-4 py-1.5 rounded-2xl text-stone-500 font-medium text-[11px] transition-all duration-200 cursor-pointer;
-}
-
-.Btn-Nav-Item:hover {
-  @apply text-emerald-800 bg-white/50;
-}
-
-.Btn-Nav-Item.Activo {
-  @apply text-emerald-700 font-bold bg-white/90 border border-emerald-600/20 shadow-sm scale-105;
-}
-
-.Btn-Nav-Item svg {
-  @apply transition-transform duration-200;
-}
-
-.Btn-Nav-Item:active svg {
-  @apply scale-90;
-}
-
-.Insignia-Notificacion {
-  @apply absolute top-1 right-3 w-2 h-2 rounded-full bg-emerald-500 animate-pulse;
-}
-
-/* ==========================================================================
    10. HERO CARD / DETALLES DE ANIMACIONES
    ========================================================================== */
 @keyframes postEntrance {
@@ -979,7 +1043,6 @@ html.theme-dark .Noti-Empty {
 .Lista-Posts .Card-Post:nth-child(n+5) { animation-delay: 280ms; }
 
 .Lista-Posts .Card-Post:first-child {
-  /* Mantiene la misma transparencia y estilo cristal que las demás */
   background: inherit !important;
   border: inherit !important;
   box-shadow: inherit !important;
@@ -1027,26 +1090,23 @@ html.theme-dark .Noti-Empty {
    Efecto Polvo / Luces Flotantes Orgánicas en el Fondo
    ========================================================================== */
 
-/* Asegura espacio aislado para las luces detrás del contenido */
 .Olimpo-Contenedor {
   position: relative;
   overflow: hidden;
 }
 
-/* Luces de Fondo (Partículas / Polvo suave) */
 .Olimpo-Contenedor::before,
 .Olimpo-Contenedor::after {
   content: '';
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px); /* Difumina la luz para dar el aspecto de polvo/gas */
+  filter: blur(80px);
   opacity: 0.45;
   pointer-events: none;
   z-index: 0;
   will-change: transform, opacity;
 }
 
-/* Orbe 1: Esmeralda y Menta */
 .Olimpo-Contenedor::before {
   width: 45vw;
   height: 45vw;
@@ -1056,7 +1116,6 @@ html.theme-dark .Noti-Empty {
   animation: polvoFlotante1 18s ease-in-out infinite alternate;
 }
 
-/* Orbe 2: Cian y Turquesa */
 .Olimpo-Contenedor::after {
   width: 50vw;
   height: 50vw;
@@ -1066,7 +1125,6 @@ html.theme-dark .Noti-Empty {
   animation: polvoFlotante2 22s ease-in-out infinite alternate;
 }
 
-/* Animaciones de movimiento suave tipo deriva */
 @keyframes polvoFlotante1 {
   0% {
     transform: translate(0, 0) scale(1) rotate(0deg);
@@ -1106,8 +1164,6 @@ html.theme-dark .Noti-Empty {
   font-weight: 800;
   font-size: 2.2rem;
   letter-spacing: 0.5px;
-  
-  /* Gradiente pastel/brillante estilo Frutiger Aero */
   background: linear-gradient(
     180deg, 
     #ffffff 0%, 
@@ -1117,19 +1173,14 @@ html.theme-dark .Noti-Empty {
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  
-  /* El secreto del efecto pachoncito (Gummy / Marshmallow 3D): 
-     sombras internas y externas que simulan volumen inflado */
   filter: drop-shadow(0px 4px 0px #064e3b) 
           drop-shadow(0px 7px 10px rgba(0, 0, 0, 0.5))
           drop-shadow(0px 0px 12px rgba(16, 185, 129, 0.6));
-  
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: inline-block;
   cursor: pointer;
 }
 
-/* Efecto al pasar el mouse: se "infla" como un gomita */
 .sofocles-logo:hover {
   transform: scale(1.08) translateY(-2px);
   filter: drop-shadow(0px 6px 0px #064e3b) 
@@ -1137,7 +1188,6 @@ html.theme-dark .Noti-Empty {
           drop-shadow(0px 0px 20px rgba(52, 211, 153, 0.9));
 }
 
-/* Contenedor relativo para el Banner y su logo flotante */
 .Banner-Contenedor-Wrapper {
   position: relative;
   width: 100%;
@@ -1146,7 +1196,6 @@ html.theme-dark .Noti-Empty {
   padding-top: 0.5rem;
 }
 
-/* El logo está centrado y exactamente la mitad por encima del borde superior del banner */
 .Banner-Olimpo__mark {
   display: flex !important;
   justify-content: center !important;
@@ -1161,7 +1210,6 @@ html.theme-dark .Noti-Empty {
   margin: 0 !important;
 }
 
-/* Logo con acabado de cristal y brillo Frutiger Aero */
 .Banner-Olimpo__mark img,
 .sofocles-logo {
   width: min(52vw, 290px) !important;
@@ -1187,7 +1235,6 @@ html.theme-dark .Noti-Empty {
   min-height: 84px !important;
 }
 
-/* Sófocles product palette: no secondary SaaS colors in the feed. */
 .Olimpo-Contenedor.modo-oscuro,
 .Olimpo-Contenedor {
   background: var(--bg-deep);
@@ -1211,26 +1258,7 @@ html.theme-dark .Noti-Empty {
 .Olimpo-Contenedor .Card-Post.featured { border-top: 2px solid var(--gold); }
 .Olimpo-Contenedor .Contador-Likes:empty { display: none; }
 .Olimpo-Contenedor .Header-Action-Button { border-color: rgba(201,162,75,.2); }
-.icon-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  flex: 0 0 36px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition: background-color 150ms, color 150ms;
-}
-.icon-btn:hover { background: rgba(62, 207, 142, 0.12); color: var(--jade); }
-.icon-btn.active { color: var(--jade); }
-.icon-btn.danger:hover { background: rgba(224, 90, 90, 0.12); color: #E05A5A; }
-.icon-btn .Contador-Likes { position: absolute; right: -4px; bottom: -2px; font-size: 10px; line-height: 1; }
+
 .Olimpo-Contenedor .Card-Post {
   background: #12241f !important;
   border: 1px solid rgba(201, 162, 75, .17) !important;
@@ -1274,19 +1302,7 @@ html.theme-dark .Noti-Empty {
   gap: 8px;
 }
 .Olimpo-Contenedor .post-actions-management:empty { display: none; }
-.Olimpo-Contenedor .post-actions-row .icon-btn {
-  color: rgba(240, 234, 214, .7);
-}
-.Olimpo-Contenedor .post-actions-row .icon-btn:hover,
-.Olimpo-Contenedor .post-actions-row .icon-btn.active { color: var(--gold); }
-.Olimpo-Contenedor .post-action-icon {
-  font-size: 19px;
-  line-height: 1;
-  font-variation-settings: 'FILL' 0, 'wght' 350, 'GRAD' 0, 'opsz' 20;
-}
-.Olimpo-Contenedor .post-actions-row .icon-btn.active .post-action-icon {
-  font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 20;
-}
+
 @media (max-width: 520px) {
   .Olimpo-Contenedor .post-actions-management { margin-left: 12px; padding-left: 10px; }
 }
@@ -1295,7 +1311,6 @@ html.theme-dark .Noti-Empty {
   .Olimpo-Contenedor .icon-btn:active { transform: none; animation: none; }
 }
 
-/* Post component contract: display is reserved for identity and titles. */
 .Card-Post { font-family: var(--font-body); padding: 16px; transition: transform 150ms ease, box-shadow 150ms ease; }
 .Card-Post:hover { transform: translateY(-1px); }
 .Header-Post { min-height: 40px; }
@@ -1310,7 +1325,6 @@ html.theme-dark .Noti-Empty {
 @media (min-width: 768px) { .Card-Post { padding: 20px 24px; } .Contenido-Post { font-size: 16px; } }
 @media (prefers-reduced-motion: reduce) { .Card-Post:hover, .icon-btn { transition: none; } }
 
-/* Final specificity overrides for the branded feed container. */
 .Olimpo-Contenedor .Card-Post {
   font-family: var(--font-body);
   transition: transform 150ms ease, box-shadow 150ms ease;
@@ -1326,7 +1340,11 @@ html.theme-dark .Noti-Empty {
   .Olimpo-Contenedor .Card-Post:hover { transform: none; }
 }
 
-/* Autocomplete de menciones: popover legible en el sistema verde/dorado. */
+.Share-PostModal { width: min(430px, calc(100vw - 32px)); }
+.Share-PostModal__close { border: 0; background: transparent; color: var(--muted); font-size: 1.5rem; line-height: 1; cursor: pointer; }
+.Share-PostModal__link { display: flex; gap: 8px; margin-top: 18px; }
+.Share-PostModal__link input { min-width: 0; flex: 1; padding: 10px 12px; border: 1px solid var(--muted); border-radius: 10px; background: var(--bg-deep); color: var(--marble); font: inherit; font-size: 13px; }
+
 .Menciones-Autocomplete {
   background: #12241f !important;
   border: 1px solid rgba(201, 162, 75, .28) !important;
@@ -1382,7 +1400,6 @@ html:not(.theme-dark) .Menciones-Autocomplete__item:focus-visible {
 html:not(.theme-dark) .Menciones-Autocomplete__hint,
 html:not(.theme-dark) .Menciones-Autocomplete__state { color: #5B7168; }
 
-/* Fila de acciones: mismo eje horizontal de la card y contadores inline. */
 .Olimpo-Contenedor .post-actions-row {
   width: 100%;
   padding-inline: 0;
@@ -1392,13 +1409,6 @@ html:not(.theme-dark) .Menciones-Autocomplete__state { color: #5B7168; }
   display: flex;
   align-items: center;
   gap: 24px;
-}
-.Olimpo-Contenedor .post-actions-social .icon-btn,
-.Olimpo-Contenedor .post-actions-management .icon-btn {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  color: rgba(240, 234, 214, .7);
 }
 .Olimpo-Contenedor .post-actions-social .action-with-count {
   width: auto;
@@ -1417,25 +1427,12 @@ html:not(.theme-dark) .Menciones-Autocomplete__state { color: #5B7168; }
   border-left: 1px solid rgba(201, 162, 75, .15);
   gap: 8px;
 }
-.Olimpo-Contenedor .post-actions-management .icon-btn { color: rgba(240, 234, 214, .7); }
-.Olimpo-Contenedor .post-actions-row .icon-btn:hover,
-.Olimpo-Contenedor .post-actions-row .icon-btn.active { color: var(--gold); }
-.Olimpo-Contenedor .post-action-icon {
-  width: 20px;
-  height: 20px;
-  font-size: 20px;
-  line-height: 1;
-  font-variation-settings: 'FILL' 0, 'wght' 350, 'GRAD' 0, 'opsz' 20;
-}
-.Olimpo-Contenedor .post-actions-row .icon-btn.active .post-action-icon {
-  font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 20;
-}
+
 @media (max-width: 520px) {
   .Olimpo-Contenedor .post-actions-social { gap: 12px; }
   .Olimpo-Contenedor .post-actions-management { padding-left: 12px; }
 }
 
-/* Consolidated component contract: typography and interaction tokens. */
 .Olimpo-Contenedor .Card-Post {
   display: flex;
   flex-direction: column;
@@ -1465,8 +1462,6 @@ html:not(.theme-dark) .Menciones-Autocomplete__state { color: #5B7168; }
 .Olimpo-Contenedor .hashtag, .Olimpo-Contenedor .mention { color: var(--jade); }
 .Olimpo-Contenedor .hashtag:hover, .Olimpo-Contenedor .mention:hover { text-decoration: underline; }
 .Olimpo-Contenedor .Post-acciones { gap: 16px; margin-top: 0; }
-.Olimpo-Contenedor .Icono-Like,
-.Olimpo-Contenedor .Icono-Accion-Post { width: 18px; height: 18px; }
 .Olimpo-Contenedor .Contador-Likes:empty { display: none; }
 @media (min-width: 768px) {
   .Olimpo-Contenedor .Card-Post { padding: 20px 24px; }
@@ -1475,3 +1470,4 @@ html:not(.theme-dark) .Menciones-Autocomplete__state { color: #5B7168; }
 @media (prefers-reduced-motion: reduce) {
   .Olimpo-Contenedor .Card-Post:hover { transform: none; }
 }
+

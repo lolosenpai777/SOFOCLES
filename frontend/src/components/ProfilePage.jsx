@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import clienteAxios from '../api/clienteAxios'
 import AvatarDisplay from './AvatarDisplay'
+import FluidGlassCard from './ui/FluidGlassCard'
 import { formatDateWithRelative } from '../utils/formatDate'
 import './ProfilePage.css'
 
@@ -27,7 +28,7 @@ function useCountUp(target, duration = 360) {
   return value
 }
 
-export default function ProfilePage({ username, currentUser, onBack, onFollow, following = [] }) {
+export default function ProfilePage({ username, currentUser, onBack, onFollow, onOpenPost, following = [] }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -35,6 +36,7 @@ export default function ProfilePage({ username, currentUser, onBack, onFollow, f
   const [editing, setEditing] = useState(false)
   const [bio, setBio] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [bannerUrl, setBannerUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [followingProfile, setFollowingProfile] = useState(false)
 
@@ -58,6 +60,7 @@ export default function ProfilePage({ username, currentUser, onBack, onFollow, f
         setProfile(profileResponse.data)
         setBio(profileResponse.data.biography || '')
         setAvatarUrl(profileResponse.data.avatarUrl || '')
+        setBannerUrl(profileResponse.data.bannerUrl || '')
       } catch (loadError) {
         console.error(loadError)
         if (!active) return
@@ -98,8 +101,8 @@ export default function ProfilePage({ username, currentUser, onBack, onFollow, f
   const saveProfile = async () => {
     try {
       setSaving(true)
-      const { data } = await clienteAxios.put('/users/profile', { biography: bio, avatarUrl })
-      setProfile((current) => ({ ...current, ...data, biography: bio, avatarUrl }))
+      const { data } = await clienteAxios.put('/users/profile', { biography: bio, avatarUrl, bannerUrl })
+      setProfile((current) => ({ ...current, ...data, biography: bio, avatarUrl, bannerUrl }))
       setEditing(false)
     } catch (saveError) {
       console.error(saveError)
@@ -115,7 +118,12 @@ export default function ProfilePage({ username, currentUser, onBack, onFollow, f
     <main className="ProfilePage">
       <section className="ProfilePage__shell">
         <button type="button" className="ProfilePage__back" onClick={onBack}>← Volver al feed</button>
-        <div className="ProfilePage__banner" />
+        
+        <div 
+          className="ProfilePage__banner" 
+          style={profile.bannerUrl ? { backgroundImage: `url(${profile.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+        />
+
         <div className="ProfilePage__identity profile-header">
           <div className="ProfilePage__avatar"><AvatarDisplay avatarUrl={profile.avatarUrl} username={profile.username} size="lg" /></div>
           <div className="ProfilePage__identity-copy">
@@ -140,6 +148,7 @@ export default function ProfilePage({ username, currentUser, onBack, onFollow, f
           <div className="ProfilePage__editor">
             <textarea value={bio} onChange={(event) => setBio(event.target.value)} maxLength={160} placeholder="Cuéntanos sobre ti" />
             <input value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} placeholder="URL del avatar" />
+            <input value={bannerUrl} onChange={(event) => setBannerUrl(event.target.value)} placeholder="URL del banner" />
             <button type="button" className="Btn-Primario" onClick={saveProfile} disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</button>
           </div>
         ) : null}
@@ -153,12 +162,20 @@ export default function ProfilePage({ username, currentUser, onBack, onFollow, f
 
         <section className="ProfilePage__posts">
           {(tab === 'media' ? posts.filter((post) => post.imageUrl) : posts).map((post) => (
-            <article key={post.id || post._id}>
+            <FluidGlassCard
+              as="article"
+              key={post.id || post._id}
+              className={`ProfilePage__post-card ${onOpenPost ? 'ProfilePage__post-link' : ''}`}
+              mode="cube"
+              thickness={5}
+              chromaticAberration={0.1}
+              onClick={() => onOpenPost?.(post.id || post._id)}
+            >
               <h2>{post.title || 'Pensamiento sin título'}</h2>
               {post.content && <p>{post.content}</p>}
               {post.imageUrl && <img src={post.imageUrl} alt="" loading="lazy" />}
               <time>{formatDateWithRelative(post.createdAt)}</time>
-            </article>
+            </FluidGlassCard>
           ))}
           {((tab === 'media' ? posts.filter((post) => post.imageUrl) : posts).length === 0) && <p className="ProfilePage__empty">Todavía no hay contenido en esta sección.</p>}
         </section>

@@ -1,0 +1,114 @@
+/* ==========================================================================
+   9. NAVEGACIÓN INFERIOR ESTILO DOCK iOS (FIXED & CLICKABLE)
+   ========================================================================== */
+.Nav-Inferior-Olimpo {
+  position: fixed !important;
+  bottom: 1rem !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: calc(100% - 2rem) !important;
+  max-width: 420px !important;
+  z-index: 9999 !important; /* Capa superior absoluta para recibir clics */
+  pointer-events: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0.4rem 0.5rem !important;
+  border-radius: 26px !important;
+  box-sizing: border-box !important;
+  
+  /* Glassmorphism traslúcido */
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.8), 0 12px 28px -4px rgba(0, 0, 0, 0.25) !important;
+}
+
+@media (min-width: 768px) {
+  .Nav-Inferior-Olimpo {
+    display: none !important;
+  }
+}
+
+.Btn-Nav-Item {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  padding: 6px 4px !important;
+  min-width: 0 !important;
+  border-radius: 18px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #64748b !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  user-select: none !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative !important;
+}
+
+/* Evita que el SVG o el span le quiten el evento de clic al button */
+.Btn-Nav-Item * {
+  pointer-events: none !important;
+}
+
+.Btn-Nav-Item svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+}
+
+.Btn-Nav-Item span {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.Btn-Nav-Item:hover {
+  color: #059669 !important;
+}
+
+.Btn-Nav-Item.Activo {
+  color: #10b981 !important;
+  font-weight: 700 !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15) !important;
+}
+
+.Insignia-Notificacion {
+  position: absolute !important;
+  top: 4px !important;
+  right: 25% !important;
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 9999px !important;
+  background-color: #10b981 !important;
+  box-shadow: 0 0 6px #10b981 !important;
+}
+
+/* Adaptación Modo Oscuro */
+.Olimpo-Contenedor.modo-oscuro .Nav-Inferior-Olimpo,
+html.theme-dark .Nav-Inferior-Olimpo {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12), 0 16px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Nav-Item,
+html.theme-dark .Btn-Nav-Item {
+  color: #94a3b8 !important;
+}
+
+.Olimpo-Contenedor.modo-oscuro .Btn-Nav-Item.Activo,
+html.theme-dark .Btn-Nav-Item.Activo {
+  color: #34d399 !important;
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(52, 211, 153, 0.35) !important;
+}

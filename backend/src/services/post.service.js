@@ -127,13 +127,103 @@ export async function deletePostByAuthor(postId, authorId) {
 }
 
 export async function getPostById(postId) {
-  return prisma.post.findUnique({
+  const post = await prisma.post.findUnique({
     where: { id: postId },
-    select: {
-      id: true,
-      authorId: true,
+    include: {
+      author: {
+        select: {
+          id: true,
+          username: true,
+          avatarUrl: true,
+          email: true,
+          createdAt: true,
+        },
+      },
+      likes: {
+        select: {
+          id: true,
+        },
+      },
+      comments: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      },
     },
   })
+
+  return post ? normalizePost(post) : null
+}
+
+export async function updatePostByAuthor(postId, authorId, updates) {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { id: true, authorId: true },
+  })
+
+  if (!post) {
+    const error = new Error('Post no encontrado')
+    error.statusCode = 404
+    throw error
+  }
+
+  if (post.authorId !== authorId) {
+    const error = new Error('No puedes editar un post que no te pertenece')
+    error.statusCode = 403
+    throw error
+  }
+
+  const payload = {
+    ...(updates.title !== undefined ? { title: updates.title } : {}),
+    ...(updates.content !== undefined ? { content: updates.content } : {}),
+    ...(updates.imageUrl !== undefined ? { imageUrl: updates.imageUrl } : {}),
+  }
+
+  if (Object.keys(payload).length === 0) {
+    return getPostById(postId)
+  }
+
+  const updated = await prisma.post.update({
+    where: { id: postId },
+    data: payload,
+    include: {
+      author: {
+        select: {
+          id: true,
+          username: true,
+          avatarUrl: true,
+          email: true,
+          createdAt: true,
+        },
+      },
+      likes: {
+        select: {
+          id: true,
+        },
+      },
+      comments: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  return normalizePost(updated)
 }
 
 export async function togglePostLike(postId, userId) {

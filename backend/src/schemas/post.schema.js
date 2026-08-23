@@ -29,6 +29,42 @@ export const createPostSchema = z.object({
     .optional(),
 })
 
+export const updatePostSchema = z.object({
+  title: z
+    .string({
+      error: 'El titulo debe ser texto',
+    })
+    .trim()
+    .min(1, 'El titulo no puede estar vacío')
+    .max(120, 'El titulo no puede superar 120 caracteres')
+    .optional(),
+  content: z
+    .string({
+      error: 'El contenido debe ser texto',
+    })
+    .trim()
+    .min(1, 'El contenido no puede estar vacío')
+    .max(2000, 'El contenido no puede superar 2000 caracteres')
+    .optional(),
+  imageUrl: z
+    .string({
+      error: 'La URL de la imagen debe ser texto',
+    })
+    .trim()
+    .max(1000, 'La URL es demasiado larga')
+    .optional(),
+  imageData: z
+    .string({
+      error: 'imageData debe ser texto en formato data URL',
+    })
+    .optional(),
+  removeImage: z
+    .boolean({
+      error: 'removeImage debe ser booleano',
+    })
+    .optional(),
+})
+
 export const deletePostParamsSchema = z.object({
   id: z.coerce
     .number({

@@ -7,8 +7,12 @@ import "./FeedScreen.css";
 import PerfilModal from "./PerfilModal";
 import ReportPostModal from "../components/ReportPostModal";
 import { formatDateWithRelative } from "../utils/formatDate";
+import "./NavegacionCelular.css";
+import Nav from "../components/NavegacionCelular.jsx";
 
-function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
+
+
+function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOpenPost, onOpenProfile }) {
   // Inicialización de 'siguiendo'
   const initialFollowing = (() => {
     const f =
@@ -18,6 +22,8 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
       return f.map((u) => u.id || u._id);
     return f;
   })();
+
+  const [editorAbierto, setEditorAbierto] = useState(false);
 
   const [siguiendo, setSiguiendo] = useState(initialFollowing);
   const [modoOscuro, setModoOscuro] = useState(() => {
@@ -382,6 +388,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
       console.error("Error al publicar:", error);
       setErrorMsg("Tu pensamiento no pudo ser forjado en la red.");
     }
+    setEditorAbierto(false);
   };
 
   const seleccionarImagen = (event) => {
@@ -499,8 +506,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
   const obtenerHashtags = async () => {
     setHashtagsCargando(true);
 
-    // Los hashtags se derivan de los posts cargados; evitamos una ruta dedicada
-    // que no existe en el backend y que generaba 404 repetidos en consola.
     const fuente = Array.isArray(posts) ? posts : [];
     actualizarHashtagsDesdePosts(fuente);
   };
@@ -755,6 +760,12 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
     }
   };
 
+  const compartirPost = (postId) => {
+    const url = `${window.location.origin}/posts/${postId}`;
+    navigator.clipboard.writeText(url);
+    window.alert("¡Enlace copiado al portapapeles!");
+  };
+
   const hashtagsDetectados = extraerHashtags(`${nuevoTitulo} ${nuevoContenido}`);
   const filtroHashtagActivo = filtroFeed.startsWith("#")
     ? formatearHashtag(filtroFeed)
@@ -771,99 +782,98 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
           <img src="/logosofo.png" alt="Sófocles" className="sofocles-logo" />
         </div>
 
-        <FluidGlassCard
-          as="header"
-          className="Banner-Olimpo Banner-Olimpo--feed"
-          mode="cube"
-          thickness={5}
-          chromaticAberration={0.1}
+       <FluidGlassCard
+  as="header"
+  className="Banner-Olimpo Banner-Olimpo--feed"
+  mode="cube"
+  thickness={5}
+  chromaticAberration={0.1}
+>
+  <div className="Banner-Olimpo__actions flex w-full items-center justify-between gap-4">
+    {/* GRUPO IZQUIERDO */}
+    <div className="Banner-Olimpo__action-group Banner-Olimpo__action-group--left hidden md:flex items-center gap-3">
+      {usuarioAutenticado && (
+        <button
+          type="button"
+          className="Header-Action-Button flex items-center justify-center"
+          onClick={() =>
+            onOpenProfile?.({
+              id: miId,
+              username: usuarioAutenticado.username,
+            })
+          }
+          title={`Ver mi perfil (${usuarioAutenticado.username})`}
         >
-          <div className="Banner-Olimpo__actions">
-            <div className="Banner-Olimpo__action-group Banner-Olimpo__action-group--left flex items-center justify-center gap-3">
-              {/* 1. Botón Perfil */}
-              {usuarioAutenticado && (
-                <button
-                  type="button"
-                  className="Header-Action-Button"
-                  onClick={() =>
-                    setPerfilSeleccionado({
-                      id: miId,
-                      username: usuarioAutenticado.username,
-                    })
-                  }
-                  title={`Ver mi perfil (${usuarioAutenticado.username})`}
-                >
-                  <img src="/user-svgrepo-com.svg" alt="Mi Perfil" />
-                </button>
-              )}
+          <img src="/user-svgrepo-com.svg" alt="Mi Perfil" className="w-5 h-5 object-contain" />
+        </button>
+      )}
 
-              {/* 2. Botón Notificaciones */}
-              <button
-                type="button"
-                className="Header-Action-Button relative"
-                onClick={async () => {
-                  const nuevoEstado = !mostrarNotificacionesPanel;
-                  setMostrarNotificacionesPanel(nuevoEstado);
-                  if (nuevoEstado) await obtenerNotificaciones();
-                }}
-                title="Notificaciones"
-              >
-                <img src="/bell-svgrepo-com.svg" alt="Notificaciones" />
-                {notificaciones.filter((n) => !n.read && !n.leida).length > 0 && (
-                  <span className="Insignia-Notificacion" aria-hidden="true" />
-                )}
-              </button>
-            </div>
+      <button
+        type="button"
+        className="Header-Action-Button relative flex items-center justify-center"
+        onClick={async () => {
+          const nuevoEstado = !mostrarNotificacionesPanel;
+          setMostrarNotificacionesPanel(nuevoEstado);
+          if (nuevoEstado) await obtenerNotificaciones();
+        }}
+        title="Notificaciones"
+      >
+        <img src="/bell-svgrepo-com.svg" alt="Notificaciones" className="w-5 h-5 object-contain" />
+        {notificaciones.filter((n) => !n.read && !n.leida).length > 0 && (
+          <span className="Insignia-Notificacion" aria-hidden="true" />
+        )}
+      </button>
+    </div>
 
-            <div className="Banner-Olimpo__action-group Banner-Olimpo__action-group--right flex items-center justify-center gap-3">
-              {/* 3. Botón Admin / Moderación */}
-              {tieneAccesoModeracion && (
-                <button
-                  type="button"
-                  className="Header-Action-Button Header-Action-Button--admin"
-                  onClick={onOpenAdminReports}
-                  title="Panel de moderación"
-                >
-                  <img src="/shield-alt-svgrepo-com.svg" alt="Panel de Moderación" />
-                </button>
-              )}
+    {/* ESPACIO CENTRAL PARA EL LOGO */}
+    <div className="flex-1" />
 
-              {/* 4. Botón Modo Claro / Oscuro */}
-              {modoOscuro ? (
-                <button
-                  type="button"
-                  className="Header-Action-Button"
-                  onClick={() => setModoOscuro(false)}
-                  title="Volver al modo claro"
-                >
-                  <img src="/sun-svgrepo-com.svg" alt="Modo claro" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="Header-Action-Button"
-                  onClick={() => setModoOscuro(true)}
-                  title="Activar modo oscuro"
-                >
-                  <img src="/cloud-moon-svgrepo-com.svg" alt="Modo oscuro" />
-                </button>
-              )}
+    {/* GRUPO DERECHO */}
+    <div className="Banner-Olimpo__action-group Banner-Olimpo__action-group--right hidden md:flex items-center gap-3">
+      {tieneAccesoModeracion && (
+        <button
+          type="button"
+          className="Header-Action-Button Header-Action-Button--admin flex items-center justify-center"
+          onClick={onOpenAdminReports}
+          title="Panel de moderación"
+        >
+          <img src="/shield-alt-svgrepo-com.svg" alt="Panel de Moderación" className="w-5 h-5 object-contain" />
+        </button>
+      )}
 
-              {/* 5. Botón Cerrar Sesión */}
-              <button
-                type="button"
-                className="Header-Action-Button"
-                onClick={cerrarSesion}
-                title="Cerrar sesión"
-              >
-                <img src="/user-xmark-svgrepo-com.svg" alt="Cerrar sesión" />
-              </button>
-            </div>
-          </div>
-        </FluidGlassCard>
+      {modoOscuro ? (
+        <button
+          type="button"
+          className="Header-Action-Button flex items-center justify-center"
+          onClick={() => setModoOscuro(false)}
+          title="Volver al modo claro"
+        >
+          <img src="/sun-svgrepo-com.svg" alt="Modo claro" className="w-5 h-5 object-contain" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="Header-Action-Button flex items-center justify-center"
+          onClick={() => setModoOscuro(true)}
+          title="Activar modo oscuro"
+        >
+          <img src="/cloud-moon-svgrepo-com.svg" alt="Modo oscuro" className="w-5 h-5 object-contain" />
+        </button>
+      )}
+
+      <button
+        type="button"
+        className="Header-Action-Button flex items-center justify-center"
+        onClick={cerrarSesion}
+        title="Cerrar sesión"
+      >
+        <img src="/user-xmark-svgrepo-com.svg" alt="Cerrar sesión" className="w-5 h-5 object-contain" />
+      </button>
+    </div>
+  </div>
+</FluidGlassCard>
       </div>
 
-      {/* MODAL DE NOTIFICACIONES */}
       {mostrarNotificacionesPanel && (
         <div 
           className="Modal-Overlay" 
@@ -958,152 +968,170 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
       )}
 
       <main className="Cuerpo-Feed">
-        {/* Editor de Post */}
-        <section className="Columna-Editor">
-          <FluidGlassCard as="div" className="Card-Formulario-Feed" mode="cube" thickness={5} chromaticAberration={0.1}>
-            <h2 className="Titulo-Seccion">¿Qué idea ronda tu mente hoy?</h2>
+        <section className="Columna-Editor mb-4">
+  <FluidGlassCard as="div" className="Card-Formulario-Feed overflow-hidden" mode="cube" thickness={5} chromaticAberration={0.1}>
+    {/* Botón superior limpio */}
+    <button
+      type="button"
+      className="w-full flex items-center justify-between p-4 transition-colors group cursor-pointer"
+      onClick={() => setEditorAbierto((prev) => !prev)}
+    >
+      <div className="flex items-center gap-3">
+        <h2 className="Titulo-Seccion text-lg font-bold tracking-wide m-0 text-stone-100 group-hover:text-emerald-400 transition-colors">
+          ¿Qué idea ronda tu mente hoy?
+        </h2>
+        <img 
+          src="/pen-square-svgrepo-com.svg" 
+          alt="Escribir" 
+          className="w-5 h-5 object-contain opacity-80 group-hover:opacity-100 transition-opacity" 
+        />
+      </div>
+    </button>
 
-            {errorMsg && (
-              <div className="Mensaje-Error-Feed text-xs border p-3 rounded-xl text-center font-medium">
-                {errorMsg}
+    {/* Formulario desplegable */}
+    {editorAbierto && (
+      <div className="p-4 pt-2 border-t border-emerald-700/10">
+        {errorMsg && (
+          <div className="Mensaje-Error-Feed text-xs border p-3 rounded-xl text-center font-medium mb-3">
+            {errorMsg}
+          </div>
+        )}
+
+        <form onSubmit={manejarEnvioPost} className="flex flex-col gap-4">
+          <div className="Form-Grupo">
+            <input
+              type="text"
+              placeholder="Título de tu tesis o pensamiento..."
+              className="Input-Olimpo-Feed mb-2"
+              value={nuevoTitulo}
+              onChange={(e) => setNuevoTitulo(e.target.value)}
+              maxLength={50}
+              required
+            />
+            <textarea
+              placeholder="Comparte tu filosofía, idea o perspectiva con el nuevo orden..."
+              className="Textarea-Olimpo"
+              value={nuevoContenido}
+              onChange={(e) => setNuevoContenido(e.target.value)}
+              maxLength={1000}
+              required
+            />
+
+            <div className="rounded-2xl border border-emerald-700/10 bg-white/80 p-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Mencionar usuario..."
+                  className="Input-Olimpo-Feed mb-0"
+                  value={mencionInput}
+                  onChange={(e) => buscarUsuariosParaMenciones(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="Btn-Secundario"
+                  onClick={() => {
+                    setMencionInput("");
+                    setUsuariosParaMenciones([]);
+                  }}
+                >
+                  Limpiar
+                </button>
+              </div>
+
+              {usuariosParaMenciones.length > 0 && (
+                <div className="mt-2 rounded-xl border border-emerald-700/10 bg-stone-50 p-2">
+                  {usuariosParaMenciones.map((usuario) => {
+                    const uId = usuario._id || usuario.id;
+                    return (
+                      <button
+                        key={uId}
+                        type="button"
+                        className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm text-stone-700 transition hover:bg-emerald-50"
+                        onClick={() => agregarMencion(usuario)}
+                      >
+                        <span>@{usuario.username || usuario.name || "usuario"}</span>
+                        <span className="text-[11px] uppercase tracking-[0.2em] text-stone-400">
+                          Etiquetar
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {mencionesSeleccionadas.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {mencionesSeleccionadas.map((mencion) => (
+                    <span
+                      key={mencion.id || mencion.username}
+                      className="rounded-full border border-emerald-700/20 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+                    >
+                      @{mencion.username}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {hashtagsDetectados.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {hashtagsDetectados.map((hashtag) => (
+                  <span
+                    key={hashtag}
+                    className="px-2 py-1 text-xs font-bold text-emerald-700 bg-emerald-100/60 border border-emerald-500/20 rounded-lg"
+                  >
+                    #{hashtag}
+                  </span>
+                ))}
               </div>
             )}
 
-            <form onSubmit={manejarEnvioPost} className="flex flex-col gap-4">
-              <div className="Form-Grupo">
-                <input
-                  type="text"
-                  placeholder="Título de tu tesis o pensamiento..."
-                  className="Input-Olimpo-Feed mb-2"
-                  value={nuevoTitulo}
-                  onChange={(e) => setNuevoTitulo(e.target.value)}
-                  maxLength={50}
-                  required
+            <button
+              type="button"
+              className="Btn-Secundario mt-2"
+              onClick={() => setModalImagenAbierto(true)}
+            >
+              {nuevaImagen ? "Cambiar Imagen" : "Agregar Imagen"}
+            </button>
+
+            {nuevaImagen && (
+              <div className="relative mt-3">
+                <img
+                  src={nuevaImagen}
+                  alt="Vista previa de la publicación"
+                  className="Imagen-Preview-Editor"
                 />
-                <textarea
-                  placeholder="Comparte tu filosofía, idea o perspectiva con el nuevo orden..."
-                  className="Textarea-Olimpo"
-                  value={nuevoContenido}
-                  onChange={(e) => setNuevoContenido(e.target.value)}
-                  maxLength={1000}
-                  required
-                />
-
-                <div className="rounded-2xl border border-emerald-700/10 bg-white/80 p-3">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="Mencionar usuario..."
-                      className="Input-Olimpo-Feed mb-0"
-                      value={mencionInput}
-                      onChange={(e) => buscarUsuariosParaMenciones(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="Btn-Secundario"
-                      onClick={() => {
-                        setMencionInput("");
-                        setUsuariosParaMenciones([]);
-                      }}
-                    >
-                      Limpiar
-                    </button>
-                  </div>
-
-                  {usuariosParaMenciones.length > 0 && (
-                    <div className="mt-2 rounded-xl border border-emerald-700/10 bg-stone-50 p-2">
-                      {usuariosParaMenciones.map((usuario) => {
-                        const uId = usuario._id || usuario.id;
-                        return (
-                          <button
-                            key={uId}
-                            type="button"
-                            className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-sm text-stone-700 transition hover:bg-emerald-50"
-                            onClick={() => agregarMencion(usuario)}
-                          >
-                            <span>@{usuario.username || usuario.name || "usuario"}</span>
-                            <span className="text-[11px] uppercase tracking-[0.2em] text-stone-400">
-                              Etiquetar
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {mencionesSeleccionadas.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {mencionesSeleccionadas.map((mencion) => (
-                        <span
-                          key={mencion.id || mencion.username}
-                          className="rounded-full border border-emerald-700/20 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
-                        >
-                          @{mencion.username}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {hashtagsDetectados.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {hashtagsDetectados.map((hashtag) => (
-                      <span
-                        key={hashtag}
-                        className="px-2 py-1 text-xs font-bold text-emerald-700 bg-emerald-100/60 border border-emerald-500/20 rounded-lg"
-                      >
-                        #{hashtag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
                 <button
                   type="button"
-                  className="Btn-Secundario mt-2"
-                  onClick={() => setModalImagenAbierto(true)}
+                  className="Btn-Quitar-Imagen"
+                  onClick={() => {
+                    setNuevaImagen(null);
+                    if (inputImagenRef.current)
+                      inputImagenRef.current.value = "";
+                  }}
+                  aria-label="Quitar imagen"
                 >
-                  {nuevaImagen ? "Cambiar Imagen" : "Agregar Imagen"}
-                </button>
-
-                {nuevaImagen && (
-                  <div className="relative mt-3">
-                    <img
-                      src={nuevaImagen}
-                      alt="Vista previa de la publicación"
-                      className="Imagen-Preview-Editor"
-                    />
-                    <button
-                      type="button"
-                      className="Btn-Quitar-Imagen"
-                      onClick={() => {
-                        setNuevaImagen(null);
-                        if (inputImagenRef.current)
-                          inputImagenRef.current.value = "";
-                      }}
-                      aria-label="Quitar imagen"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="Fila-Editor-Acciones">
-                <span className="Contador-Caracteres">
-                  {1000 - nuevoContenido.length} caracteres restantes
-                </span>
-                <button type="submit" className="Btn-Primario-Feed">
-                  Publicar Idea
+                  ×
                 </button>
               </div>
-            </form>
-          </FluidGlassCard>
-        </section>
+            )}
+          </div>
 
-        {/* Línea de Tiempo */}
+          <div className="Fila-Editor-Acciones">
+            <span className="Contador-Caracteres">
+              {1000 - nuevoContenido.length} caracteres restantes
+            </span>
+            <button type="submit" className="Btn-Primario-Feed">
+              Publicar Idea
+            </button>
+          </div>
+        </form>
+      </div>
+    )}
+  </FluidGlassCard>
+</section>
+
         <section className="Columna-Publicaciones">
-          {/* Filtros */}
           <div className="flex items-start gap-2 mb-4 border-b border-emerald-700/10 pb-2">
             <button
               type="button"
@@ -1199,7 +1227,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
             </div>
           </div>
 
-          {/* Buscador */}
           <div className="mb-4">
             <input
               type="text"
@@ -1217,7 +1244,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
             </div>
           )}
 
-          {/* Usuarios Encontrados */}
           {usuariosEncontrados.length > 0 && (
             <FluidGlassCard as="div" className="Lista-Usuarios mb-4" mode="cube" thickness={5} chromaticAberration={0.1}>
               {usuariosEncontrados.map((usuario) => {
@@ -1245,7 +1271,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
             </FluidGlassCard>
           )}
 
-          {/* Renderizado del Feed */}
           {cargandoFeed ? (
             <div className="Cargando-Contenedor">
               <span className="Texto-Cargando">Invocando el feed...</span>
@@ -1297,7 +1322,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
                           type="button"
                           className="p-0 border-none bg-transparent cursor-pointer"
                           onClick={() =>
-                            setPerfilSeleccionado({
+                            onOpenProfile?.({
                               id: autorId,
                               username: authorName,
                             })
@@ -1357,108 +1382,128 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
                         </button>
                       )}
 
-                      <div className="flex items-center gap-4 mt-3">
-                        <button
-                          type="button"
-                          className={`Btn-Like-Post ${tieneLike ? "Activo" : ""}`}
-                          onClick={() => manejarLikePost(pId)}
-                          aria-label="Me gusta"
-                        >
-                          <svg
-                            className="Icono-Like"
-                            viewBox="0 0 24 24"
-                            fill={tieneLike ? "currentColor" : "none"}
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M12 20s-6.5-4.35-8.2-8.03A4.82 4.82 0 0 1 7.8 4.7c1.47 0 2.76.74 3.5 1.93.74-1.19 2.03-1.93 3.5-1.93a4.82 4.82 0 0 1 3.99 7.97C18.5 15.65 12 20 12 20z" />
-                          </svg>
-                          <span className="Contador-Likes">
-                            {cantidadLikes}
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="Btn-Comentario-Post"
-                          onClick={() => setPostDetalle(post)}
-                          aria-label="Comentarios"
-                          title="Ver publicación y comentarios"
-                        >
-                          <svg
-                            className="Icono-Like"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                          </svg>
-                          <span className="Contador-Likes">
-                            {cantidadComentarios}
-                          </span>
-                        </button>
-
-                        {usuarioAutenticado && autorId !== miId && (
+                      <div className="post-actions-row flex items-center justify-between w-full mt-3">
+                        <div className="post-actions-social flex items-center gap-3">
+                          {/* BOTÓN LIKE CON CLASES DE RESPUESTA CORREGIDAS */}
                           <button
                             type="button"
-                            className="Btn-Accion-Post ml-auto"
-                            onClick={() => reportarPost(pId)}
-                            title="Reportar publicación"
-                            aria-label="Reportar publicación"
+                            className={`icon-btn action-with-count ${tieneLike ? "active" : ""}`}
+                            onClick={() => manejarLikePost(pId)}
+                            aria-label="Me gusta"
                           >
-                            ⚑
+                            <svg
+                              className="Icono-Like post-action-icon"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M12 20s-6.5-4.35-8.2-8.03A4.82 4.82 0 0 1 7.8 4.7c1.47 0 2.76.74 3.5 1.93.74-1.19 2.03-1.93 3.5-1.93a4.82 4.82 0 0 1 3.99 7.97C18.5 15.65 12 20 12 20z" />
+                            </svg>
+                            <span className="Contador-Likes">
+                              {cantidadLikes}
+                            </span>
                           </button>
-                        )}
 
-                        {usuarioAutenticado && autorId === miId && (
-                          <div className="ml-auto flex items-center gap-2">
+                          {/* BOTÓN COMENTARIO */}
+                          <button
+                            type="button"
+                            className="icon-btn action-with-count"
+                            onClick={() => onOpenPost?.(pId)}
+                            aria-label="Comentarios"
+                            title="Ver publicación y comentarios"
+                          >
+                            <svg
+                              className="Icono-Comentario post-action-icon"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>
+                            <span className="Contador-Likes">
+                              {cantidadComentarios}
+                            </span>
+                          </button>
+
+                          {/* BOTÓN COMPARTIR */}
+                          <button
+                            type="button"
+                            className="Btn-Compartir-Post icon-btn"
+                            onClick={() => compartirPost(pId)}
+                            title="Compartir publicación"
+                            aria-label="Compartir publicación"
+                          >
+                            <img
+                              src="/send-svgrepo-com.svg"
+                              alt="Compartir publicación"
+                              className="w-5 h-5 object-contain"
+                            />
+                          </button>
+                        </div>
+
+                        <div className="post-actions-management flex items-center gap-2 ml-auto">
+                          {usuarioAutenticado && autorId !== miId && (
                             <button
                               type="button"
-                              className="Btn-Accion-Post"
-                              onClick={() => abrirModalEditar(post)}
-                              title="Editar publicación"
+                              className="icon-btn danger"
+                              onClick={() => reportarPost(pId)}
+                              title="Reportar publicación"
+                              aria-label="Reportar publicación"
                             >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 1 1 3.536 3.536L6.5 21H3v-3.5L16.732 3.732z"
-                                />
-                              </svg>
+                              ⚑
                             </button>
-                            <button
-                              type="button"
-                              className="Btn-Accion-Post Eliminar"
-                              onClick={() => abrirModalEliminar(pId)}
-                              title="Eliminar publicación"
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                          )}
+
+                          {usuarioAutenticado && autorId === miId && (
+                            <>
+                              <button
+                                type="button"
+                                className="icon-btn"
+                                onClick={() => abrirModalEditar(post)}
+                                title="Editar publicación"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3H4v2h16V7h-3z"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        )}
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 1 1 3.536 3.536L6.5 21H3v-3.5L16.732 3.732z"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                type="button"
+                                className="icon-btn danger"
+                                onClick={() => abrirModalEliminar(pId)}
+                                title="Eliminar publicación"
+                              >
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3H4v2h16V7h-3z"
+                                  />
+                                </svg>
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </FluidGlassCard>
@@ -1479,7 +1524,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
         </section>
       </main>
 
-      {/* Modal de Detalle de Publicación / Comentarios */}
       {postDetalle && (
         <div
           className="Modal-Overlay"
@@ -1538,7 +1582,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
                 )}
               </div>
 
-              {/* Sección de Comentarios */}
               <div className="mt-4 text-left">
                 <button
                   type="button"
@@ -1580,7 +1623,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
 
                 {comentariosExpandido[postDetalle._id || postDetalle.id] && (
                   <>
-                    {/* Formulario para nuevo comentario */}
                     {usuarioAutenticado && (
                       <form
                         onSubmit={(e) =>
@@ -1677,7 +1719,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
                       </form>
                     )}
 
-                    {/* Lista de comentarios */}
                     <div className="comentarios-lista">
                       {(postDetalle.comments || postDetalle.comentarios || [])
                         .length === 0 ? (
@@ -1759,7 +1800,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
         </div>
       )}
 
-      {/* Modal Confirmación Eliminar */}
       {postAEliminar && (
         <div
           className="Modal-Overlay"
@@ -1795,7 +1835,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
         </div>
       )}
 
-      {/* Modal Vista Perfil */}
       {perfilSeleccionado && (
         <PerfilModal
           usuario={perfilSeleccionado}
@@ -1806,7 +1845,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
         />
       )}
 
-      {/* Modal Imagen */}
       {modalImagenAbierto && (
         <div
           className="Modal-Overlay"
@@ -1861,7 +1899,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
         />
       )}
 
-      {/* Modal Búsqueda GIFs */}
       {abrirBuscadorGif && (
         <GiphySearch
           onSelectGif={setGifSeleccionado}
@@ -1869,7 +1906,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
         />
       )}
 
-      {/* Modal de edición */}
       {postAEditar && (
         <div
           className="Modal-Overlay"
@@ -1980,38 +2016,28 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports }) {
           en el código.
         </p>
       </footer>
-
-      {/* Barra de Navegación Inferior Móvil */}
-      <nav className="Nav-Inferior-Olimpo">
-        <button
-          type="button"
-          onClick={() => {
-            setFiltroFeed("todos");
-            obtenerPosts("todos");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-          className={`Btn-Nav-Item ${filtroFeed === "todos" ? "Activo" : ""}`}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6" />
-          </svg>
-          <span>Feed</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setFiltroFeed("seguidos");
-            obtenerPosts("seguidos");
-          }}
-          className={`Btn-Nav-Item ${filtroFeed === "seguidos" ? "Activo" : ""}`}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-          <span>Siguiendo</span>
-        </button>
-      </nav>
+      
+     <Nav
+  vistaActual={filtroFeed} 
+  onCambiarVista={(nuevaVista) => {
+    if (nuevaVista === 'notificaciones') {
+      setMostrarNotificacionesPanel(true);
+    } else if (nuevaVista === 'crear' || nuevaVista === 'post') {
+      setEditorAbierto(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setFiltroFeed(nuevaVista);
+    }
+  }}
+  onIrPerfil={(username) => {
+    onOpenProfile?.({
+      id: miId,
+      username: username || usuarioAutenticado?.username,
+    });
+  }}
+  currentUser={usuarioAutenticado}
+/>
+     
     </div>
   );
 }

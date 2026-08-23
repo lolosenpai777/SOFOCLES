@@ -6,6 +6,7 @@ import AdminUsersModeration from './components/AdminUsersModeration.jsx'
 import AdminRoute from './components/AdminRoute.jsx'
 import UsernameSetupModal from './components/UsernameSetupModal.jsx'
 import ProfilePage from './components/ProfilePage.jsx'
+import PostPage from './components/PostPage.jsx'
 import { formatDateWithRelative } from './utils/formatDate'
 import * as Dialog from '@radix-ui/react-dialog'
 
@@ -30,6 +31,11 @@ function parseAdminRoute(pathname) {
 function parseProfileRoute(pathname) {
   const match = pathname.match(/^\/perfil\/([^/]+)\/?$/)
   return match ? decodeURIComponent(match[1]) : null
+}
+
+function parsePostRoute(pathname) {
+  const match = pathname.match(/^\/post\/(\d+)\/?$/)
+  return match ? Number(match[1]) : null
 }
 
 function SocialAuthButtons() {
@@ -88,6 +94,7 @@ function App() {
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(null)
   const [cargandoSesion, setCargandoSesion] = useState(true)
   const [pathname, setPathname] = useState(window.location.pathname)
+  const [vistaInterna, setVistaInterna] = useState(null)
 
   const query = new URLSearchParams(window.location.search)
   const resetToken = query.get('token')
@@ -105,6 +112,7 @@ function App() {
 
   const adminRoute = parseAdminRoute(pathname)
   const profileRoute = parseProfileRoute(pathname)
+  const postRoute = parsePostRoute(pathname)
 
   const handleSpotlightPointerMove = (event) => {
     const card = event.currentTarget
@@ -402,6 +410,33 @@ function App() {
     )
   }
 
+  if (vistaInterna?.type === 'profile') {
+    return (
+      <ProfilePage
+        username={vistaInterna.username}
+        currentUser={usuarioAutenticado}
+        onBack={() => setVistaInterna(null)}
+        following={usuarioAutenticado?.following || []}
+        onFollow={usuarioAutenticado ? async (userId) => {
+          const { data } = await clienteAxios.post(`/users/${userId}/follow`)
+          return Boolean(data.siguiendo ?? data.following)
+        } : undefined}
+        onOpenPost={(postId) => setVistaInterna({ type: 'post', postId })}
+      />
+    )
+  }
+
+  if (vistaInterna?.type === 'post') {
+    return (
+      <PostPage
+        postId={vistaInterna.postId}
+        currentUser={usuarioAutenticado}
+        onBack={() => setVistaInterna(null)}
+        onOpenProfile={(profile) => setVistaInterna({ type: 'profile', username: profile.username })}
+      />
+    )
+  }
+
   if (profileRoute) {
     return (
       <ProfilePage
@@ -413,6 +448,18 @@ function App() {
           const { data } = await clienteAxios.post(`/users/${userId}/follow`)
           return Boolean(data.siguiendo ?? data.following)
         } : undefined}
+        onOpenPost={(postId) => setVistaInterna({ type: 'post', postId })}
+      />
+    )
+  }
+
+  if (postRoute) {
+    return (
+      <PostPage
+        postId={postRoute}
+        currentUser={usuarioAutenticado}
+        onBack={() => navigateTo('/')}
+        onOpenProfile={(profile) => navigateTo(`/perfil/${encodeURIComponent(profile.username)}`)}
       />
     )
   }
@@ -452,7 +499,8 @@ function App() {
         usuarioAutenticado={usuarioAutenticado}
         cerrarSesion={cerrarSesion}
         onOpenAdminReports={() => navigateTo('/admin/reports')}
-        onOpenProfile={(profile) => navigateTo(`/perfil/${encodeURIComponent(profile.username)}`)}
+        onOpenProfile={(profile) => setVistaInterna({ type: 'profile', username: profile.username })}
+        onOpenPost={(postId) => setVistaInterna({ type: 'post', postId })}
       />
     )
   }

@@ -1,0 +1,528 @@
+/* ==========================================================================
+   POST PAGE - ESTILOS GLASSMORPHISM (SINCRONIZADO CON FEEDSCREEN)
+   ========================================================================== */
+
+/* Contenedor principal */
+.ProfilePage.PostPage {
+  min-height: 100vh;
+  width: 100%;
+  padding: 1.5rem 1rem 4rem;
+  color: var(--marble, #f8fafc);
+  background: transparent !important;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.ProfilePage__shell {
+  width: 100%;
+  max-width: 52rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ==========================================================================
+   BOTONES E INTERACCIONES (ESTILO FEEDSCREEN)
+   ========================================================================== */
+
+/* Botón Volver */
+.ProfilePage__back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--marble, #f8fafc);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 8px 20px rgba(0, 0, 0, 0.25);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ProfilePage__back:hover {
+  background: rgba(62, 207, 142, 0.2);
+  border-color: rgba(62, 207, 142, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(62, 207, 142, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+.ProfilePage__back:active {
+  transform: scale(0.95);
+}
+
+/* Normalización de botones primarios y secundarios */
+.Btn-Primario,
+.Btn-Primario-Feed {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 40px !important;
+  padding: 0 18px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  border-radius: 14px !important;
+  border: none !important;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, var(--emerald-vibrant, #10b981) 0%, var(--emerald-strong, #059669) 100%) !important;
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.28) !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+.Btn-Primario:hover:not(:disabled),
+.Btn-Primario-Feed:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1.5px);
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.38) !important;
+}
+
+.Btn-Primario:active:not(:disabled),
+.Btn-Primario-Feed:active:not(:disabled) {
+  transform: scale(0.95) !important;
+}
+
+.Btn-Primario:disabled,
+.Btn-Primario-Feed:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.Btn-Secundario {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 40px !important;
+  padding: 0 18px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  border-radius: 14px !important;
+  color: var(--marble, #f8fafc) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(14px) !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+.Btn-Secundario:hover {
+  background: rgba(62, 207, 142, 0.15) !important;
+  color: var(--emerald-vibrant, #10b981) !important;
+  border-color: rgba(62, 207, 142, 0.35) !important;
+}
+
+.Btn-Secundario:active {
+  transform: scale(0.95);
+}
+
+/* ==========================================================================
+   BANNER E IDENTIDAD
+   ========================================================================== */
+
+.ProfilePage__banner {
+  width: 100%;
+  height: 140px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.78) 0%, rgba(30, 41, 59, 0.62) 100%);
+  border: 1px solid rgba(201, 162, 75, 0.2);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12), 0 20px 40px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+}
+
+.ProfilePage__identity {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: -3.5rem;
+  padding: 0 1.25rem;
+}
+
+.PostPage__author {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.25s ease;
+}
+
+.PostPage__author:hover {
+  transform: scale(1.05);
+}
+
+.PostPage__author > div {
+  border: 2px solid var(--gold, #c9a24b) !important;
+  border-radius: 50% !important;
+}
+
+.ProfilePage__identity-copy {
+  flex: 1;
+}
+
+.profile-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.PostPage__author-name {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: var(--font-display, inherit);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--marble, #f8fafc);
+  cursor: pointer;
+  text-align: left;
+}
+
+.PostPage__author-name:hover {
+  color: var(--emerald-vibrant, #10b981);
+  text-decoration: underline;
+}
+
+.profile-header-top p {
+  font-size: 0.75rem;
+  color: var(--muted, #94a3b8);
+  font-style: italic;
+  margin-top: 0.15rem;
+}
+
+/* ==========================================================================
+   TARJETA POST & FORMULARIOS
+   ========================================================================== */
+
+.PostPage__post {
+  background: #12241f !important;
+  border: 1px solid rgba(201, 162, 75, 0.17) !important;
+  border-radius: 28px !important;
+  padding: 1.75rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.PostPage__post h2 {
+  font-family: var(--font-display, inherit);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--marble, #f8fafc);
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.PostPage__post p {
+  font-family: var(--font-body, inherit);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--marble, #f8fafc);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.PostPage__post img {
+  width: 100%;
+  max-height: 28rem;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 1px solid rgba(201, 162, 75, 0.18);
+  margin-top: 0.5rem;
+}
+
+.ProfilePage__editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ProfilePage__editor input,
+.ProfilePage__editor textarea,
+.PostPage__composer textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: var(--marble, #f8fafc) !important;
+  font-family: var(--font-body, inherit);
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.ProfilePage__editor textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.ProfilePage__editor input:focus,
+.ProfilePage__editor textarea:focus,
+.PostPage__composer textarea:focus {
+  border-color: var(--emerald-vibrant, #10b981) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ==========================================================================
+   SECCIÓN DE COMENTARIOS
+   ========================================================================== */
+
+.PostPage__comments {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.PostPage__comments h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--marble, #f8fafc);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.PostPage__comments h2 span {
+  color: var(--emerald-vibrant, #10b981);
+  font-size: 0.9rem;
+}
+
+.PostPage__composer {
+  background: #12241f !important;
+  border: 1px solid rgba(201, 162, 75, 0.17) !important;
+  border-radius: 24px !important;
+  padding: 1.25rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.PostPage__composer textarea {
+  min-height: 80px;
+  resize: none;
+}
+
+.PostPage__composer > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.PostPage__composer span {
+  font-size: 0.75rem;
+  color: var(--muted, #94a3b8);
+}
+
+.PostPage__composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+/* Previsualización GIF */
+.PostPage__selected-gif {
+  position: relative;
+  display: inline-block;
+  max-width: 220px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.PostPage__selected-gif img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.PostPage__selected-gif button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(224, 90, 90, 0.9);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.PostPage__selected-gif button:active {
+  transform: scale(0.9);
+}
+
+/* Lista de Comentarios */
+.PostPage__comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.PostPage__comment {
+  background: #12241f !important;
+  border: 1px solid rgba(201, 162, 75, 0.17) !important;
+  border-radius: 22px !important;
+  padding: 1rem 1.25rem !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  position: relative;
+}
+
+.PostPage__comment-avatar {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.PostPage__comment-avatar > div {
+  border: 1px solid var(--gold, #c9a24b) !important;
+  border-radius: 50% !important;
+}
+
+.PostPage__comment > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.PostPage__comment-author {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--emerald-vibrant, #10b981);
+  cursor: pointer;
+  text-align: left;
+  align-self: flex-start;
+}
+
+.PostPage__comment-author:hover {
+  text-decoration: underline;
+}
+
+.PostPage__comment p {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--marble, #f8fafc);
+  margin: 0;
+  word-break: break-word;
+}
+
+.PostPage__gif {
+  max-width: 260px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 0.4rem;
+}
+
+.PostPage__comment time {
+  font-size: 0.7rem;
+  color: var(--muted, #94a3b8);
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+/* Botón Eliminar Comentario */
+.PostPage__delete {
+  background: transparent;
+  border: none;
+  color: #e05a5a;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.PostPage__delete:hover {
+  background: rgba(224, 90, 90, 0.15);
+  color: #f87171;
+}
+
+.PostPage__delete:active {
+  transform: scale(0.92);
+}
+
+/* Estados Vacíos / Mensajes */
+.PostPage__error {
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: rgba(224, 90, 90, 0.15);
+  border: 1px solid rgba(224, 90, 90, 0.3);
+  color: #fca5a5;
+  font-size: 0.825rem;
+}
+
+.PostPage__signin,
+.ProfilePage__empty {
+  font-size: 0.85rem;
+  color: var(--muted, #94a3b8);
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* ==========================================================================
+   CORRECCIÓN DE CLICS Y SCROLL CON AURORA BACKGROUND (IGUAL QUE EN PROFILE)
+   ========================================================================== */
+
+.AuroraBackground {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-deep, #020617);
+}
+
+/* La capa de animación del fondo NO debe capturar clics ni bloquear el scroll */
+.AuroraBackground__aceternity-layer,
+.AuroraBackground > div:first-child {
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+/* El contenido interactivo debe estar arriba */
+.AuroraBackground > *:not(.AuroraBackground__aceternity-layer) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Garantiza transparencia para que el fondo sea visible */
+.ProfilePage {
+  background: transparent !important;
+  position: relative;
+  z-index: 1;
+}

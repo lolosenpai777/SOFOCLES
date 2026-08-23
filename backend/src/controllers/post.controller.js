@@ -5,6 +5,7 @@ import {
   getPosts,
   getPostsFollowing,
   togglePostLike,
+  updatePostByAuthor,
 } from '../services/post.service.js'
 import { prisma } from '../config/prisma.js'
 import { storeImage } from '../services/storage.service.js'
@@ -93,6 +94,59 @@ export async function listPostsHandler(request, reply) {
     request.log.error(error)
     const statusCode = error.statusCode ?? 500
     const message = statusCode >= 500 ? 'Error al obtener posts' : error.message || 'Solicitud invalida'
+    return reply.code(statusCode).send({ error: message })
+  }
+}
+
+export async function getPostHandler(request, reply) {
+  try {
+    const postId = Number(request.params?.id)
+    const post = await getPostById(postId)
+
+    if (!post) {
+      return reply.code(404).send({ error: 'Post no encontrado' })
+    }
+
+    return reply.send({ post })
+  } catch (error) {
+    request.log.error(error)
+    const statusCode = error.statusCode ?? 500
+    const message = statusCode >= 500 ? 'Error al obtener el post' : error.message || 'Solicitud invalida'
+    return reply.code(statusCode).send({ error: message })
+  }
+}
+
+export async function updatePostHandler(request, reply) {
+  try {
+    const postId = Number(request.params?.id)
+    const userId = request.user?.id ?? request.userId
+    const body = request.body || {}
+
+    if (!userId) {
+      return reply.code(401).send({ error: 'No autenticado' })
+    }
+
+    let imageUrl = body.imageUrl
+    if (body.imageData) {
+      imageUrl = await storeImage(body.imageData, 'post')
+    }
+
+    const payload = {
+      title: body.title,
+      content: body.content,
+      imageUrl: body.removeImage ? '' : imageUrl,
+    }
+
+    const cleanedPayload = Object.fromEntries(
+      Object.entries(payload).filter(([, value]) => value !== undefined),
+    )
+
+    const post = await updatePostByAuthor(postId, Number(userId), cleanedPayload)
+    return reply.send({ post })
+  } catch (error) {
+    request.log.error(error)
+    const statusCode = error.statusCode ?? 500
+    const message = statusCode >= 500 ? 'Error al actualizar el post' : error.message || 'Solicitud invalida'
     return reply.code(statusCode).send({ error: message })
   }
 }

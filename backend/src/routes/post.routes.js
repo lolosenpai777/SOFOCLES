@@ -1,8 +1,15 @@
-import { createPostHandler, deletePostHandler, likePostHandler, listPostsHandler } from '../controllers/post.controller.js'
+import {
+  createPostHandler,
+  deletePostHandler,
+  getPostHandler,
+  likePostHandler,
+  listPostsHandler,
+  updatePostHandler,
+} from '../controllers/post.controller.js'
 import { requireAuth } from '../middlewares/auth.middleware.js'
 import { validateBody } from '../middlewares/validate-schema.middleware.js'
 import { validateParams } from '../middlewares/validate-schema.middleware.js'
-import { createPostSchema, deletePostParamsSchema } from '../schemas/post.schema.js'
+import { createPostSchema, deletePostParamsSchema, updatePostSchema } from '../schemas/post.schema.js'
 
 export async function postRoutes(fastify) {
   fastify.post(
@@ -25,6 +32,33 @@ export async function postRoutes(fastify) {
   )
 
   fastify.get('/posts', listPostsHandler)
+
+  fastify.get(
+    '/posts/:id',
+    {
+      preValidation: validateParams(deletePostParamsSchema),
+    },
+    getPostHandler,
+  )
+
+  fastify.put(
+    '/posts/:id',
+    {
+      preHandler: [requireAuth],
+      preValidation: [validateParams(deletePostParamsSchema), validateBody(updatePostSchema)],
+      config: {
+        rateLimit: {
+          max: 20,
+          timeWindow: '1 minute',
+          keyGenerator(request) {
+            const authHeader = request.headers?.authorization || 'anon'
+            return `${request.ip}:${authHeader}`
+          },
+        },
+      },
+    },
+    updatePostHandler,
+  )
 
   fastify.delete(
     '/posts/:id',
