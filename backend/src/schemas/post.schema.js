@@ -27,6 +27,9 @@ export const createPostSchema = z.object({
       error: 'imageData debe ser texto en formato data URL',
     })
     .optional(),
+  imageDatas: z.array(z.string()).max(8).optional(),
+  visibility: z.enum(['PUBLIC', 'FOLLOWERS']).default('PUBLIC'),
+  hashtags: z.array(z.string().trim().min(1).max(50)).max(20).default([]),
 })
 
 export const updatePostSchema = z.object({
@@ -63,6 +66,9 @@ export const updatePostSchema = z.object({
       error: 'removeImage debe ser booleano',
     })
     .optional(),
+  imageDatas: z.array(z.string()).max(8).optional(),
+  visibility: z.enum(['PUBLIC', 'FOLLOWERS']).optional(),
+  hashtags: z.array(z.string().trim().min(1).max(50)).max(20).optional(),
 })
 
 export const deletePostParamsSchema = z.object({

@@ -1,4 +1,4 @@
-import { searchUsersByUsername, toggleFollow, getUserProfile, updateUserProfile, updateUsername } from '../services/user.service.js'
+import { searchUsersByUsername, toggleFollow, getUserProfile, updateUserProfile, updateUsername, updateUserBadges } from '../services/user.service.js'
 import { prisma } from '../config/prisma.js'
 import { createNotification } from '../services/notification.service.js'
 
@@ -13,6 +13,7 @@ export async function meHandler(request) {
       email: true,
       role: true,
       moderationRole: true,
+      isVerified: true,
       needsUsernameSetup: true,
       following: {
         select: { id: true },
@@ -28,6 +29,7 @@ export async function meHandler(request) {
       email: user.email,
       role: user.role,
       moderationRole: user.moderationRole,
+      isVerified: Boolean(user.isVerified),
       needsUsernameSetup: Boolean(user.needsUsernameSetup),
       following: (user.following || []).map((u) => u.id),
     },
@@ -78,17 +80,23 @@ export async function getProfileHandler(request, reply) {
     }
   }
 
+
   const profile = await getUserProfile(userId, viewer)
   return reply.code(200).send(profile)
 }
 
 export async function updateProfileHandler(request, reply) {
   const userId = request.userId
-  const { biography, avatarUrl } = request.body
+  const { biography, avatarUrl, bannerUrl, websiteUrl, twitterUrl, instagramUrl, accentColor } = request.body
 
-  const updated = await updateUserProfile(userId, { biography, avatarUrl })
+  const updated = await updateUserProfile(userId, { biography, avatarUrl, bannerUrl, websiteUrl, twitterUrl, instagramUrl, accentColor })
   return reply.code(200).send({
     success: true,
     user: updated,
   })
+}
+
+export async function updateUserBadgesHandler(request, reply) {
+  const user = await updateUserBadges(Number(request.params.id), request.body)
+  return reply.send({ success: true, user })
 }

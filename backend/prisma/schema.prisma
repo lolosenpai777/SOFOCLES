@@ -15,8 +15,14 @@ model User {
   needsUsernameSetup Boolean @default(false) @map("needs_username_setup")
   biography    String?  @default("")
   avatarUrl    String?  @map("avatar_url")
+  bannerUrl    String?  @map("banner_url")
+  websiteUrl   String?  @map("website_url")
+  twitterUrl   String?  @map("twitter_url")
+  instagramUrl String?  @map("instagram_url")
+  accentColor  String?  @map("accent_color")
   emailVerifiedAt DateTime? @map("email_verified_at")
   emailVerified Boolean @default(false) @map("email_verified")
+  isVerified Boolean @default(false) @map("is_verified")
   role         UserRole @default(USER)
   moderationRole ModerationRole @default(NONE) @map("moderation_role")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -24,6 +30,7 @@ model User {
 
   posts        Post[]
   likedPosts   Post[]   @relation("PostLikes")
+  savedPosts   PostSave[]
   followers    User[]   @relation("UserFollows")
   following    User[]   @relation("UserFollows")
   comments     Comment[]
@@ -69,17 +76,25 @@ model LinkedAccount {
 
 model Post {
   id        Int      @id @default(autoincrement())
-  title     String
+  title     String?
   content   String?
   imageUrl  String?  @map("image_url") @default("")
+  imageUrls String[] @map("image_urls") @default([])
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  pinnedAt  DateTime? @map("pinned_at")
   hiddenAt  DateTime? @map("hidden_at")
+  quotedPostId Int? @map("quoted_post_id")
+  visibility PostVisibility @default(PUBLIC)
+  hashtags  String[] @default([])
 
   author   User @relation(fields: [authorId], references: [id])
   authorId Int  @map("author_id")
 
   likes     User[]     @relation("PostLikes")
+  saves     PostSave[]
+  quotedPost Post? @relation("PostQuotes", fields: [quotedPostId], references: [id], onDelete: SetNull)
+  quotes     Post[] @relation("PostQuotes")
   comments  Comment[]
   reports   Report[]
   moderationActions ModerationAction[] @relation("ModerationActionTargetPost")
@@ -101,6 +116,10 @@ model Comment {
 
   post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId Int  @map("post_id")
+  parentId Int? @map("parent_id")
+
+  parent Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
 
   @@index([postId, createdAt])
   @@index([authorId, createdAt])
@@ -349,6 +368,24 @@ model PasswordResetToken {
 enum EmailVerificationTokenType {
   LINK
   CODE
+}
+
+model PostSave {
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([postId, createdAt])
+  @@map("post_saves")
+}
+
+enum PostVisibility {
+  PUBLIC
+  FOLLOWERS
 }
 
 model EmailVerificationToken {

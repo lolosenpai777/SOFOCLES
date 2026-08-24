@@ -12,6 +12,12 @@ export async function uploadAvatarHandler(request, reply) {
   return reply.code(201).send({ url: user.avatarUrl, user })
 }
 
+export async function uploadBannerHandler(request, reply) {
+  const url = await storeImage(request.body.imageData, 'banner')
+  const user = await updateUserProfile(request.userId, { bannerUrl: absoluteUrl(request, url) })
+  return reply.code(201).send({ url: user.bannerUrl, user })
+}
+
 export async function uploadPostAttachmentHandler(request, reply) {
   const url = await storeImage(request.body.imageData, 'post')
   return reply.code(201).send({ url: absoluteUrl(request, url) })

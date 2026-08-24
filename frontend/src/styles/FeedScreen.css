@@ -1257,6 +1257,41 @@ html.theme-dark .Noti-Empty {
 .Olimpo-Contenedor textarea:focus { border-color: var(--jade); box-shadow: 0 0 0 3px rgba(62,207,142,.16); transition: border-color 180ms ease, box-shadow 180ms ease; }
 .Olimpo-Contenedor .Card-Post.featured { border-top: 2px solid var(--gold); }
 .Olimpo-Contenedor .Contador-Likes:empty { display: none; }
+
+.post-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.post-hashtags button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--gold, #c9a24b);
+  cursor: pointer;
+  font: 600 0.8rem/1.2 var(--font-body, Lora, serif);
+}
+.post-hashtags button:hover { text-decoration: underline; text-underline-offset: 3px; }
+.Cuerpo-Post-Contenido > .Imagen-Post { display: none; }
+.post-image-carousel { position: relative; }
+.post-image-carousel__image { width: 100%; max-height: 420px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(201, 162, 75, .2); }
+.post-image-carousel__controls { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 6px; color: var(--muted); }
+.post-image-carousel__controls button { border: 0; background: transparent; color: var(--gold); cursor: pointer; font-size: 1.25rem; line-height: 1; }
+.post-quote-card { margin-top: 12px; padding: 12px; border: 1px solid rgba(201, 162, 75, .28); border-radius: 10px; background: rgba(10, 31, 29, .62); color: var(--marble); }
+.post-quote-card__author { display: flex; align-items: center; gap: 8px; color: var(--gold); }
+.post-quote-card p { margin: 4px 0 0; }
+.post-quote-card img { width: 100%; max-height: 180px; margin-top: 8px; object-fit: cover; border-radius: 6px; }
+.post-quote-card .post-quote-card { margin-top: 10px; background: rgba(20, 49, 43, .58); }
+.QuotePost-Modal__form { display: grid; gap: 14px; }
+.QuotePost-Modal__form label { display: grid; gap: 6px; text-align: left; color: var(--marble); font-size: .85rem; }
+.QuotePost-Modal__form input,
+.QuotePost-Modal__form textarea { width: 100%; padding: 10px 12px; border: 1px solid rgba(201, 162, 75, .2); border-radius: 10px; background: var(--bg-panel, #12241f); color: var(--marble); }
+.QuotePost-Modal__form textarea { min-height: 120px; resize: vertical; }
+.QuotePost-Modal__form input:focus,
+.QuotePost-Modal__form textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201, 162, 75, .14); }
+.QuotePost-Modal__actions { display: flex; justify-content: flex-end; gap: 10px; }
+.QuotePost-Modal__error { margin: 6px 0 0; color: #e05a5a; font-size: 0.85rem; }
 .Olimpo-Contenedor .Header-Action-Button { border-color: rgba(201,162,75,.2); }
 
 .Olimpo-Contenedor .Card-Post {

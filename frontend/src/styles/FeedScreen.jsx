@@ -1,14 +1,37 @@
 import { useState, useEffect, useRef } from "react";
 import clienteAxios from "../api/clienteAxios";
 import AvatarDisplay from "../components/AvatarDisplay";
+import UserBadges from "../components/UserBadges";
 import GiphySearch from "../components/GiphySearch";
 import FluidGlassCard from "../components/ui/FluidGlassCard";
 import "./FeedScreen.css";
 import PerfilModal from "./PerfilModal";
 import ReportPostModal from "../components/ReportPostModal";
+import QuotePostModal from "../components/QuotePostModal";
 import { formatDateWithRelative } from "../utils/formatDate";
 import "./NavegacionCelular.css";
 import Nav from "../components/NavegacionCelular.jsx";
+
+function PostImageCarousel({ post, alt }) {
+  const images = Array.isArray(post.imageUrls) && post.imageUrls.length ? post.imageUrls : (post.imageUrl ? [post.imageUrl] : [])
+  const [index, setIndex] = useState(0)
+  if (!images.length) return null
+  return <div className="post-image-carousel">
+    <img src={images[index]} alt={alt} className="post-image-carousel__image" />
+    {images.length > 1 && <div className="post-image-carousel__controls"><button type="button" onClick={() => setIndex((current) => (current - 1 + images.length) % images.length)} aria-label="Imagen anterior">‹</button><span>{index + 1}/{images.length}</span><button type="button" onClick={() => setIndex((current) => (current + 1) % images.length)} aria-label="Imagen siguiente">›</button></div>}
+  </div>
+}
+
+function QuotedPostEmbed({ post, depth = 0 }) {
+  if (!post) return null
+  const images = post.imageUrls?.length ? post.imageUrls : (post.imageUrl ? [post.imageUrl] : [])
+  return <div className="post-quote-card">
+    <div className="post-quote-card__author"><AvatarDisplay avatarUrl={post.author?.avatarUrl} username={post.author?.username || 'Usuario'} size="sm" /><strong>@{post.author?.username || 'usuario'} <UserBadges user={post.author} /></strong></div>
+    {post.content && <p>{post.content}</p>}
+    {images[0] && <img src={images[0]} alt="Imagen de la publicación citada" />}
+    {depth === 0 && post.quotedPost && <QuotedPostEmbed post={post.quotedPost} depth={1} />}
+  </div>
+}
 
 
 
@@ -47,10 +70,12 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
   const [expandedPosts, setExpandedPosts] = useState({});
   const [nuevoTitulo, setNuevoTitulo] = useState("");
   const [nuevoContenido, setNuevoContenido] = useState("");
+  const [visibilidadPost, setVisibilidadPost] = useState("PUBLIC");
   const [mencionInput, setMencionInput] = useState("");
   const [usuariosParaMenciones, setUsuariosParaMenciones] = useState([]);
   const [mencionesSeleccionadas, setMencionesSeleccionadas] = useState([]);
   const [nuevaImagen, setNuevaImagen] = useState(null);
+  const [nuevasImagenes, setNuevasImagenes] = useState([]);
   const [modalImagenAbierto, setModalImagenAbierto] = useState(false);
   const [errorImagen, setErrorImagen] = useState("");
   const inputImagenRef = useRef(null);
@@ -74,6 +99,8 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
 
   const [notificaciones, setNotificaciones] = useState([]);
   const [postAReportar, setPostAReportar] = useState(null);
+  const [postACitar, setPostACitar] = useState(null);
+  const [citando, setCitando] = useState(false);
   const [mostrarNotificacionesPanel, setMostrarNotificacionesPanel] = useState(false);
   const tieneAccesoModeracion =
     usuarioAutenticado?.role === "ADMIN" ||
@@ -254,8 +281,11 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
       setErrorMsg("");
       setCargandoFeed(true);
 
-      const url =
-        tipoFiltro === "seguidos" ? "/posts?filter=following" : "/posts";
+      const url = tipoFiltro === "seguidos"
+        ? "/posts?filter=following"
+        : typeof tipoFiltro === "string" && tipoFiltro.startsWith("#")
+          ? `/posts?hashtag=${encodeURIComponent(normalizarHashtag(tipoFiltro))}`
+          : "/posts";
       const respuesta = await clienteAxios.get(url);
       const listaPosts = Array.isArray(respuesta.data?.posts)
         ? respuesta.data.posts
@@ -357,11 +387,14 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
       const payload = {
         title: nuevoTitulo.trim(),
         content: nuevoContenido.trim(),
+        visibility: visibilidadPost,
+        hashtags: hashtagsDetectados,
       };
 
       if (nuevaImagen) {
         payload.imageData = nuevaImagen;
       }
+      if (nuevasImagenes.length > 0) payload.imageDatas = nuevasImagenes;
 
       if (mencionesSeleccionadas.length > 0) {
         payload.mentions = mencionesSeleccionadas.map((m) => m.username);
@@ -384,6 +417,8 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
       setUsuariosParaMenciones([]);
       setMencionesSeleccionadas([]);
       setNuevaImagen(null);
+      setNuevasImagenes([]);
+      setVisibilidadPost("PUBLIC");
     } catch (error) {
       console.error("Error al publicar:", error);
       setErrorMsg("Tu pensamiento no pudo ser forjado en la red.");
@@ -392,26 +427,30 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
   };
 
   const seleccionarImagen = (event) => {
-    const archivo = event.target.files?.[0];
-    if (!archivo) return;
+    const archivos = Array.from(event.target.files || []).slice(0, 8);
+    if (!archivos.length) return;
 
-    if (!archivo.type.startsWith("image/")) {
+    if (archivos.some((archivo) => !archivo.type.startsWith("image/"))) {
       setErrorImagen("Selecciona un archivo de imagen válido.");
       return;
     }
 
-    if (archivo.size > 5 * 1024 * 1024) {
+    if (archivos.some((archivo) => archivo.size > 5 * 1024 * 1024)) {
       setErrorImagen("La imagen no puede superar los 5 MB.");
       return;
     }
 
-    const lector = new FileReader();
-    lector.onload = () => {
-      setNuevaImagen(lector.result);
+    Promise.all(archivos.map((archivo) => new Promise((resolve, reject) => {
+      const lector = new FileReader();
+      lector.onload = () => resolve(lector.result);
+      lector.onerror = reject;
+      lector.readAsDataURL(archivo);
+    }))).then((imagenes) => {
+      setNuevasImagenes(imagenes);
+      setNuevaImagen(imagenes[0]);
       setErrorImagen("");
       setModalImagenAbierto(false);
-    };
-    lector.readAsDataURL(archivo);
+    }).catch(() => setErrorImagen("No se pudieron preparar las imágenes."));
   };
 
   const abrirModalEliminar = (postId) => setPostAEliminar(postId);
@@ -451,6 +490,30 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
 
   const reportarPost = async (postId) => {
     setPostAReportar(postId);
+  };
+
+  const citarPost = async (post) => {
+    setPostACitar(post)
+  };
+
+  const publicarCita = async ({ title, content }) => {
+    if (!postACitar) return
+    try {
+      setCitando(true)
+      const { data } = await clienteAxios.post(`/posts/${postACitar.id || postACitar._id}/quote`, { title, content })
+      setPosts((actuales) => [data.post, ...actuales])
+      setPostACitar(null)
+    } catch (error) { setErrorMsg(error.response?.data?.error || 'No se pudo citar la publicación.') } finally { setCitando(false) }
+  };
+
+  const guardarPost = async (postId) => {
+    try {
+      const { data } = await clienteAxios.post(`/posts/${postId}/save`)
+      setPosts((actuales) => actuales.map((post) => ((post._id || post.id) === postId ? { ...post, saved: data.saved } : post)))
+      if (postDetalle && (postDetalle._id || postDetalle.id) === postId) setPostDetalle((actual) => ({ ...actual, saved: data.saved }))
+    } catch (error) {
+      setErrorMsg(error.response?.data?.error || "No se pudo actualizar Guardados.")
+    }
   };
 
   const toggleExpandPost = (postId) => {
@@ -760,10 +823,13 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
     }
   };
 
-  const compartirPost = (postId) => {
-    const url = `${window.location.origin}/posts/${postId}`;
-    navigator.clipboard.writeText(url);
-    window.alert("¡Enlace copiado al portapapeles!");
+  const compartirPost = (postId, authorUsername) => {
+    const url = `${window.location.origin}/${authorUsername}/post/${postId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      window.alert("¡Enlace copiado al portapapeles!");
+    }).catch(() => {
+      window.alert("No se pudo copiar el enlace.");
+    });
   };
 
   const hashtagsDetectados = extraerHashtags(`${nuevoTitulo} ${nuevoContenido}`);
@@ -1086,6 +1152,14 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
               </div>
             )}
 
+            <label className="flex items-center justify-between gap-3 text-sm text-stone-700">
+              <span className="font-semibold">Visibilidad</span>
+              <select className="Input-Olimpo-Feed max-w-[220px]" value={visibilidadPost} onChange={(e) => setVisibilidadPost(e.target.value)}>
+                <option value="PUBLIC">Público</option>
+                <option value="FOLLOWERS">Solo seguidores</option>
+              </select>
+            </label>
+
             <button
               type="button"
               className="Btn-Secundario mt-2"
@@ -1094,7 +1168,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
               {nuevaImagen ? "Cambiar Imagen" : "Agregar Imagen"}
             </button>
 
-            {nuevaImagen && (
+            {nuevasImagenes.length > 0 && (
               <div className="relative mt-3">
                 <img
                   src={nuevaImagen}
@@ -1338,7 +1412,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
                           />
                         </button>
                         <div className="ml-3">
-                          <h3 className="Nombre-Usuario">{authorName}</h3>
+                          <h3 className="Nombre-Usuario">{authorName} <UserBadges user={post.author || post.usuario} /></h3>
                           <span className="Fecha-Post">
                             {post.createdAt ? formatDateWithRelative(post.createdAt) : "Hace instantes"}
                           </span>
@@ -1357,12 +1431,23 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
                     </header>
 
                     <div className="Cuerpo-Post-Contenido">
-                      <h4 className="Title-Post-Display">
-                        {post.title || "Pensamiento sin título"}
-                      </h4>
+                      {(post.title || !post.quotedPost) && (
+                        <h4 className="Title-Post-Display">
+                          {post.title || "Pensamiento sin título"}
+                        </h4>
+                      )}
                       <p className="Contenido-Post">
                         {isExpanded ? content : preview}
                       </p>
+                      {post.quotedPost && <QuotedPostEmbed post={post.quotedPost} />}
+
+                      {obtenerHashtagsDelPost(post).length > 0 && (
+                        <div className="post-hashtags" aria-label="Hashtags">
+                          {obtenerHashtagsDelPost(post).map((tag) => (
+                            <button key={tag} type="button" onClick={() => manejarFiltroHashtag(tag)}>#{tag}</button>
+                          ))}
+                        </div>
+                      )}
 
                       {post.imageUrl && (
                         <img
@@ -1371,6 +1456,8 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
                           className="Imagen-Post"
                         />
                       )}
+
+                      <PostImageCarousel post={post} alt={`Imagen de la publicación de ${authorName}`} />
 
                       {shouldTruncate && (
                         <button
@@ -1410,7 +1497,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
                           <button
                             type="button"
                             className="icon-btn action-with-count"
-                            onClick={() => onOpenPost?.(pId)}
+                            onClick={() => onOpenPost?.(pId, authorName)}
                             aria-label="Comentarios"
                             title="Ver publicación y comentarios"
                           >
@@ -1434,7 +1521,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
                           <button
                             type="button"
                             className="Btn-Compartir-Post icon-btn"
-                            onClick={() => compartirPost(pId)}
+                            onClick={() => compartirPost(pId, authorName)}
                             title="Compartir publicación"
                             aria-label="Compartir publicación"
                           >
@@ -1444,9 +1531,19 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
                               className="w-5 h-5 object-contain"
                             />
                           </button>
+                          <button
+                            type="button"
+                            className={`icon-btn ${post.saved ? "active" : ""}`}
+                            onClick={() => guardarPost(pId)}
+                            title={post.saved ? "Quitar de guardados" : "Guardar publicación"}
+                            aria-label={post.saved ? "Quitar de guardados" : "Guardar publicación"}
+                          >
+                            {post.saved ? "★" : "☆"}
+                          </button>
                         </div>
 
                         <div className="post-actions-management flex items-center gap-2 ml-auto">
+                          <button type="button" className="icon-btn" onClick={() => citarPost(post)} title="Citar publicación" aria-label="Citar publicación">❝</button>
                           {usuarioAutenticado && autorId !== miId && (
                             <button
                               type="button"
@@ -1541,7 +1638,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
                 Publicación de @
                 {postDetalle.author?.username ||
                   postDetalle.usuario?.username ||
-                  "Anónimo"}
+                  "Anónimo"} <UserBadges user={postDetalle.author || postDetalle.usuario} />
               </h3>
               <button
                 type="button"
@@ -1567,9 +1664,11 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
 
             <div className="Modal-Contenido-Scroll">
               <div className="text-left space-y-3 border-b border-emerald-700/10 pb-4">
-                <h4 className="Title-Post-Display text-lg">
-                  {postDetalle.title || "Pensamiento sin título"}
-                </h4>
+                {(postDetalle.title || !postDetalle.quotedPost) && (
+                  <h4 className="Title-Post-Display text-lg">
+                    {postDetalle.title || "Pensamiento sin título"}
+                  </h4>
+                )}
                 <p className="text-stone-700 text-sm whitespace-pre-line">
                   {postDetalle.content || postDetalle.contenido}
                 </p>
@@ -1742,7 +1841,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
                                 <div className="comentarios-lista__content">
                                   <div className="flex-1 min-w-0">
                                     <span className="comentarios-lista__author">
-                                      @{cAuthorName}
+                                      @{cAuthorName} <UserBadges user={c.author} />
                                     </span>
                                     <p className="comentarios-lista__text">
                                       {c.text || c.texto || c.contenido}
@@ -1898,6 +1997,8 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
           onReported={() => window.alert("Gracias. El reporte fue enviado al equipo de moderación.")}
         />
       )}
+
+      {postACitar && <QuotePostModal onClose={() => setPostACitar(null)} onSubmit={publicarCita} saving={citando} />}
 
       {abrirBuscadorGif && (
         <GiphySearch
