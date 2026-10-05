@@ -2037,6 +2037,18 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
   }}
   currentUser={usuarioAutenticado}
 />
+
+      {/* Botón flotante Eco (cuadrado en la parte inferior izquierda con leaf-svgrepo-com.svg) */}
+      <a
+        href="/eco"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="Eco-Boton-Flotante"
+        title="Eco — Chat incógnito en nueva pestaña"
+        aria-label="Abrir Eco"
+      >
+        <img src="/leaf-svgrepo-com.svg" alt="Eco" />
+      </a>
      
     </div>
   );

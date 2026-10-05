@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="leafGradStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3ECF8E" />
+      <stop offset="100%" stop-color="#C9A24B" />
+    </linearGradient>
+    <linearGradient id="leafGradFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3ECF8E" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#C9A24B" stop-opacity="0.15" />
+    </linearGradient>
+  </defs>
+  <!-- Silueta rellena de la hoja -->
+  <path d="M4.44905 17.0091C-0.246262 7.83768 7.34063 0.686186 19.5547 3.61251C20.4161 3.81888 21.0082 4.6099 20.9652 5.49458C20.5863 13.288 17.0342 17.7048 6.13264 17.9858C5.43034 18.0039 4.7692 17.6344 4.44905 17.0091Z" fill="url(#leafGradFill)" stroke="url(#leafGradStroke)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Nervadura de la hoja -->
+  <path d="M3.99987 21C5.49993 15.5 5.99988 12.5 11.9998 9.99997" stroke="url(#leafGradStroke)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

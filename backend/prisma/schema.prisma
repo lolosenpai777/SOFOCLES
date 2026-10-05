@@ -45,6 +45,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   linkedAccounts LinkedAccount[]
+  ecoProfile EcoProfile?
 
   @@index([createdAt])
   @@map("users")
@@ -65,6 +66,87 @@ model LinkedAccount {
   @@unique([provider, providerAccountId])
   @@index([userId])
   @@map("linked_accounts")
+}
+
+model EcoProfile {
+  id                    Int      @id @default(autoincrement())
+  userId                Int      @unique @map("user_id")
+  alias                 String
+  mascara               String
+  genderDeclared        String   @map("gender_declared")
+  genderConfirmed       Boolean  @default(false) @map("gender_confirmed")
+  ageStatus             String   @default("PENDING") @map("age_status")
+  ageDocumentUrl        String?  @map("age_document_url")
+  ageVerificationDeadline DateTime @map("age_verification_deadline")
+  interests             String[] @default([])
+  tourCompleted         Boolean  @default(false) @map("tour_completed")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  participants          EcoParticipant[]
+  sentMessages          EcoMessage[] @relation("EcoMessageAuthor")
+
+  @@map("eco_profiles")
+}
+
+model EcoConversation {
+  id              String @id @default(uuid())
+  status          String @default("ACTIVE")
+  resonance       Int    @default(0)
+  compatibility   Int    @default(50)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  participants    EcoParticipant[]
+  messages        EcoMessage[]
+
+  @@map("eco_conversations")
+}
+
+model EcoParticipant {
+  conversationId String @map("conversation_id")
+  profileId      Int    @map("profile_id")
+  joinedAt       DateTime @default(now()) @map("joined_at")
+
+  conversation EcoConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  profile      EcoProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, profileId])
+  @@index([profileId])
+  @@map("eco_participants")
+}
+
+model EcoMessage {
+  id               String @id @default(uuid())
+  conversationId   String @map("conversation_id")
+  authorProfileId  Int    @map("author_profile_id")
+  content          String @db.Text
+  attachmentUrl    String? @map("attachment_url")
+  quotedMessageId  String? @map("quoted_message_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  conversation EcoConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  author       EcoProfile @relation("EcoMessageAuthor", fields: [authorProfileId], references: [id], onDelete: Cascade)
+  quotedMessage EcoMessage? @relation("EcoMessageQuotes", fields: [quotedMessageId], references: [id], onDelete: SetNull)
+  replies      EcoMessage[] @relation("EcoMessageQuotes")
+  reactions    EcoReaction[]
+
+  @@index([conversationId, createdAt])
+  @@map("eco_messages")
+}
+
+model EcoReaction {
+  id        Int @id @default(autoincrement())
+  messageId String @map("message_id")
+  profileId Int @map("profile_id")
+  emoji     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message EcoMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, profileId, emoji])
+  @@map("eco_reactions")
 }
 
 model Post {

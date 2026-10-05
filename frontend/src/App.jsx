@@ -7,6 +7,7 @@ import AdminRoute from './components/AdminRoute.jsx'
 import UsernameSetupModal from './components/UsernameSetupModal.jsx'
 import ProfilePage from './components/ProfilePage.jsx'
 import PostPage from './components/PostPage.jsx'
+import EcoPage from './components/EcoPage.jsx'
 import { formatDateWithRelative } from './utils/formatDate'
 import * as Dialog from '@radix-ui/react-dialog'
 
@@ -113,6 +114,7 @@ function App() {
   const adminRoute = parseAdminRoute(pathname)
   const profileRoute = parseProfileRoute(pathname)
   const postRoute = parsePostRoute(pathname)
+  const isEcoRoute = pathname === '/eco' || pathname.startsWith('/eco/')
 
   const handleSpotlightPointerMove = (event) => {
     const card = event.currentTarget
@@ -433,6 +435,21 @@ function App() {
         currentUser={usuarioAutenticado}
         onBack={() => setVistaInterna(null)}
         onOpenProfile={(profile) => setVistaInterna({ type: 'profile', username: profile.username })}
+      />
+    )
+  }
+
+  if (vistaInterna?.type === 'eco' || isEcoRoute) {
+    return (
+      <EcoPage
+        currentUser={usuarioAutenticado}
+        onBackToFeed={() => {
+          if (vistaInterna?.type === 'eco') {
+            setVistaInterna(null)
+          } else {
+            navigateTo('/')
+          }
+        }}
       />
     )
   }

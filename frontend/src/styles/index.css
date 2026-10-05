@@ -377,7 +377,7 @@ body {
   backdrop-filter: blur(24px) saturate(160%);
 }
 
-.Banner-Olimpo__actions hidden md:flex {
+.Banner-Olimpo__actions  {
   position: relative !important;
   z-index: 20 !important;
   display: flex !important;

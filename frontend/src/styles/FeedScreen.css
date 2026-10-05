@@ -203,6 +203,67 @@ body, button, input, textarea, select {
   box-shadow: 0 12px 28px rgba(201, 162, 75, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.6) !important;
 }
 
+/* Botón cuadrado flotante para Eco en la esquina inferior izquierda */
+.Eco-Boton-Flotante {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 45;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: rgba(15, 46, 43, 0.75);
+  border: 1px solid rgba(201, 162, 75, 0.35);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.Eco-Boton-Flotante:hover {
+  transform: translateY(-2px);
+  background: rgba(15, 46, 43, 0.9);
+  border-color: #3ecf8e;
+  box-shadow: 0 12px 28px rgba(62, 207, 142, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+.Eco-Boton-Flotante img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(62, 207, 142, 0.3));
+}
+
+html:not(.theme-dark) .Eco-Boton-Flotante {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(61, 107, 86, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+html:not(.theme-dark) .Eco-Boton-Flotante:hover {
+  background: #ffffff;
+  border-color: #3d6b56;
+}
+
+@media (max-width: 768px) {
+  .Eco-Boton-Flotante {
+    bottom: 4.8rem;
+    left: 1rem;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+  .Eco-Boton-Flotante img {
+    width: 25px;
+    height: 25px;
+  }
+}
+
 /* Adaptación para modo oscuro */
 .Olimpo-Contenedor.modo-oscuro .Header-Action-Button {
   background: rgba(15, 23, 42, 0.65) !important;

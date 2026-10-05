@@ -1,0 +1,2166 @@
+/* ==========================================================================
+   ECO — CHAT INCÓGNITO DIALÉCTICO (ESTILO MONOCROMÁTICO Y SIN ANIMACIONES)
+   ========================================================================== */
+
+.Eco-Contenedor {
+  position: relative;
+  height: 100dvh;
+  max-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-deep, #0a1f1d);
+  color: var(--marble, #ede7da);
+  font-family: var(--font-body, system-ui, sans-serif);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+html:not(.theme-dark) .Eco-Contenedor {
+  background-color: #f7f5f0;
+  color: #1a2e2b;
+}
+
+/* ==========================================================================
+   BANNER DE VERIFICACIÓN DE EDAD (24 HORAS DE CORTESÍA)
+   ========================================================================== */
+
+.Eco-Banner-Verificacion {
+  background: rgba(201, 162, 75, 0.15);
+  border-bottom: 1px solid rgba(201, 162, 75, 0.35);
+  padding: 0.4rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--marble, #ede7da);
+  z-index: 45;
+  flex-shrink: 0;
+}
+
+html:not(.theme-dark) .Eco-Banner-Verificacion {
+  background: #fef3c7;
+  border-bottom: 1px solid #f59e0b;
+  color: #92400e;
+}
+
+.Eco-Banner-Verificacion__info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.Eco-Banner-Verificacion__timer {
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  color: var(--gold, #c9a24b);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+}
+
+html:not(.theme-dark) .Eco-Banner-Verificacion__timer {
+  background: #fde68a;
+  color: #78350f;
+}
+
+.Eco-Btn-VerificarAhora {
+  background: var(--gold, #c9a24b);
+  color: #0a1f1d;
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.Eco-Btn-VerificarAhora:hover {
+  filter: brightness(1.1);
+}
+
+/* ==========================================================================
+   HEADER DE ECO
+   ========================================================================== */
+
+.Eco-Header {
+  height: 56px;
+  flex-shrink: 0;
+  z-index: 40;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(10, 31, 29, 0.85);
+  border-bottom: 1px solid rgba(62, 207, 142, 0.15);
+  padding: 0 1.25rem;
+  display: flex;
+  align-items: center;
+}
+
+html:not(.theme-dark) .Eco-Header {
+  background: rgba(247, 245, 240, 0.9);
+  border-bottom: 1px solid rgba(61, 107, 86, 0.15);
+}
+
+.Eco-Header__inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.Eco-Header__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.Eco-Header__logo {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+}
+
+.Eco-Header__title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.Eco-Header__title {
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #3ecf8e 0%, #c9a24b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin: 0;
+}
+
+.Eco-Header__subtitle {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted, #7fa39c);
+  margin: 0;
+}
+
+.Eco-Header__user-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(62, 207, 142, 0.1);
+  border: 1px solid rgba(62, 207, 142, 0.3);
+  color: #3ecf8e;
+  cursor: pointer;
+}
+
+.Eco-Header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.Eco-Btn-Icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(15, 46, 43, 0.6);
+  border: 1px solid rgba(201, 162, 75, 0.25);
+  color: var(--marble, #ede7da);
+  cursor: pointer;
+}
+
+html:not(.theme-dark) .Eco-Btn-Icon {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(61, 107, 86, 0.2);
+  color: #1a2e2b;
+}
+
+.Eco-Btn-Secundario {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: rgba(15, 46, 43, 0.6);
+  border: 1px solid rgba(201, 162, 75, 0.25);
+  color: var(--marble, #ede7da);
+  cursor: pointer;
+}
+
+html:not(.theme-dark) .Eco-Btn-Secundario {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(61, 107, 86, 0.25);
+  color: #1a2e2b;
+}
+
+/* ==========================================================================
+   LAYOUT PRINCIPAL: 3 COLUMNAS AJUSTADAS AL 100% DEL VIEWPORT
+   ========================================================================== */
+
+.Eco-Main-3Col {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 0.65rem 1rem 0.75rem;
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: 0.85rem;
+  align-items: stretch;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+  .Eco-Main-3Col {
+    grid-template-columns: 250px 1fr;
+  }
+  .Eco-Panel-Espejo {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .Eco-Main-3Col {
+    grid-template-columns: 1fr;
+    padding: 0.4rem;
+  }
+}
+
+/* ==========================================================================
+   ECO / ALIGNMENT WITH THE NORMAL SOFOCLES FEED
+   ========================================================================== */
+
+.Eco-Contenedor {
+  --eco-feed-bg: var(--bg-deep, #020617);
+  --eco-feed-panel: #12241f;
+  --eco-feed-border: rgba(201, 162, 75, 0.17);
+  --eco-feed-border-soft: rgba(255, 255, 255, 0.14);
+  --eco-feed-text: var(--marble, #f8fafc);
+  --eco-feed-muted: var(--muted, #94a3b8);
+  background: var(--eco-feed-bg) !important;
+  color: var(--eco-feed-text) !important;
+  font-family: var(--font-body) !important;
+}
+
+.Eco-Contenedor::before {
+  background: none;
+  mask-image: none;
+}
+
+.Eco-Header {
+  height: 84px;
+  margin-top: 46px;
+  padding: 0 clamp(1rem, 3vw, 2.5rem);
+  background: rgba(15, 23, 42, 0.78) !important;
+  border: 1px solid var(--eco-feed-border) !important;
+  border-radius: 28px;
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12), 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.Eco-Header__inner {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.Eco-Header__logo {
+  width: 48px;
+  height: 48px;
+  filter: drop-shadow(0 0 12px rgba(62, 207, 142, 0.3));
+}
+
+.Eco-Header__title {
+  font-family: var(--font-display) !important;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--marble) !important;
+  -webkit-text-fill-color: var(--marble) !important;
+}
+
+.Eco-Header__subtitle {
+  color: var(--muted);
+  letter-spacing: 0.2em;
+}
+
+.Eco-Header__user-tag {
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--eco-feed-border) !important;
+  border-radius: 14px;
+  background: rgba(15, 46, 43, 0.65) !important;
+  color: var(--marble) !important;
+}
+
+.Eco-Btn-Icon,
+.Eco-Btn-Secundario {
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--marble) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.14), 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.Eco-Btn-Icon {
+  width: 40px;
+}
+
+.Eco-Btn-Icon:hover,
+.Eco-Btn-Secundario:hover {
+  background: rgba(62, 207, 142, 0.15) !important;
+  border-color: rgba(62, 207, 142, 0.35) !important;
+  color: var(--emerald-vibrant, #10b981) !important;
+}
+
+.Eco-Banner-Verificacion {
+  min-height: 46px;
+  padding: 0.55rem clamp(1rem, 3vw, 2.5rem);
+  background: rgba(15, 23, 42, 0.88) !important;
+  border-bottom: 1px solid var(--eco-feed-border) !important;
+  color: var(--marble) !important;
+}
+
+.Eco-Banner-Verificacion__timer {
+  border: 1px solid rgba(201, 162, 75, 0.35);
+  border-radius: 8px;
+  background: rgba(201, 162, 75, 0.12) !important;
+  color: var(--gold, #c9a24b) !important;
+}
+
+.Eco-Btn-VerificarAhora,
+.Eco-Btn-Primario {
+  border: 0 !important;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--emerald-vibrant, #10b981), var(--emerald-strong, #059669)) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.22);
+}
+
+.Eco-Main-3Col {
+  width: 100%;
+  max-width: 80rem;
+  padding: 1.5rem 1rem 2rem;
+  grid-template-columns: 260px minmax(0, 1fr) 300px;
+  gap: 1.5rem;
+}
+
+.Eco-Panel-Chats,
+.Eco-Panel-Espejo,
+.Eco-Chat-Card--monocromo {
+  border: 1px solid var(--eco-feed-border) !important;
+  border-radius: 28px !important;
+  background: var(--eco-feed-panel) !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.06), 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.Eco-Chats__header,
+.Eco-Chat__header {
+  border-color: rgba(201, 162, 75, 0.14) !important;
+}
+
+.Eco-Chats__titulo,
+.Eco-Espejo__alias,
+.Eco-Chat__header-meta h4 {
+  font-family: var(--font-display) !important;
+  color: var(--marble) !important;
+}
+
+.Eco-Btn-NuevoChat {
+  border: 1px solid rgba(62, 207, 142, 0.35);
+  border-radius: 12px;
+  background: rgba(62, 207, 142, 0.12);
+  color: var(--emerald-vibrant, #10b981);
+}
+
+.Eco-Chats__item {
+  border-radius: 16px;
+  background: rgba(10, 31, 29, 0.3);
+}
+
+.Eco-Chats__item:hover,
+.Eco-Chats__item.Activo {
+  border-color: rgba(62, 207, 142, 0.35);
+  background: rgba(62, 207, 142, 0.12);
+}
+
+.Eco-Chats__item-avatar,
+.Eco-Chat__header-avatar,
+.Eco-Mensaje-Avatar {
+  border: 1px solid rgba(201, 162, 75, 0.3);
+  border-radius: 50%;
+  background: rgba(10, 31, 29, 0.8);
+}
+
+.Eco-Mensajes-Scroll {
+  background: transparent;
+  padding: 1.25rem;
+}
+
+.Eco-Hito-Sistema {
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.Eco-Burbuja {
+  border-radius: 18px !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(30, 41, 59, 0.72) !important;
+  color: var(--marble) !important;
+}
+
+.Eco-Mensaje-Fila--propia .Eco-Burbuja {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: rgba(226, 232, 240, 0.92) !important;
+  color: #1e293b !important;
+}
+
+.Eco-Mensaje-Fila--ajena .Eco-Burbuja {
+  border-bottom-left-radius: 5px !important;
+}
+
+.Eco-Mensaje-Fila--propia .Eco-Burbuja {
+  border-bottom-right-radius: 5px !important;
+}
+
+.Eco-Input-Area--estatico,
+.Eco-Rompehielos-Contenedor {
+  background: rgba(15, 23, 42, 0.38) !important;
+  border-color: rgba(201, 162, 75, 0.14) !important;
+}
+
+.Eco-Input-Text--mono {
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  background: rgba(16, 24, 39, 0.6) !important;
+  color: var(--marble) !important;
+}
+
+.Eco-Input-Text--mono:focus {
+  border-color: var(--emerald-vibrant, #10b981);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.16);
+}
+
+.Eco-Btn-Enviar--mono {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--emerald-vibrant, #10b981), var(--emerald-strong, #059669)) !important;
+  color: #fff !important;
+}
+
+.Eco-Ficha {
+  border-color: rgba(201, 162, 75, 0.14);
+  border-radius: 16px;
+  background: rgba(10, 31, 29, 0.5);
+}
+
+.Eco-Ficha.Desbloqueada {
+  border-color: rgba(62, 207, 142, 0.35);
+  background: rgba(62, 207, 142, 0.08);
+}
+
+.Eco-Ficha__label,
+.Eco-Resonancia-Titulo {
+  color: var(--gold, #c9a24b) !important;
+}
+
+@media (max-width: 768px) {
+  .Eco-Header {
+    height: 72px;
+    margin-top: 72px;
+    border-radius: 0;
+  }
+
+  .Eco-Main-3Col {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+}
+
+/* Pestañas de navegación para móviles */
+.Eco-Nav-Movil-Tabs {
+  display: none;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(10, 31, 29, 0.75);
+  border-bottom: 1px solid rgba(62, 207, 142, 0.15);
+  flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+  .Eco-Nav-Movil-Tabs {
+    display: grid;
+  }
+}
+
+.Eco-Nav-Tab-Btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted, #7fa39c);
+  cursor: pointer;
+}
+
+.Eco-Nav-Tab-Btn.Activo {
+  background: rgba(62, 207, 142, 0.2);
+  color: #3ecf8e;
+}
+
+/* ==========================================================================
+   COLUMNA 1: LISTA DE CHATS ENTRE USUARIOS
+   ========================================================================== */
+
+.Eco-Panel-Chats {
+  background: rgba(15, 46, 43, 0.65);
+  border: 1px solid rgba(201, 162, 75, 0.25);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+html:not(.theme-dark) .Eco-Panel-Chats {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(61, 107, 86, 0.2);
+}
+
+.Eco-Chats__header {
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid rgba(62, 207, 142, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.Eco-Chats__titulo {
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--marble, #ede7da);
+}
+
+html:not(.theme-dark) .Eco-Chats__titulo {
+  color: #1a2e2b;
+}
+
+.Eco-Btn-NuevoChat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(62, 207, 142, 0.15);
+  border: 1px solid rgba(62, 207, 142, 0.35);
+  color: #3ecf8e;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.Eco-Chats__lista {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.Eco-Chats__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(10, 31, 29, 0.3);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+html:not(.theme-dark) .Eco-Chats__item {
+  background: rgba(240, 237, 230, 0.5);
+}
+
+.Eco-Chats__item:hover {
+  background: rgba(62, 207, 142, 0.1);
+  border-color: rgba(62, 207, 142, 0.25);
+}
+
+.Eco-Chats__item.Activo {
+  background: rgba(62, 207, 142, 0.15);
+  border-color: rgba(62, 207, 142, 0.4);
+}
+
+.Eco-Chats__item-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(10, 31, 29, 0.8);
+  border: 1px solid rgba(201, 162, 75, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.Eco-Chats__item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.Eco-Chats__item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.15rem;
+}
+
+.Eco-Chats__item-alias {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--marble, #ede7da);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+html:not(.theme-dark) .Eco-Chats__item-alias {
+  color: #1a2e2b;
+}
+
+.Eco-Chats__item-hora {
+  font-size: 0.62rem;
+  color: var(--muted, #7fa39c);
+  flex-shrink: 0;
+}
+
+.Eco-Chats__item-ultimo-msg {
+  font-size: 0.7rem;
+  color: var(--muted, #7fa39c);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.Eco-Chats__item-tag-res {
+  font-size: 0.6rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  background: rgba(201, 162, 75, 0.15);
+  color: var(--gold, #c9a24b);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   COLUMNA 2: SALA DE CHAT MONOCROMÁTICA SIMPLE (SIN ANIMACIONES)
+   ========================================================================== */
+
+.Eco-Panel-Chat {
+  height: 100%;
+  max-height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Recuadro del chat: Monocromático simple y descansado */
+.Eco-Chat-Card--monocromo {
+  background: #11171a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+html:not(.theme-dark) .Eco-Chat-Card--monocromo {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+}
+
+/* Cabecera del chat */
+.Eco-Chat__header {
+  padding: 0.65rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+html:not(.theme-dark) .Eco-Chat__header {
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.Eco-Chat__header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.Eco-Chat__header-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.Eco-Chat__header-meta h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0;
+  color: #f1f5f9;
+}
+
+html:not(.theme-dark) .Eco-Chat__header-meta h4 {
+  color: #0f172a;
+}
+
+.Eco-Chat__header-meta p {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.Eco-Btn-Reportar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.Eco-Btn-Reportar:hover {
+  background: rgba(239, 68, 68, 0.22);
+}
+
+/* Historial de mensajes (Scroll interno) */
+.Eco-Mensajes-Scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.Eco-Mensajes-Scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.Eco-Mensajes-Scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+/* Hito monocromático */
+.Eco-Hito-Sistema {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+html:not(.theme-dark) .Eco-Hito-Sistema {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+/* Mensajes monocromáticos sin colores estridentes */
+.Eco-Mensaje-Fila {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  max-width: 82%;
+  position: relative;
+}
+
+.Eco-Mensaje-Fila--propia {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.Eco-Mensaje-Fila--ajena {
+  align-self: flex-start;
+}
+
+.Eco-Mensaje-Avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+.Eco-Burbuja {
+  padding: 0.6rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  word-break: break-word;
+  position: relative;
+}
+
+/* Burbuja propia: Monocromático gris carbón/pizarra suave */
+.Eco-Mensaje-Fila--propia .Eco-Burbuja {
+  background: #273544;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  border-bottom-right-radius: 2px;
+}
+
+html:not(.theme-dark) .Eco-Mensaje-Fila--propia .Eco-Burbuja {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+/* Burbuja ajena: Monocromático gris neutro */
+.Eco-Mensaje-Fila--ajena .Eco-Burbuja {
+  background: #1a2228;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border-bottom-left-radius: 2px;
+}
+
+html:not(.theme-dark) .Eco-Mensaje-Fila--ajena .Eco-Burbuja {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #1e293b;
+}
+
+/* Mensaje citado / Cita dentro de la burbuja */
+.Eco-Cita-Dentro {
+  padding: 0.35rem 0.55rem;
+  border-left: 3px solid #94a3b8;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  margin-bottom: 0.4rem;
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+/* Imagen adjunta en el mensaje */
+.Eco-Mensaje-Adjunto-Img {
+  max-width: 240px;
+  max-height: 180px;
+  border-radius: 8px;
+  margin-top: 0.4rem;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+}
+
+.Eco-Burbuja__meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+  font-size: 0.6rem;
+  color: #94a3b8;
+}
+
+/* Acciones en cada mensaje (Reaccionar y Responder) */
+.Eco-Mensaje-Acciones {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+  position: absolute;
+  top: -12px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 0.15rem 0.3rem;
+  z-index: 10;
+}
+
+.Eco-Mensaje-Fila:hover .Eco-Mensaje-Acciones {
+  display: flex;
+}
+
+.Eco-Mensaje-Fila--propia .Eco-Mensaje-Acciones {
+  right: 10px;
+}
+
+.Eco-Mensaje-Fila--ajena .Eco-Mensaje-Acciones {
+  left: 36px;
+}
+
+.Eco-Btn-Accion-Msg {
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.Eco-Btn-Accion-Msg:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Reacciones guardadas en el mensaje */
+.Eco-Reacciones-Container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+}
+
+.Eco-Reaccion-Pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+/* Indicador de meditación de respuesta */
+.Eco-Escribiendo-Indicador {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 8px;
+  background: #1a2228;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+/* ==========================================================================
+   FOOTER ESTÁTICO DE LA SALA DE CHAT (BARRA DE ESCRITURA INMUTABLE)
+   ========================================================================== */
+
+.Eco-Input-Area--estatico {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  padding: 0.65rem 0.85rem 0.75rem;
+  background: #0f1417;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+html:not(.theme-dark) .Eco-Input-Area--estatico {
+  background: #f1f5f9;
+  border-top: 1px solid #cbd5e1;
+}
+
+/* Barra de Cita activa antes de enviar */
+.Eco-Barra-Cita-Activa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.65rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-left: 3px solid #3ecf8e;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+.Eco-Barra-Cita-Activa button {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+/* Preview de archivo adjunto antes de enviar */
+.Eco-Preview-Adjunto-Bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  font-size: 0.7rem;
+}
+
+.Eco-Preview-Adjunto-Bar img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.Eco-Formulario {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.Eco-Btn-Adjunto {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 0.4rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Eco-Btn-Adjunto:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.Eco-Input-Text--mono {
+  flex: 1;
+  background: #182026;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.82rem;
+  color: #f8fafc;
+  outline: none;
+}
+
+html:not(.theme-dark) .Eco-Input-Text--mono {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.Eco-Input-Text--mono:focus {
+  border-color: #94a3b8;
+}
+
+.Eco-Btn-Enviar--mono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #334155;
+  border: none;
+  color: #f8fafc;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.Eco-Btn-Enviar--mono:hover:not(:disabled) {
+  background: #475569;
+}
+
+.Eco-Btn-Enviar--mono:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   COLUMNA 3: EL ESPEJO DE ECO (REVELACIÓN PROGRESIVA)
+   ========================================================================== */
+
+.Eco-Panel-Espejo {
+  background: rgba(15, 46, 43, 0.65);
+  border: 1px solid rgba(201, 162, 75, 0.25);
+  border-radius: 14px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+html:not(.theme-dark) .Eco-Panel-Espejo {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(61, 107, 86, 0.2);
+}
+
+.Eco-Espejo__avatar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(62, 207, 142, 0.15);
+  flex-shrink: 0;
+}
+
+.Eco-Avatar-Contenedor {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, rgba(62, 207, 142, 0.6), rgba(201, 162, 75, 0.6));
+  margin-bottom: 0.4rem;
+}
+
+.Eco-Avatar-Img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #081715;
+}
+
+.Eco-Avatar-Mascara {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(10, 31, 29, 0.85) 0%, rgba(10, 31, 29, 0.95) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold, #c9a24b);
+}
+
+.Eco-Espejo__alias {
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--marble, #ede7da);
+}
+
+html:not(.theme-dark) .Eco-Espejo__alias {
+  color: #1a2e2b;
+}
+
+.Eco-Espejo__status {
+  font-size: 0.68rem;
+  color: #3ecf8e;
+  margin-top: 0.1rem;
+}
+
+.Eco-Resonancia-Seccion {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.Eco-Resonancia-Header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+}
+
+.Eco-Resonancia-Titulo {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold, #c9a24b);
+}
+
+.Eco-Resonancia-Porcentaje {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #3ecf8e;
+}
+
+.Eco-Barra-Pista {
+  width: 100%;
+  height: 7px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(62, 207, 142, 0.2);
+  overflow: hidden;
+}
+
+.Eco-Barra-Relleno {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #3ecf8e 0%, #c9a24b 100%);
+}
+
+.Eco-Barra-Hint {
+  font-size: 0.65rem;
+  color: var(--muted, #7fa39c);
+  text-align: center;
+}
+
+.Eco-Fichas-Lista {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  flex: 1;
+}
+
+.Eco-Ficha {
+  background: rgba(10, 31, 29, 0.5);
+  border: 1px solid rgba(62, 207, 142, 0.12);
+  border-radius: 10px;
+  padding: 0.6rem;
+}
+
+html:not(.theme-dark) .Eco-Ficha {
+  background: rgba(240, 237, 230, 0.7);
+  border: 1px solid rgba(61, 107, 86, 0.15);
+}
+
+.Eco-Ficha.Desbloqueada {
+  background: rgba(62, 207, 142, 0.08);
+  border-color: rgba(62, 207, 142, 0.35);
+}
+
+.Eco-Ficha__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.Eco-Ficha__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--gold, #c9a24b);
+}
+
+.Eco-Ficha__nivel-tag {
+  font-size: 0.6rem;
+  padding: 0.08rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--muted, #7fa39c);
+  font-weight: 600;
+}
+
+.Eco-Ficha.Desbloqueada .Eco-Ficha__nivel-tag {
+  background: rgba(62, 207, 142, 0.2);
+  color: #3ecf8e;
+}
+
+.Eco-Ficha__contenido {
+  font-size: 0.75rem;
+  color: var(--marble, #ede7da);
+  line-height: 1.35;
+}
+
+html:not(.theme-dark) .Eco-Ficha__contenido {
+  color: #2b3e39;
+}
+
+.Eco-Ficha__bloqueado {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted, #7fa39c);
+  font-size: 0.7rem;
+  font-style: italic;
+  user-select: none;
+}
+
+.Eco-Ficha__blur-text {
+  filter: blur(4px);
+  opacity: 0.4;
+  user-select: none;
+  background: rgba(62, 207, 142, 0.15);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.Eco-Tags-Lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.Eco-Tag-Item {
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 0.12rem 0.4rem;
+  border-radius: 9999px;
+  background: rgba(62, 207, 142, 0.15);
+  border: 1px solid rgba(62, 207, 142, 0.3);
+  color: #3ecf8e;
+}
+
+/* ==========================================================================
+   MODALES DEL SISTEMA ECO (AUTH, ONBOARDING, DOCUMENTO, REPORTES)
+   ========================================================================== */
+
+.Eco-Modal-Backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.Eco-Modal-Card {
+  max-width: 520px;
+  width: 100%;
+  background: #0f1719;
+  border: 1px solid rgba(201, 162, 75, 0.4);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  border-radius: 18px;
+  padding: 1.75rem;
+  text-align: center;
+  position: relative;
+}
+
+html:not(.theme-dark) .Eco-Modal-Card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+}
+
+.Eco-Modal-Card h3 {
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--marble, #ede7da);
+  margin: 0 0 0.5rem;
+}
+
+html:not(.theme-dark) .Eco-Modal-Card h3 {
+  color: #0f172a;
+}
+
+.Eco-Modal-Card p {
+  font-size: 0.8rem;
+  color: var(--muted, #7fa39c);
+  margin: 0 0 1.25rem;
+  line-height: 1.45;
+}
+
+/* Grid de Selección de Intereses (Mínimo 6) */
+.Eco-Intereses-Grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 0.25rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.Eco-Interes-Chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--marble, #ede7da);
+  cursor: pointer;
+}
+
+html:not(.theme-dark) .Eco-Interes-Chip {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.Eco-Interes-Chip.Seleccionado {
+  background: rgba(62, 207, 142, 0.2);
+  border-color: #3ecf8e;
+  color: #3ecf8e;
+  font-weight: 600;
+}
+
+/* Tour guiado steps */
+.Eco-Tour-Pasos {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.Eco-Tour-Dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.Eco-Tour-Dot.Activo {
+  background: #3ecf8e;
+  width: 20px;
+  border-radius: 9999px;
+}
+
+/* Subida de foto de documento de identidad */
+.Eco-Dropzone-Doc {
+  border: 2px dashed rgba(201, 162, 75, 0.4);
+  border-radius: 12px;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.Eco-Dropzone-Doc:hover {
+  border-color: #3ecf8e;
+}
+
+.Eco-Dropzone-Doc img {
+  max-height: 140px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+/* Modal de Reporte */
+.Eco-Reporte-Form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.Eco-Reporte-Form select,
+.Eco-Reporte-Form textarea {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  color: #f8fafc;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+html:not(.theme-dark) .Eco-Reporte-Form select,
+html:not(.theme-dark) .Eco-Reporte-Form textarea {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+/* Eco uses a restrained grayscale surface and deliberately avoids motion. */
+.Eco-Contenedor {
+  --eco-ink: #11181c;
+  --eco-slate: #1e293b;
+  --eco-marble: #f1f5f9;
+  background: var(--eco-ink) !important;
+  color: var(--eco-marble) !important;
+}
+
+.Eco-Contenedor > .Aura-Apolo-Cyan,
+.Eco-Contenedor > .Aura-Afrodita-Magenta,
+.Eco-Contenedor > .Red-Geometrica {
+  display: none;
+}
+
+.Eco-Header {
+  margin-top: 43px;
+  background: var(--eco-ink) !important;
+  border-color: #334155 !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.Eco-Header__title,
+.Eco-Barra-Relleno {
+  background: var(--eco-marble) !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: initial !important;
+  color: var(--eco-marble) !important;
+}
+
+.Eco-Banner-Verificacion {
+  position: absolute;
+  inset: 0 0 auto;
+  min-height: 43px;
+  box-sizing: border-box;
+  background: var(--eco-slate) !important;
+  border-color: #475569 !important;
+  color: var(--eco-marble) !important;
+}
+
+.Eco-Banner-Verificacion__timer,
+.Eco-Btn-VerificarAhora,
+.Eco-Btn-Primario {
+  background: var(--eco-marble) !important;
+  color: var(--eco-ink) !important;
+  border: 1px solid #cbd5e1;
+}
+
+.Eco-Btn-Primario {
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.Eco-Btn-Primario:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.Eco-Confirmacion-Formal {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  text-align: left;
+  color: #cbd5e1;
+  font-size: 0.72rem;
+}
+
+.Eco-Chat-Card--monocromo,
+.Eco-Panel-Chats,
+.Eco-Panel-Espejo {
+  background: var(--eco-ink) !important;
+  border-color: #334155 !important;
+  border-radius: 8px;
+}
+
+.Eco-Burbuja,
+.Eco-Chat__header,
+.Eco-Input-Area--estatico,
+.Eco-Mensaje-Acciones {
+  transition: none !important;
+  animation: none !important;
+}
+
+.Eco-Input-Area--estatico {
+  position: relative;
+  bottom: auto;
+  background: var(--eco-ink) !important;
+  border-color: #334155 !important;
+}
+
+.Eco-Mensaje-Fila:hover .Eco-Mensaje-Acciones {
+  display: flex;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .Eco-Contenedor *,
+  .Eco-Contenedor *::before,
+  .Eco-Contenedor *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   ECO / VISUAL REFINEMENT
+   ========================================================================== */
+
+.Eco-Contenedor {
+  --eco-bg: #0b1014;
+  --eco-panel: #11181e;
+  --eco-panel-raised: #17212a;
+  --eco-line: #27333d;
+  --eco-line-strong: #3a4a58;
+  --eco-text: #edf2f6;
+  --eco-muted: #8d9aa6;
+  --eco-soft: #c4ced6;
+  --eco-accent: #dbe4eb;
+  background: var(--eco-bg) !important;
+  color: var(--eco-text) !important;
+}
+
+.Eco-Contenedor::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
+}
+
+.Eco-Header {
+  height: 68px;
+  margin-top: 46px;
+  padding: 0 clamp(1rem, 3vw, 2.5rem);
+  background: rgba(11, 16, 20, 0.96) !important;
+  border-bottom: 1px solid var(--eco-line) !important;
+  position: relative;
+}
+
+.Eco-Header__inner {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.Eco-Header__brand {
+  gap: 0.8rem;
+}
+
+.Eco-Header__logo {
+  width: 34px;
+  height: 34px;
+  filter: grayscale(1) brightness(1.5);
+}
+
+.Eco-Header__title {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  background: none !important;
+  color: var(--eco-text) !important;
+  -webkit-text-fill-color: var(--eco-text) !important;
+}
+
+.Eco-Header__subtitle {
+  color: var(--eco-muted);
+  letter-spacing: 0.14em;
+}
+
+.Eco-Header__user-tag {
+  max-width: min(30vw, 260px);
+  padding: 0.45rem 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--eco-line) !important;
+  border-radius: 6px;
+  background: var(--eco-panel) !important;
+  color: var(--eco-soft) !important;
+}
+
+.Eco-Header__user-tag span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.Eco-Header__actions {
+  gap: 0.4rem;
+}
+
+.Eco-Btn-Icon,
+.Eco-Btn-Secundario {
+  border: 1px solid var(--eco-line) !important;
+  background: transparent !important;
+  color: var(--eco-soft) !important;
+}
+
+.Eco-Btn-Icon:hover,
+.Eco-Btn-Secundario:hover {
+  background: var(--eco-panel-raised) !important;
+  border-color: var(--eco-line-strong) !important;
+}
+
+.Eco-Banner-Verificacion {
+  min-height: 46px;
+  padding: 0.55rem clamp(1rem, 3vw, 2.5rem);
+  background: #151d24 !important;
+  border-bottom: 1px solid var(--eco-line) !important;
+  color: var(--eco-soft) !important;
+  font-size: 0.72rem;
+}
+
+.Eco-Banner-Verificacion__info {
+  min-width: 0;
+}
+
+.Eco-Banner-Verificacion__info span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.Eco-Banner-Verificacion__timer {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--eco-line-strong);
+  border-radius: 4px;
+  background: var(--eco-bg) !important;
+  color: var(--eco-text) !important;
+}
+
+.Eco-Btn-VerificarAhora {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--eco-line-strong) !important;
+  border-radius: 5px;
+  background: var(--eco-accent) !important;
+  color: var(--eco-bg) !important;
+}
+
+.Eco-Nav-Movil-Tabs {
+  padding: 0.45rem 1rem;
+  background: var(--eco-bg);
+  border-bottom: 1px solid var(--eco-line);
+}
+
+.Eco-Nav-Tab-Btn {
+  border-radius: 5px;
+  color: var(--eco-muted);
+}
+
+.Eco-Nav-Tab-Btn.Activo {
+  background: var(--eco-panel-raised);
+  color: var(--eco-text);
+}
+
+.Eco-Main-3Col {
+  width: min(1500px, 100%);
+  margin: 0 auto;
+  padding: 1rem clamp(0.75rem, 2vw, 2rem) 1.25rem;
+  grid-template-columns: 250px minmax(0, 1fr) 280px;
+  gap: 1rem;
+}
+
+.Eco-Panel-Chats,
+.Eco-Panel-Espejo {
+  background: var(--eco-panel) !important;
+  border: 1px solid var(--eco-line) !important;
+  border-radius: 8px;
+}
+
+.Eco-Chats__header {
+  min-height: 58px;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--eco-line);
+}
+
+.Eco-Chats__titulo {
+  color: var(--eco-text) !important;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+}
+
+.Eco-Btn-NuevoChat {
+  border: 1px solid var(--eco-line-strong);
+  border-radius: 5px;
+  background: var(--eco-panel-raised);
+  color: var(--eco-text);
+}
+
+.Eco-Chats__lista {
+  gap: 0.25rem;
+  padding: 0.5rem;
+}
+
+.Eco-Chats__item {
+  min-height: 66px;
+  padding: 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+}
+
+.Eco-Chats__item:hover,
+.Eco-Chats__item.Activo {
+  border-color: var(--eco-line-strong);
+  background: var(--eco-panel-raised);
+}
+
+.Eco-Chats__item-avatar {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--eco-line-strong);
+  border-radius: 6px;
+  background: var(--eco-bg);
+  filter: grayscale(1);
+}
+
+.Eco-Chats__item-alias,
+.Eco-Chats__item-ultimo-msg {
+  color: var(--eco-text) !important;
+}
+
+.Eco-Chats__item-ultimo-msg,
+.Eco-Chats__item-hora {
+  color: var(--eco-muted) !important;
+}
+
+.Eco-Chats__item-tag-res {
+  border: 1px solid var(--eco-line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--eco-soft);
+}
+
+.Eco-Chat-Card--monocromo {
+  border: 1px solid var(--eco-line) !important;
+  border-radius: 8px;
+  background: var(--eco-panel) !important;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+  min-height: 0;
+}
+
+.Eco-Panel-Chat {
+  min-height: 0;
+}
+
+.Eco-Chat-Card--monocromo .fluid-glass__content {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.Eco-Chat-Card--monocromo .fluid-glass__chromatic,
+.Eco-Chat-Card--monocromo .fluid-glass__specular,
+.Eco-Chat-Card--monocromo .fluid-glass__bevel {
+  display: none;
+}
+
+.Eco-Chat__header {
+  min-height: 70px;
+  padding: 0.8rem 1rem;
+  background: var(--eco-panel) !important;
+  border-bottom: 1px solid var(--eco-line) !important;
+}
+
+.Eco-Chat__header-avatar {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--eco-line-strong);
+  border-radius: 6px;
+  background: var(--eco-bg);
+  filter: grayscale(1);
+}
+
+.Eco-Chat__header-meta h4 {
+  color: var(--eco-text) !important;
+  font-size: 0.9rem;
+}
+
+.Eco-Chat__header-meta p {
+  color: var(--eco-muted);
+}
+
+.Eco-Mensajes-Scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  gap: 0.9rem;
+  background: #0e151a;
+}
+
+.Eco-Hito-Sistema {
+  max-width: 90%;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--eco-line);
+  border-radius: 5px;
+  background: var(--eco-panel);
+  color: var(--eco-muted);
+  text-align: center;
+}
+
+.Eco-Mensaje-Fila {
+  max-width: min(78%, 620px);
+  gap: 0.6rem;
+}
+
+.Eco-Mensaje-Avatar {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--eco-line-strong);
+  border-radius: 6px;
+  background: var(--eco-panel-raised);
+  color: var(--eco-soft);
+  filter: grayscale(1);
+}
+
+.Eco-Burbuja {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--eco-line) !important;
+  border-radius: 8px !important;
+  background: var(--eco-panel-raised) !important;
+  color: var(--eco-text) !important;
+  box-shadow: none;
+}
+
+.Eco-Mensaje-Fila--propia .Eco-Burbuja {
+  background: #dbe4eb !important;
+  border-color: #dbe4eb !important;
+  color: #11181c !important;
+}
+
+.Eco-Mensaje-Fila--ajena .Eco-Burbuja {
+  background: var(--eco-panel-raised) !important;
+  color: var(--eco-text) !important;
+}
+
+.Eco-Burbuja__meta {
+  color: var(--eco-muted);
+}
+
+.Eco-Mensaje-Fila--propia .Eco-Burbuja__meta {
+  color: #53616c;
+}
+
+.Eco-Mensaje-Acciones {
+  top: -2.1rem;
+  padding: 0.2rem;
+  border: 1px solid var(--eco-line-strong);
+  border-radius: 5px;
+  background: var(--eco-panel);
+}
+
+.Eco-Btn-Accion-Msg {
+  color: var(--eco-soft);
+}
+
+.Eco-Btn-Accion-Msg:hover {
+  background: var(--eco-panel-raised);
+  color: var(--eco-text);
+}
+
+.Eco-Input-Area--estatico {
+  padding: 0.85rem 1rem 1rem;
+  background: var(--eco-panel) !important;
+  border-top: 1px solid var(--eco-line) !important;
+}
+
+.Eco-Formulario {
+  gap: 0.55rem;
+}
+
+.Eco-Input-Text--mono {
+  min-height: 42px;
+  border: 1px solid var(--eco-line-strong);
+  border-radius: 6px;
+  background: var(--eco-bg) !important;
+  color: var(--eco-text) !important;
+}
+
+.Eco-Input-Text--mono:focus {
+  border-color: #93a4b2;
+  box-shadow: 0 0 0 2px rgba(147, 164, 178, 0.12);
+}
+
+.Eco-Btn-Adjunto {
+  color: var(--eco-muted);
+}
+
+.Eco-Btn-Adjunto:hover {
+  background: var(--eco-panel-raised);
+  color: var(--eco-text);
+}
+
+.Eco-Btn-Enviar--mono {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--eco-line-strong);
+  border-radius: 6px;
+  background: var(--eco-accent) !important;
+  color: var(--eco-bg) !important;
+}
+
+.Eco-Rompehielos-Contenedor {
+  flex: 0 0 auto;
+  max-height: 58px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  padding: 0.65rem 1rem;
+  border-top: 1px solid var(--eco-line);
+  background: var(--eco-panel);
+}
+
+.Eco-Rompehielos-Btn {
+  display: inline-flex;
+  border: 1px solid var(--eco-line);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--eco-muted);
+}
+
+.Eco-Rompehielos-Btn:hover {
+  border-color: var(--eco-line-strong);
+  background: var(--eco-panel-raised);
+  color: var(--eco-text);
+}
+
+.Eco-Panel-Espejo {
+  padding: 1rem;
+}
+
+.Eco-Panel-Espejo .Eco-Espejo__status,
+.Eco-Panel-Espejo .Eco-Resonancia-Porcentaje,
+.Eco-Panel-Espejo .Eco-Resonancia-Titulo {
+  color: var(--eco-soft) !important;
+}
+
+.Eco-Barra-Pista {
+  border: 1px solid var(--eco-line-strong);
+  background: var(--eco-bg);
+}
+
+.Eco-Barra-Relleno {
+  background: var(--eco-accent) !important;
+}
+
+.Eco-Ficha {
+  border: 1px solid var(--eco-line);
+  border-radius: 6px;
+  background: var(--eco-panel-raised);
+}
+
+.Eco-Ficha.Desbloqueada {
+  border-color: var(--eco-line-strong);
+  background: #1b2730;
+}
+
+.Eco-Ficha__label,
+.Eco-Espejo__alias {
+  color: var(--eco-text) !important;
+}
+
+.Eco-Ficha__nivel-tag,
+.Eco-Ficha__contenido,
+.Eco-Barra-Hint {
+  color: var(--eco-muted) !important;
+}
+
+.Eco-Toast-Error {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 120;
+  max-width: min(360px, calc(100vw - 2rem));
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #684d4d;
+  border-radius: 6px;
+  background: #24191b;
+  color: #f0d6d6;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+  .Eco-Main-3Col {
+    grid-template-columns: 230px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .Eco-Header {
+    height: 62px;
+    margin-top: 72px;
+    padding: 0 0.75rem;
+  }
+
+  .Eco-Banner-Verificacion {
+    align-items: flex-start;
+    min-height: 72px;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .Eco-Banner-Verificacion__info {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .Eco-Banner-Verificacion__info span {
+    white-space: normal;
+  }
+
+  .Eco-Header__user-tag {
+    max-width: 34vw;
+  }
+
+  .Eco-Header__subtitle,
+  .Eco-Header__user-tag .hidden {
+    display: none;
+  }
+
+  .Eco-Main-3Col {
+    padding: 0.65rem;
+  }
+
+  .Eco-Mensaje-Fila {
+    max-width: 90%;
+  }
+
+  .Eco-Mensaje-Acciones {
+    display: flex;
+    position: static;
+    order: 3;
+    margin-top: 0.25rem;
+    align-self: flex-end;
+  }
+}

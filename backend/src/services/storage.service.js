@@ -46,3 +46,13 @@ export async function storeImage(imageData, kind = 'post') {
   await fs.writeFile(path.join(dir, fileName), buffer, { flag: 'wx' })
   return `/uploads/${fileName}`
 }
+
+// Identity documents never use the public uploads directory or public Cloudinary URLs.
+export async function storePrivateImage(imageData, kind = 'private') {
+  const buffer = await normalizeImage(imageData)
+  const fileName = `${kind}-${crypto.randomUUID()}.webp`
+  const dir = path.join(process.cwd(), 'private-uploads')
+  await fs.mkdir(dir, { recursive: true })
+  await fs.writeFile(path.join(dir, fileName), buffer, { flag: 'wx', mode: 0o600 })
+  return `private://${fileName}`
+}

@@ -103,6 +103,10 @@ export function buildApp() {
 
   fastify.register(authRoutes, { prefix: '/api' })
   fastify.register(socialAuthRoutes, { prefix: '/api' })
+  fastify.register(async function (instance) {
+    const mod = await import('./routes/eco.routes.js')
+    await mod.ecoRoutes(instance)
+  }, { prefix: '/api' })
   // register posts route via dynamic import to ensure module loads correctly
   fastify.register(async function (instance) {
     const mod = await import('./routes/post.routes.js')
