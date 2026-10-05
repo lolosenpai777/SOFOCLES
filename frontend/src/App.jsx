@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom'
 import clienteAxios from './api/clienteAxios'
 import FeedScreen from './styles/FeedScreen.jsx'
 import AdminReports from './components/AdminReports.jsx'
@@ -8,36 +9,45 @@ import UsernameSetupModal from './components/UsernameSetupModal.jsx'
 import ProfilePage from './components/ProfilePage.jsx'
 import PostPage from './components/PostPage.jsx'
 import EcoPage from './components/EcoPage.jsx'
+import NotFoundPage from './components/NotFoundPage.jsx'
 import { formatDateWithRelative } from './utils/formatDate'
 import * as Dialog from '@radix-ui/react-dialog'
 
-function parseAdminRoute(pathname) {
-  if (pathname === '/admin/users' || pathname === '/admin/users/') {
-    return {
-      isMatch: true,
-      section: 'users',
-      caseId: null,
-    }
-  }
+// Reserved route segments that cannot be usernames
+const RESERVED_ROUTES = new Set([
+  'admin', 'login', 'registro', 'post', 'posts', 'buscar', 'tag',
+  'settings', 'oauth', 'health', 'api', 'perfil',
+  'restablecer-contrasena', 'verificar-correo',
+])
 
-  const match = pathname.match(/^\/admin\/reports(?:\/(\d+))?\/?$/)
-  if (!match) return null
-  return {
-    isMatch: true,
-    section: 'reports',
-    caseId: match[1] ? Number(match[1]) : null,
-  }
+/* ── Tiny route helper components ───────────────────────────────── */
+
+function LegacyProfileRedirect() {
+  const { username } = useParams()
+  return <Navigate to={`/${username}`} replace />
 }
 
-function parseProfileRoute(pathname) {
-  const match = pathname.match(/^\/perfil\/([^/]+)\/?$/)
-  return match ? decodeURIComponent(match[1]) : null
+function LegacyPostRedirect() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    clienteAxios.get(`/posts/${id}`)
+      .then(({ data }) => {
+        const authorUsername = data.post?.author?.username
+        if (authorUsername) {
+          navigate(`/${authorUsername}/post/${id}`, { replace: true })
+        } else {
+          navigate('/', { replace: true })
+        }
+      })
+      .catch(() => navigate('/', { replace: true }))
+  }, [id, navigate])
+
+  return <div className="ProfilePage"><div className="ProfilePage__state">Redirigiendo...</div></div>
 }
 
-function parsePostRoute(pathname) {
-  const match = pathname.match(/^\/post\/(\d+)\/?$/)
-  return match ? Number(match[1]) : null
-}
+/* ── Social auth buttons (unchanged) ────────────────────────────── */
 
 function SocialAuthButtons() {
   const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api'
@@ -69,7 +79,13 @@ function SocialAuthButtons() {
   )
 }
 
+/* ── Main App component ──────────────────────────────────────────── */
+
 function App() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const pathname = location.pathname
+
   const [modalActivo, setModalActivo] = useState(null)
 
   // Estados para Login
@@ -94,10 +110,8 @@ function App() {
   const [mostrarVerificacion, setMostrarVerificacion] = useState(false)
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(null)
   const [cargandoSesion, setCargandoSesion] = useState(true)
-  const [pathname, setPathname] = useState(window.location.pathname)
-  const [vistaInterna, setVistaInterna] = useState(null)
 
-  const query = new URLSearchParams(window.location.search)
+  const query = new URLSearchParams(location.search)
   const resetToken = query.get('token')
   const isReset = pathname.includes('restablecer-contrasena') && resetToken
   const isVerification = pathname.includes('verificar-correo') && resetToken
@@ -111,10 +125,10 @@ function App() {
   const [verificationNotice, setVerificationNotice] = useState('')
   const [verificandoCodigo, setVerificandoCodigo] = useState(false)
 
-  const adminRoute = parseAdminRoute(pathname)
-  const profileRoute = parseProfileRoute(pathname)
-  const postRoute = parsePostRoute(pathname)
-  const isEcoRoute = pathname === '/eco' || pathname.startsWith('/eco/')
+  // Wrapper for navigate to keep the same API as before
+  const navigateTo = useCallback((nextPath, options = {}) => {
+    navigate(nextPath || '/', { replace: options.replace })
+  }, [navigate])
 
   const handleSpotlightPointerMove = (event) => {
     const card = event.currentTarget
@@ -128,17 +142,6 @@ function App() {
       spotlightFrame.current = null
     })
   }
-
-  const navigateTo = useCallback((nextPath, options = {}) => {
-    const { replace = false } = options
-    const target = nextPath || '/'
-    if (replace) {
-      window.history.replaceState({}, '', target)
-    } else {
-      window.history.pushState({}, '', target)
-    }
-    setPathname(window.location.pathname)
-  }, [])
 
   useEffect(() => {
     const fields = [
@@ -217,15 +220,9 @@ function App() {
       .catch((err) => {
         console.error(err)
         setErrorMsg('No se pudo completar el inicio de sesión social. Inténtalo nuevamente.')
-        navigateTo('/login', { replace: true })
+        navigateTo('/', { replace: true })
       })
   }, [isOAuthCallback, navigateTo, oauthCode])
-
-  useEffect(() => {
-    const onPopState = () => setPathname(window.location.pathname)
-    window.addEventListener('popstate', onPopState)
-    return () => window.removeEventListener('popstate', onPopState)
-  }, [])
 
   useEffect(() => {
     const tokenGuardado = localStorage.getItem('sofocles_token')
@@ -250,10 +247,10 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!cargandoSesion && !usuarioAutenticado && adminRoute?.isMatch) {
-      navigateTo('/login', { replace: true })
+    if (!cargandoSesion && !usuarioAutenticado && pathname.startsWith('/admin')) {
+      navigateTo('/', { replace: true })
     }
-  }, [adminRoute, cargandoSesion, navigateTo, usuarioAutenticado])
+  }, [pathname, cargandoSesion, navigateTo, usuarioAutenticado])
 
   // Función de Login
   const login = async (e) => {
@@ -327,6 +324,7 @@ function App() {
   const cerrarSesion = () => {
     localStorage.removeItem('sofocles_token')
     setUsuarioAutenticado(null)
+    navigateTo('/', { replace: true })
   }
 
   const solicitarRecuperacion = async () => {
@@ -390,6 +388,13 @@ function App() {
     setUsuarioAutenticado((current) => ({ ...current, ...updatedUser, needsUsernameSetup: false }))
   }
 
+  const handleFollow = async (userId) => {
+    const { data } = await clienteAxios.post(`/users/${userId}/follow`)
+    return Boolean(data.siguiendo ?? data.following)
+  }
+
+  /* ── Loading state ─────────────────────────────────────────────── */
+
   if (cargandoSesion) {
     return (
       <div className="Olimpo-Contenedor min-h-screen flex items-center justify-center">
@@ -400,176 +405,75 @@ function App() {
     )
   }
 
-  if (isOAuthCallback) {
-    return (
-      <div className="Olimpo-Contenedor">
-        <div className="Auth-Scene">
-          <div className="Auth-Panel">
-            <p className="Auth-Panel__meta">Completando inicio de sesión...</p>
-          </div>
+  /* ── Route elements (closures over App state) ──────────────────── */
+
+  const oauthCallbackElement = (
+    <div className="Olimpo-Contenedor">
+      <div className="Auth-Scene">
+        <div className="Auth-Panel">
+          <p className="Auth-Panel__meta">Completando inicio de sesión...</p>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
 
-  if (vistaInterna?.type === 'profile') {
-    return (
-      <ProfilePage
-        username={vistaInterna.username}
-        currentUser={usuarioAutenticado}
-        onBack={() => setVistaInterna(null)}
-        following={usuarioAutenticado?.following || []}
-        onFollow={usuarioAutenticado ? async (userId) => {
-          const { data } = await clienteAxios.post(`/users/${userId}/follow`)
-          return Boolean(data.siguiendo ?? data.following)
-        } : undefined}
-        onOpenPost={(postId) => setVistaInterna({ type: 'post', postId })}
-      />
-    )
-  }
-
-  if (vistaInterna?.type === 'post') {
-    return (
-      <PostPage
-        postId={vistaInterna.postId}
-        currentUser={usuarioAutenticado}
-        onBack={() => setVistaInterna(null)}
-        onOpenProfile={(profile) => setVistaInterna({ type: 'profile', username: profile.username })}
-      />
-    )
-  }
-
-  if (vistaInterna?.type === 'eco' || isEcoRoute) {
-    return (
-      <EcoPage
-        currentUser={usuarioAutenticado}
-        onBackToFeed={() => {
-          if (vistaInterna?.type === 'eco') {
-            setVistaInterna(null)
-          } else {
-            navigateTo('/')
-          }
-        }}
-      />
-    )
-  }
-
-  if (profileRoute) {
-    return (
-      <ProfilePage
-        username={profileRoute}
-        currentUser={usuarioAutenticado}
-        onBack={() => navigateTo('/')}
-        following={usuarioAutenticado?.following || []}
-        onFollow={usuarioAutenticado ? async (userId) => {
-          const { data } = await clienteAxios.post(`/users/${userId}/follow`)
-          return Boolean(data.siguiendo ?? data.following)
-        } : undefined}
-        onOpenPost={(postId) => setVistaInterna({ type: 'post', postId })}
-      />
-    )
-  }
-
-  if (postRoute) {
-    return (
-      <PostPage
-        postId={postRoute}
-        currentUser={usuarioAutenticado}
-        onBack={() => navigateTo('/')}
-        onOpenProfile={(profile) => navigateTo(`/perfil/${encodeURIComponent(profile.username)}`)}
-      />
-    )
-  }
-
-  if (usuarioAutenticado) {
-    if (usuarioAutenticado.needsUsernameSetup) {
-      return <UsernameSetupModal user={usuarioAutenticado} onCompleted={completarUsernameSetup} />
-    }
-
-    if (adminRoute?.isMatch) {
-      return (
-        <AdminRoute
-          user={usuarioAutenticado}
-          onRedirectToLogin={() => navigateTo('/login', { replace: true })}
-          onBackToFeed={() => navigateTo('/')}
-        >
-          {adminRoute.section === 'reports' ? (
-            <AdminReports
-              currentUser={usuarioAutenticado}
-              initialCaseId={adminRoute.caseId}
-              onBack={() => navigateTo('/')}
-              onCaseChange={(caseId) => navigateTo(`/admin/reports/${caseId}`)}
-              onOpenUsersModeration={() => navigateTo('/admin/users')}
+  const resetPasswordElement = isReset ? (
+    <div className="Olimpo-Contenedor">
+      <div className="Auth-Scene">
+        <form className="Auth-Panel" onSubmit={restablecerContrasena}>
+          <div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}>
+            <img src="/logosofo.png" alt="Sófocles" />
+          </div>
+          <h1 className="sr-only">Nueva contraseña</h1>
+          <div className="Form-Grupo">
+            <label>Nueva contraseña</label>
+            <input
+              className="Input-Olimpo"
+              type="password"
+              minLength="8"
+              required
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Mínimo 8 caracteres"
             />
-          ) : (
-            <AdminUsersModeration
-              onBack={() => navigateTo('/')}
-              onOpenReports={() => navigateTo('/admin/reports')}
-            />
-          )}
-        </AdminRoute>
-      )
-    }
+          </div>
+          <button className="Btn-Primario" type="submit">
+            Actualizar contraseña
+          </button>
+          {authNotice && <p className="Auth-Panel__meta">{authNotice}</p>}
+        </form>
+      </div>
+    </div>
+  ) : <Navigate to="/" replace />
 
-    return (
+  const verifyEmailElement = isVerification ? (
+    <div className="Olimpo-Contenedor">
+      <div className="Auth-Scene">
+        <div className="Auth-Panel">
+          <div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}>
+            <img src="/logosofo.png" alt="Sófocles" />
+          </div>
+          <h1 className="sr-only">Verificación</h1>
+          <p className="Auth-Panel__meta">{authNotice || 'Verificando correo…'}</p>
+        </div>
+      </div>
+    </div>
+  ) : <Navigate to="/" replace />
+
+  const feedElement = usuarioAutenticado ? (
+    usuarioAutenticado.needsUsernameSetup ? (
+      <UsernameSetupModal user={usuarioAutenticado} onCompleted={completarUsernameSetup} />
+    ) : (
       <FeedScreen
         usuarioAutenticado={usuarioAutenticado}
         cerrarSesion={cerrarSesion}
         onOpenAdminReports={() => navigateTo('/admin/reports')}
-        onOpenProfile={(profile) => setVistaInterna({ type: 'profile', username: profile.username })}
-        onOpenPost={(postId) => setVistaInterna({ type: 'post', postId })}
+        onOpenProfile={(profile) => navigateTo(`/${profile.username}`)}
+        onOpenPost={(postId, authorUsername) => navigateTo(`/${authorUsername}/post/${postId}`)}
       />
     )
-  }
-
-  if (isReset) {
-    return (
-      <div className="Olimpo-Contenedor">
-        <div className="Auth-Scene">
-          <form className="Auth-Panel" onSubmit={restablecerContrasena}>
-            <div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}>
-              <img src="/logosofo.png" alt="Sófocles" />
-            </div>
-            <h1 className="sr-only">Nueva contraseña</h1>
-            <div className="Form-Grupo">
-              <label>Nueva contraseña</label>
-              <input
-                className="Input-Olimpo"
-                type="password"
-                minLength="8"
-                required
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Mínimo 8 caracteres"
-              />
-            </div>
-            <button className="Btn-Primario" type="submit">
-              Actualizar contraseña
-            </button>
-            {authNotice && <p className="Auth-Panel__meta">{authNotice}</p>}
-          </form>
-        </div>
-      </div>
-    )
-  }
-
-  if (isVerification) {
-    return (
-      <div className="Olimpo-Contenedor">
-        <div className="Auth-Scene">
-          <div className="Auth-Panel">
-            <div className="Logo-Stage__mark mx-auto" style={{ maxWidth: '13rem' }}>
-              <img src="/logosofo.png" alt="Sófocles" />
-            </div>
-            <h1 className="sr-only">Verificación</h1>
-            <p className="Auth-Panel__meta">{authNotice || 'Verificando correo…'}</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
+  ) : (
+    /* ── Landing page (unauthenticated) ──────────────────────────── */
     <div className="Olimpo-Contenedor">
       <div className="Aura-Apolo-Cyan" />
       <div className="Aura-Afrodita-Magenta" />
@@ -605,32 +509,24 @@ function App() {
             </div>
 
             <div className="Auth-Panel__actions Auth-Panel__actions--hero Home-Actions">
-              {usuarioAutenticado ? (
-                <button className="Btn-Primario" onClick={cerrarSesion}>
-                  Cerrar sesión
-                </button>
-              ) : (
-                <>
-                  <button
-                    className="Btn-Secundario"
-                    onClick={() => {
-                      setErrorMsg('')
-                      setModalActivo('login')
-                    }}
-                  >
-                    Iniciar sesión
-                  </button>
-                  <button
-                    className="Btn-Primario"
-                    onClick={() => {
-                      setErrorMsg('')
-                      setModalActivo('registro')
-                    }}
-                  >
-                    Registrar
-                  </button>
-                </>
-              )}
+              <button
+                className="Btn-Secundario"
+                onClick={() => {
+                  setErrorMsg('')
+                  setModalActivo('login')
+                }}
+              >
+                Iniciar sesión
+              </button>
+              <button
+                className="Btn-Primario"
+                onClick={() => {
+                  setErrorMsg('')
+                  setModalActivo('registro')
+                }}
+              >
+                Registrar
+              </button>
             </div>
 
             {errorMsg && <p className="Auth-Panel__meta text-red-600">{errorMsg}</p>}
@@ -671,6 +567,86 @@ function App() {
           </aside>
         </section>
       </main>
+    </div>
+  )
+
+  const adminReportsElement = usuarioAutenticado ? (
+    <AdminRoute
+      user={usuarioAutenticado}
+      onRedirectToLogin={() => navigateTo('/', { replace: true })}
+      onBackToFeed={() => navigateTo('/')}
+    >
+      <AdminReportsWrapper
+        currentUser={usuarioAutenticado}
+        navigateTo={navigateTo}
+      />
+    </AdminRoute>
+  ) : <Navigate to="/" replace />
+
+  const adminUsersElement = usuarioAutenticado ? (
+    <AdminRoute
+      user={usuarioAutenticado}
+      onRedirectToLogin={() => navigateTo('/', { replace: true })}
+      onBackToFeed={() => navigateTo('/')}
+    >
+      <AdminUsersModeration
+        onBack={() => navigateTo('/')}
+        onOpenReports={() => navigateTo('/admin/reports')}
+      />
+    </AdminRoute>
+  ) : <Navigate to="/" replace />
+
+  const profileElement = usuarioAutenticado ? (
+    <ProfilePage
+      currentUser={usuarioAutenticado}
+      onFollow={handleFollow}
+      following={usuarioAutenticado?.following || []}
+    />
+  ) : <Navigate to="/" replace />
+
+  const postElement = usuarioAutenticado ? (
+    <PostPage currentUser={usuarioAutenticado} />
+  ) : <Navigate to="/" replace />
+
+  /* ── Render ────────────────────────────────────────────────────── */
+
+  return (
+    <>
+      <Routes>
+        {/* Public utility routes */}
+        <Route path="/oauth/callback" element={oauthCallbackElement} />
+        <Route path="/restablecer-contrasena" element={resetPasswordElement} />
+        <Route path="/verificar-correo" element={verifyEmailElement} />
+
+        {/* Admin routes (protected) */}
+        <Route path="/admin/reports/:caseId" element={adminReportsElement} />
+        <Route path="/admin/reports" element={adminReportsElement} />
+        <Route path="/admin/users" element={adminUsersElement} />
+
+        <Route
+          path="/eco"
+          element={
+            <EcoPage
+              currentUser={usuarioAutenticado}
+              onBackToFeed={() => navigateTo('/')}
+            />
+          }
+        />
+
+        {/* Legacy redirects */}
+        <Route path="/perfil/:username" element={<LegacyProfileRedirect />} />
+        <Route path="/post/:id" element={<LegacyPostRedirect />} />
+
+        {/* Main content routes */}
+        <Route path="/:username/post/:postId" element={postElement} />
+        <Route path="/:username" element={profileElement} />
+        <Route path="/" element={feedElement} />
+
+        {/* 404 */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+
+      {/* ── Modals (always rendered, controlled by state) ──────────── */}
 
       {/* MODAL DE LOGIN */}
       <Dialog.Root open={modalActivo === 'login'} onOpenChange={(open) => !open && setModalActivo(null)}>
@@ -976,7 +952,22 @@ function App() {
           </div>
         </div>
       )}
-    </div>
+    </>
+  )
+}
+
+/* ── AdminReports wrapper (needs useParams for caseId) ───────────── */
+
+function AdminReportsWrapper({ currentUser, navigateTo }) {
+  const { caseId } = useParams()
+  return (
+    <AdminReports
+      currentUser={currentUser}
+      initialCaseId={caseId ? Number(caseId) : null}
+      onBack={() => navigateTo('/')}
+      onCaseChange={(id) => navigateTo(`/admin/reports/${id}`)}
+      onOpenUsersModeration={() => navigateTo('/admin/users')}
+    />
   )
 }
 

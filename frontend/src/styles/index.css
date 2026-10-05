@@ -2183,3 +2183,8 @@ select {
 .Olimpo-Contenedor .Aura-Afrodita-Magenta {
   display: none !important;
 }
+/* Badges de identidad: verificaciÃ³n y staff */
+.UserBadges { display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; margin-left: 4px; }
+.UserBadge { display: inline-flex; align-items: center; justify-content: center; width: 1.05em; height: 1.05em; border-radius: 50%; font: 700 .72em/1 Arial, sans-serif; }
+.UserBadge--verified { color: #fff; background: #3b82f6; }
+.UserBadge--staff { color: #0a1f1a; background: var(--gold, #c9a24b); }

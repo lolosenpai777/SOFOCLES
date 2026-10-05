@@ -6,6 +6,10 @@ import {
   getPostsFollowing,
   togglePostLike,
   updatePostByAuthor,
+  togglePinnedPost,
+  togglePostSave,
+  getSavedPosts,
+  createQuotePost,
 } from '../services/post.service.js'
 import { prisma } from '../config/prisma.js'
 import { storeImage } from '../services/storage.service.js'
@@ -17,18 +21,23 @@ export async function createPostHandler(request, reply) {
     let title = undefined
     let content = undefined
     let imageUrl = undefined
+    const body = request.body || {}
+    const imageUrls = []
 
     const isMultipart = String(request.headers['content-type'] || '').includes('multipart/form-data')
 
     if (isMultipart && request.isMultipart) {
       // multipart is not used in this environment; fall back to JSON handling below
     } else {
-      const body = request.body || {}
       title = body.title
       content = body.content
       imageUrl = body.imageUrl
 
       if (!imageUrl && body.imageData) imageUrl = await storeImage(body.imageData, 'post')
+      if (Array.isArray(body.imageDatas)) {
+        for (const imageData of body.imageDatas.slice(0, 8)) imageUrls.push(await storeImage(imageData, 'post'))
+        if (!imageUrl) imageUrl = imageUrls[0]
+      }
     }
     const authorId = request.userId
 
@@ -54,7 +63,7 @@ export async function createPostHandler(request, reply) {
       }
     }
 
-    const post = await createPost({ title, content, imageUrl, authorId })
+    const post = await createPost({ title, content, imageUrl, imageUrls, authorId, visibility: body.visibility || 'PUBLIC', hashtags: body.hashtags || [] })
 
     return reply.code(201).send({ mensaje: 'Post creado', post })
   } catch (error) {
@@ -84,11 +93,13 @@ export async function listPostsHandler(request, reply) {
         return reply.code(401).send({ error: 'No autenticado' })
       }
 
-      const result = await getPostsFollowing(Number(userId), request.query)
+      const result = await getPostsFollowing(Number(userId), request.query, Number(userId))
       return reply.send({ posts: result.items, nextCursor: result.nextCursor })
     }
 
-    const result = await getPosts(request.query)
+    let viewerId
+    try { await request.jwtVerify(); viewerId = Number(request.userId ?? request.user?.sub) } catch {}
+    const result = await getPosts(request.query, viewerId)
     return reply.send({ posts: result.items, nextCursor: result.nextCursor })
   } catch (error) {
     request.log.error(error)
@@ -101,7 +112,9 @@ export async function listPostsHandler(request, reply) {
 export async function getPostHandler(request, reply) {
   try {
     const postId = Number(request.params?.id)
-    const post = await getPostById(postId)
+    let viewerId
+    try { await request.jwtVerify(); viewerId = Number(request.userId ?? request.user?.sub) } catch {}
+    const post = await getPostById(postId, viewerId)
 
     if (!post) {
       return reply.code(404).send({ error: 'Post no encontrado' })
@@ -135,6 +148,8 @@ export async function updatePostHandler(request, reply) {
       title: body.title,
       content: body.content,
       imageUrl: body.removeImage ? '' : imageUrl,
+      visibility: body.visibility,
+      hashtags: body.hashtags,
     }
 
     const cleanedPayload = Object.fromEntries(
@@ -209,5 +224,37 @@ export async function likePostHandler(request, reply) {
     const statusCode = error.statusCode ?? 500
     const message = statusCode >= 500 ? 'Error al dar like al post' : error.message || 'Solicitud invalida'
     return reply.code(statusCode).send({ error: message })
+  }
+}
+
+export async function togglePinnedPostHandler(request, reply) {
+  try {
+    const post = await togglePinnedPost(Number(request.params?.id), Number(request.user?.id ?? request.userId))
+    return reply.send({ pinned: Boolean(post.pinnedAt), pinnedAt: post.pinnedAt })
+  } catch (error) {
+    return reply.code(error.statusCode ?? 500).send({ error: error.message || 'No se pudo fijar el post' })
+  }
+}
+
+export async function togglePostSaveHandler(request, reply) {
+  try {
+    const result = await togglePostSave(Number(request.params?.id), Number(request.user?.id ?? request.userId))
+    return reply.send(result)
+  } catch (error) {
+    return reply.code(error.statusCode ?? 500).send({ error: error.message || 'No se pudo guardar el post' })
+  }
+}
+
+export async function savedPostsHandler(request, reply) {
+  const result = await getSavedPosts(Number(request.user?.id ?? request.userId), request.query)
+  return reply.send({ posts: result.items, nextCursor: result.nextCursor })
+}
+
+export async function quotePostHandler(request, reply) {
+  try {
+    const post = await createQuotePost({ postId: Number(request.params?.id), title: request.body?.title ? String(request.body.title).trim() : null, content: String(request.body?.content || '').trim(), authorId: Number(request.user?.id ?? request.userId) })
+    return reply.code(201).send({ post })
+  } catch (error) {
+    return reply.code(error.statusCode ?? 500).send({ error: error.message || 'No se pudo citar el post' })
   }
 }

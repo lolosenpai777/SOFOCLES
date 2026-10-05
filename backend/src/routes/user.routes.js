@@ -1,8 +1,9 @@
-import { getUsersHandler, followUserHandler, getProfileHandler, updateProfileHandler, updateUsernameHandler } from '../controllers/user.controller.js'
+import { getUsersHandler, followUserHandler, getProfileHandler, updateProfileHandler, updateUsernameHandler, updateUserBadgesHandler } from '../controllers/user.controller.js'
 import { requireAuth } from '../middlewares/auth.middleware.js'
+import { requireAdmin } from '../middlewares/admin.middleware.js'
 import { validateBody, validateParams } from '../middlewares/validate-schema.middleware.js'
 import { deletePostParamsSchema } from '../schemas/post.schema.js'
-import { updateUsernameSchema } from '../schemas/user.schema.js'
+import { updateUsernameSchema, updateUserBadgesSchema } from '../schemas/user.schema.js'
 
 export async function userRoutes(fastify) {
   fastify.get('/users', getUsersHandler)
@@ -53,4 +54,6 @@ export async function userRoutes(fastify) {
     },
     updateProfileHandler,
   )
+
+  fastify.patch('/admin/users/:id/badges', { preHandler: [requireAuth, requireAdmin], preValidation: [validateParams(deletePostParamsSchema), validateBody(updateUserBadgesSchema)] }, updateUserBadgesHandler)
 }

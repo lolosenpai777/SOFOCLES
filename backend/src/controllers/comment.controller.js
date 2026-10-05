@@ -4,7 +4,7 @@ import { ensureNotRestricted } from '../services/suspension.service.js'
 
 export async function listCommentsHandler(request) {
   const take = Math.min(Math.max(Number(request.query?.limit) || 20, 1), 50)
-  const rows = await prisma.comment.findMany({ where: { postId: Number(request.params.id) }, take: take + 1, ...(request.query?.cursor ? { cursor: { id: Number(request.query.cursor) }, skip: 1 } : {}), orderBy: { id: 'desc' }, include: { author: { select: { id: true, username: true, avatarUrl: true } } } })
+  const rows = await prisma.comment.findMany({ where: { postId: Number(request.params.id) }, take: take + 1, ...(request.query?.cursor ? { cursor: { id: Number(request.query.cursor) }, skip: 1 } : {}), orderBy: { id: 'desc' }, include: { author: { select: { id: true, username: true, avatarUrl: true, isVerified: true, role: true, moderationRole: true } } } })
   const hasMore = rows.length > take
   const comments = hasMore ? rows.slice(0, take) : rows
   return { comments, nextCursor: hasMore ? comments.at(-1).id : null }
@@ -13,7 +13,7 @@ export async function listCommentsHandler(request) {
 export async function createCommentHandler(request, reply) {
   try {
     const { id: postId } = request.params
-    const { text, gifUrl } = request.body
+    const { text, gifUrl, parentCommentId } = request.body
     const userId = request.userId
 
     if (!userId) {
@@ -35,6 +35,11 @@ export async function createCommentHandler(request, reply) {
       return reply.code(404).send({ error: 'Post no encontrado' })
     }
 
+    if (parentCommentId) {
+      const parent = await prisma.comment.findFirst({ where: { id: Number(parentCommentId), postId: Number(postId), parentId: null } })
+      if (!parent) return reply.code(400).send({ error: 'La respuesta debe apuntar a un comentario principal de este post' })
+    }
+
     // Create comment
     const comment = await prisma.comment.create({
       data: {
@@ -42,6 +47,7 @@ export async function createCommentHandler(request, reply) {
         gifUrl: gifUrl || null,
         authorId: userId,
         postId: parseInt(postId),
+        parentId: parentCommentId ? Number(parentCommentId) : null,
       },
       include: {
         author: {

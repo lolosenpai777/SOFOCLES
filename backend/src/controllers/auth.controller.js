@@ -8,6 +8,7 @@ export function signAuthToken(reply, user) {
     role: user.role,
     moderationRole: user.moderationRole,
     emailVerified: Boolean(user.emailVerified),
+    isVerified: Boolean(user.isVerified),
     needsUsernameSetup: Boolean(user.needsUsernameSetup),
   })
 }

@@ -3,6 +3,10 @@ import {
   deletePostHandler,
   getPostHandler,
   likePostHandler,
+  togglePinnedPostHandler,
+  togglePostSaveHandler,
+  savedPostsHandler,
+  quotePostHandler,
   listPostsHandler,
   updatePostHandler,
 } from '../controllers/post.controller.js'
@@ -32,6 +36,8 @@ export async function postRoutes(fastify) {
   )
 
   fastify.get('/posts', listPostsHandler)
+
+  fastify.get('/posts/saved', { preHandler: [requireAuth] }, savedPostsHandler)
 
   fastify.get(
     '/posts/:id',
@@ -97,4 +103,18 @@ export async function postRoutes(fastify) {
     },
     likePostHandler,
   )
+
+  fastify.post(
+    '/posts/:id/pin',
+    { preHandler: [requireAuth], preValidation: validateParams(deletePostParamsSchema) },
+    togglePinnedPostHandler,
+  )
+
+  fastify.post(
+    '/posts/:id/save',
+    { preHandler: [requireAuth], preValidation: validateParams(deletePostParamsSchema) },
+    togglePostSaveHandler,
+  )
+
+  fastify.post('/posts/:id/quote', { preHandler: [requireAuth], preValidation: validateParams(deletePostParamsSchema) }, quotePostHandler)
 }

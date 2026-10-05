@@ -241,6 +241,26 @@
   font-weight: 700;
 }
 
+.ProfilePage__stats--interactive {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  flex-wrap: wrap;
+}
+.ProfilePage__stats--interactive button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--profile-accent, var(--gold));
+  cursor: pointer;
+  font: inherit;
+}
+.ProfilePage__stats--interactive button:hover,
+.ProfilePage__stats--interactive button:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ==========================================================================
    3. PESTAÑAS (POSTS / MULTIMEDIA)
    ========================================================================== */
@@ -381,6 +401,13 @@
   font-style: italic;
   align-self: flex-end;
 }
+.ProfilePage__post-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
 
 /* Estado de Carga / Vacío */
 .ProfilePage__state,
@@ -425,4 +452,133 @@
   background: transparent !important;
   position: relative;
   z-index: 1;
+}
+
+.ProfilePage__editor {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid rgba(201, 162, 75, .24);
+  border-radius: 18px;
+  background: rgba(15, 46, 43, .72);
+}
+.ProfilePage__field-label {
+  color: var(--gold);
+  font: 600 11px/1.2 var(--font-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.ProfilePage__editor textarea,
+.ProfilePage__editor input[type="file"] {
+  width: 100%;
+  color: var(--marble);
+  font-family: var(--font-body);
+}
+.ProfilePage__editor textarea {
+  min-height: 96px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid rgba(240, 234, 214, .16);
+  border-radius: 12px;
+  background: #12241f;
+}
+.ProfilePage__editor input[type="file"] {
+  padding: 10px;
+  border: 1px dashed rgba(201, 162, 75, .35);
+  border-radius: 12px;
+  background: rgba(10, 31, 29, .7);
+}
+.ProfilePage__counter {
+  margin: -4px 0 4px;
+  color: var(--muted);
+  font: 500 11px/1 var(--font-mono);
+  text-align: right;
+}
+.ProfilePage__image-preview {
+  width: 100%;
+  object-fit: cover;
+  border: 1px solid rgba(201, 162, 75, .3);
+  border-radius: 12px;
+  background: #0A1F1D;
+}
+.ProfilePage__image-preview--avatar {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+}
+.ProfilePage__image-preview--banner {
+  aspect-ratio: 16 / 5;
+}
+.ProfilePage__bio a,
+.ProfilePage__social-links a {
+  color: var(--profile-accent, var(--jade));
+  text-decoration: none;
+}
+.ProfilePage__bio a:hover,
+.ProfilePage__social-links a:hover { text-decoration: underline; }
+.ProfilePage__joined {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font: 400 12px/1.4 var(--font-body);
+}
+.ProfilePage__social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+  font: 600 12px/1 var(--font-body);
+}
+.ProfilePage__field-error { margin: -8px 0 4px; color: #e05a5a; font-size: .82rem; }
+.ProfilePage__accent-picker { display: flex; gap: 10px; align-items: center; }
+.ProfilePage__accent-picker button {
+  width: 26px;
+  height: 26px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(240, 234, 214, .3);
+}
+.ProfilePage__accent-picker button.is-selected {
+  border-color: var(--marble);
+  box-shadow: 0 0 0 2px var(--profile-accent, var(--jade));
+}
+.ProfilePage__foreign-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.ProfilePage__notice { color: var(--jade); font-size: 12px; }
+.ProfilePage__pinned-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 5px 8px;
+  border: 1px solid rgba(201, 162, 75, .28);
+  border-radius: 999px;
+  color: var(--gold);
+  font: 600 10px/1 var(--font-mono);
+  text-transform: uppercase;
+}
+.ProfilePage__pin-button {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  color: var(--profile-accent, var(--jade));
+  cursor: pointer;
+  font: 600 11px/1 var(--font-body);
+}
+.ProfilePage__connections-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(10, 31, 29, .72); backdrop-filter: blur(8px); }
+.ProfilePage__connections { width: min(420px, 100%); max-height: 70vh; overflow: auto; padding: 18px; border: 1px solid rgba(201, 162, 75, .25); border-radius: 18px; background: #12241f; color: var(--marble); }
+.ProfilePage__connections-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.ProfilePage__connections-head h2 { margin: 0; font-family: var(--font-display); }
+.ProfilePage__connections-head button { border: 0; background: transparent; color: var(--gold); cursor: pointer; }
+.ProfilePage__connection { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px; border: 0; border-radius: 10px; background: transparent; color: var(--marble); cursor: pointer; text-align: left; }
+.ProfilePage__connection:hover { background: rgba(62, 207, 142, .12); }
+.ProfilePage__avatar { --avatar-accent: var(--profile-accent, var(--gold)); }
+.ProfilePage__avatar > div { border-color: var(--avatar-accent) !important; }
+html:not(.theme-dark) .ProfilePage__editor {
+  background: rgba(255, 255, 255, .9);
+  border-color: rgba(201, 162, 75, .35);
+}
+html:not(.theme-dark) .ProfilePage__editor textarea,
+html:not(.theme-dark) .ProfilePage__editor input[type="file"] {
+  color: #24352F;
+  background: #fff;
+  border-color: rgba(36, 53, 47, .2);
 }

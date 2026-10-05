@@ -17,6 +17,7 @@ export const createCommentSchema = z.object({
     .max(1000, 'La URL es demasiado larga')
     .optional()
     .nullable(),
+  parentCommentId: z.coerce.number().int().positive().optional().nullable(),
 }).refine(
   (data) => data.text?.trim() || data.gifUrl,
   {
