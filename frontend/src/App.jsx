@@ -480,91 +480,63 @@ function App() {
       <div className="Red-Geometrica" />
 
       <main className="Auth-Scene">
-        <section className="Home-Layout">
-          <div className="Home-Panel Home-Panel--copy" onPointerMove={handleSpotlightPointerMove}>
-            <span className="Home-Kicker">Una plaza para tus ideas</span>
-            <div className="Logo-Stage Home-Branding">
-              <div className="Logo-Stage__mark Home-Branding__mark">
-                <img src="/logosofo.png" alt="Sófocles" />
-              </div>
-              <p className="Home-Headline">Donde tus ideas encuentran plaza.</p>
-              <p className="Home-Subcopy">
-                Publica, conversa y descubre las voces que hacen crecer la conversación.
+        <section className="Landing-Shell">
+          <header className="Landing-Nav" aria-label="Navegación de Sófocles">
+            <div className="Landing-Nav__brand"><span className="Landing-Nav__dot" /> SÓFOCLES</div>
+            <nav className="Landing-Nav__links" aria-label="Secciones">
+              <a href="#manifiesto">Manifiesto</a>
+              <a href="#rituales">Rituales</a>
+            </nav>
+            <button className="Landing-Nav__login" onClick={() => { setErrorMsg(''); setModalActivo('login') }}>
+              Ya soy parte <span aria-hidden="true">↗</span>
+            </button>
+          </header>
+
+          <div className="Landing-Hero" id="manifiesto">
+            <div className="Landing-Hero__copy">
+              <div className="Landing-Stamp">Un ágora para la mente curiosa <span>✦</span></div>
+              <h1 className="Landing-Hero__title">
+                Piensa <em>en voz alta.</em>
+                <span>Encuentra tu gente.</span>
+              </h1>
+              <p className="Landing-Hero__lead">
+                Sófocles es el lugar donde las ideas se cruzan, las preguntas encuentran eco y las conversaciones dejan algo nuevo.
               </p>
+              <div className="Landing-Hero__actions">
+                <button className="Landing-CTA" onClick={() => { setErrorMsg(''); setModalActivo('registro') }}>
+                  <span>Entrar al ágora</span><b aria-hidden="true">↗</b>
+                </button>
+                <span className="Landing-Hero__hint">Gratis para empezar<br /><small>sin ruido, sin prisa</small></span>
+              </div>
+              {errorMsg && <p className="Auth-Panel__meta text-red-600">{errorMsg}</p>}
             </div>
 
-            <div className="Home-Metrics">
-              <article className="Home-MetricCard">
-                <strong>Publica</strong>
-                <span>Deja una idea en el ágora</span>
-              </article>
-              <article className="Home-MetricCard">
-                <strong>Conversa</strong>
-                <span>Encuentra tu tribu</span>
-              </article>
-              <article className="Home-MetricCard">
-                <strong>Descubre</strong>
-                <span>Sigue las voces que importan</span>
-              </article>
+            <div className="Landing-Art" onPointerMove={handleSpotlightPointerMove} aria-label="Composición visual de Sófocles">
+              <div className="Landing-Art__grain" />
+              <div className="Landing-Art__halo" />
+              <div className="Landing-Art__orbit Landing-Art__orbit--one" />
+              <div className="Landing-Art__orbit Landing-Art__orbit--two" />
+              <div className="Landing-Art__sun">
+                <img src="/isotipo-sofocles.png" alt="Sófocles" />
+              </div>
+              <div className="Landing-Art__quote">“La conversación<br /><strong>nos transforma.</strong>”</div>
+              <div className="Landing-Art__scribble">ideas<br />en movimiento ↝</div>
+              <div className="Landing-Art__card Landing-Art__card--one"><span>01</span><strong>Curiosidad</strong><small>la chispa de todo</small></div>
+              <div className="Landing-Art__card Landing-Art__card--two"><span>02</span><strong>Perspectiva</strong><small>mira distinto</small></div>
+              <div className="Landing-Art__flower" aria-hidden="true">✺</div>
             </div>
-
-            <div className="Auth-Panel__actions Auth-Panel__actions--hero Home-Actions">
-              <button
-                className="Btn-Secundario"
-                onClick={() => {
-                  setErrorMsg('')
-                  setModalActivo('login')
-                }}
-              >
-                Iniciar sesión
-              </button>
-              <button
-                className="Btn-Primario"
-                onClick={() => {
-                  setErrorMsg('')
-                  setModalActivo('registro')
-                }}
-              >
-                Registrar
-              </button>
-            </div>
-
-            {errorMsg && <p className="Auth-Panel__meta text-red-600">{errorMsg}</p>}
           </div>
 
-          <aside className="Home-Panel Home-Panel--visual Home-Panel--support" aria-label="Información de acceso">
-            <div className="Home-SupportMark" aria-hidden="true">✦</div>
-            <p className="Home-SupportText">Un espacio sereno para pensar en voz alta y encontrar conversación.</p>
-            <div className="Home-PreviewCard" onPointerMove={handleSpotlightPointerMove}>
-              <p className="Home-PreviewCard__eyebrow">Entra en la conversación</p>
-              <h2 className="Home-PreviewCard__title">
-                Tu próxima idea merece una audiencia.
-              </h2>
-              <p className="Home-PreviewCard__text">
-                Crea tu cuenta con correo, Google o Discord y empieza a construir tu presencia en Sófocles.
-              </p>
-              <div className="Home-PreviewCard__chips">
-                <span>Comparte</span>
-                <span>Conecta</span>
-                <span>Participa</span>
-              </div>
-            </div>
+          <div className="Landing-Manifesto" id="rituales">
+            <div className="Landing-Manifesto__intro"><span>02 — Cómo se siente</span><h2>Un lugar para<br /><em>quedarte pensando.</em></h2></div>
+            <div className="Landing-Ritual"><span className="Landing-Ritual__icon">✎</span><div><strong>Escribe lo que importa</strong><p>Convierte una intuición en una conversación.</p></div></div>
+            <div className="Landing-Ritual"><span className="Landing-Ritual__icon">◌</span><div><strong>Encuentra nuevas miradas</strong><p>Personas con curiosidad, no con prisa.</p></div></div>
+            <div className="Landing-Ritual"><span className="Landing-Ritual__icon">✦</span><div><strong>Hazlo tuyo</strong><p>Un perfil, una voz, un lugar en la plaza.</p></div></div>
+          </div>
 
-            <div className="Home-InfoGrid">
-              <article>
-                <strong>1</strong>
-                <span>Abre login o registro desde la portada</span>
-              </article>
-              <article>
-                <strong>2</strong>
-                <span>Usa OAuth o correo con validación</span>
-              </article>
-              <article>
-                <strong>3</strong>
-                <span>Entra al feed con una sesión persistente</span>
-              </article>
-            </div>
-          </aside>
+          <footer className="Landing-Footer">
+            <span>SOFOCLES / 2026</span><span className="Landing-Footer__line" /><span>Para quienes todavía preguntan</span>
+          </footer>
         </section>
       </main>
     </div>

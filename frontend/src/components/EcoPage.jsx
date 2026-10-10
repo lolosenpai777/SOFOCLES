@@ -181,10 +181,6 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
   const [cargandoEco, setCargandoEco] = useState(true);
   const [ecoError, setEcoError] = useState('');
 
-  // Modal de bienvenida / selección de género si es primera visita
-  const [mostrarModalGenero, setMostrarModalGenero] = useState(true);
-  const [generoSeleccionado, setGeneroSeleccionado] = useState('masculino');
-  const [aceptoGenero, setAceptoGenero] = useState(false);
   const [interesesSeleccionados, setInteresesSeleccionados] = useState(() => {
     if (typeof window === 'undefined') return [];
     try { return JSON.parse(localStorage.getItem('sofocles_eco_interests') || '[]'); } catch { return []; }
@@ -212,7 +208,13 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
   // Conversaciones / Chats activos
   const [chats, setChats] = useState(CHATS_INICIALES);
   const [chatActivoId, setChatActivoId] = useState('chat-1');
+  const [busquedaEco, setBusquedaEco] = useState('');
   const chatActivo = chats.find((c) => c.id === chatActivoId) || chats[0];
+  const chatsVisibles = chats.filter((chat) => {
+    const termino = busquedaEco.trim().toLowerCase();
+    if (!termino) return true;
+    return `${chat.alias} ${chat.filosofia} ${(chat.intereses || []).join(' ')}`.toLowerCase().includes(termino);
+  });
 
   // Vista móvil / tablets ('chats' | 'sala' | 'espejo')
   const [vistaMovil, setVistaMovil] = useState('sala');
@@ -222,6 +224,22 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
   const [escribiendo, setEscribiendo] = useState(false);
   const [mostrarTeofania, setMostrarTeofania] = useState(false);
   const scrollRef = useRef(null);
+  const ecoInterfaceRef = useRef(null);
+  const [seccionEco, setSeccionEco] = useState(null);
+  const [menuEcoAbierto, setMenuEcoAbierto] = useState(false);
+
+  const elegirSeccionEco = (seccion) => {
+    setSeccionEco(seccion);
+    setVistaMovil(seccion === 'progreso' ? 'espejo' : seccion === 'chats' ? 'sala' : 'chats');
+    window.requestAnimationFrame(() => {
+      ecoInterfaceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const volverAlSelectorEco = () => {
+    setSeccionEco(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const timer = window.setInterval(() => setTiempoEdad(Math.max(0, fechaLimiteEdad - Date.now())), 1000);
@@ -237,7 +255,6 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
         setMiIdentidad({ alias: data.profile.alias, mascara: data.profile.mascara, genero: data.profile.genderDeclared });
         setInteresesSeleccionados(data.profile.interests || []);
         setFechaLimiteEdad(new Date(data.profile.ageVerificationDeadline).getTime());
-        setMostrarModalGenero(false);
       })
       .catch((error) => {
         if (error.response?.status !== 404) setEcoError(error.response?.data?.error || 'No se pudo cargar el perfil Eco.');
@@ -265,20 +282,6 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [chatActivo?.mensajes, escribiendo]);
-
-  // Manejo de selección de género y asignación de nombre incógnito
-  const confirmarGeneroIdentidad = async () => {
-    try {
-      const { data } = await clienteAxios.post('/eco/profile', { genderDeclared: generoSeleccionado, genderConfirmed: true });
-      const profile = data.profile;
-      setEcoProfile(profile);
-      setMiIdentidad({ alias: profile.alias, mascara: profile.mascara, genero: profile.genderDeclared });
-      setFechaLimiteEdad(new Date(profile.ageVerificationDeadline).getTime());
-      setMostrarModalGenero(false);
-    } catch (error) {
-      setEcoError(error.response?.data?.error || 'No se pudo crear tu perfil Eco.');
-    }
-  };
 
   const alternarInteres = (interes) => {
     setInteresesSeleccionados((actuales) => {
@@ -541,68 +544,30 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
   }
 
   return (
-    <div className={`Eco-Contenedor ${modoOscuro ? 'theme-dark' : ''}`}>
+    <div className={`Eco-Contenedor ${modoOscuro ? 'theme-dark' : ''} ${seccionEco ? `Eco-Contenedor--${seccionEco}` : 'Eco-Contenedor--selector'}`}>
       {/* Fondo místico estático del Olimpo */}
       <div className="Aura-Apolo-Cyan" />
       <div className="Aura-Afrodita-Magenta" />
       <div className="Red-Geometrica" />
 
-      {/* HEADER COMPACTO (60px) */}
       <header className="Eco-Header">
         <div className="Eco-Header__inner">
           <div className="Eco-Header__brand" onClick={onBackToFeed} title="Volver al Feed">
-            <img src="/logosofo.png" alt="Sófocles" className="Eco-Header__logo" />
             <div className="Eco-Header__title-group">
               <span className="Eco-Header__title">Eco</span>
               <span className="Eco-Header__subtitle">Incógnito Dialéctico</span>
             </div>
           </div>
-
-          {/* Tu identidad actual en Eco */}
-          {miIdentidad && (
-            <div
-              className="Eco-Header__user-tag"
-              onClick={() => setMostrarModalGenero(true)}
-              title="Haz clic para cambiar tu género o regenerar tu identidad incógnita"
-            >
-              <span>{miIdentidad.mascara}</span>
-              <span className="hidden sm:inline">Tu alias:</span>
-              <span className="font-bold">{miIdentidad.alias}</span>
-            </div>
-          )}
-
           <div className="Eco-Header__actions">
-            {modoOscuro ? (
-              <button
-                type="button"
-                className="Eco-Btn-Icon"
-                onClick={() => setModoOscuro(false)}
-                title="Cambiar a Modo Claro"
-              >
-                <img src="/sun-svgrepo-com.svg" alt="Modo Claro" className="w-4 h-4 object-contain" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="Eco-Btn-Icon"
-                onClick={() => setModoOscuro(true)}
-                title="Cambiar a Modo Oscuro"
-              >
-                <img src="/cloud-moon-svgrepo-com.svg" alt="Modo Oscuro" className="w-4 h-4 object-contain" />
-              </button>
-            )}
-
+            <button type="button" className="Eco-Btn-Icon" onClick={() => setModoOscuro((actual) => !actual)} title="Cambiar tema">
+              <img src={modoOscuro ? "/sun-svgrepo-com.svg" : "/cloud-moon-svgrepo-com.svg"} alt="" className="w-4 h-4 object-contain" />
+            </button>
             <button
               type="button"
               className="Eco-Btn-Secundario"
               onClick={() => {
-                if (window.opener) {
-                  window.close();
-                } else if (onBackToFeed) {
-                  onBackToFeed();
-                } else {
-                  window.location.href = '/';
-                }
+                if (onBackToFeed) onBackToFeed();
+                else window.location.href = '/';
               }}
               title="Volver"
             >
@@ -611,6 +576,40 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
           </div>
         </div>
       </header>
+
+      {!seccionEco && <section className="Eco-Launchpad" aria-labelledby="eco-launchpad-title">
+        <div className="Eco-Launchpad__hero">
+          <div className="Eco-Launchpad__copy">
+            <div className="Eco-Launchpad__eyebrow">UN ÁGORA PARA LA MENTE CURIOSA <span>✦</span></div>
+            <h1 id="eco-launchpad-title">Habla<br /><em>sin el velo.</em><span>Encuentra tu eco.</span></h1>
+            <p>Una identidad incógnita para conversar con libertad, descubrir nuevas miradas y dejar que las ideas hablen primero.</p>
+            <div className="Eco-Launchpad__hint"><span>Haz clic en el isotipo</span><small>para abrir las rutas de Eco</small></div>
+          </div>
+          <div className={`Eco-Echo-Art ${menuEcoAbierto ? 'is-open' : ''}`}>
+            <div className="Eco-Echo-Art__grain" />
+            <div className="Eco-Echo-Art__orbit Eco-Echo-Art__orbit--one" />
+            <div className="Eco-Echo-Art__orbit Eco-Echo-Art__orbit--two" />
+            <div className="Eco-Echo-Art__quote">“La identidad<br /><strong>también se escucha.</strong>”</div>
+            <div className="Eco-Echo-Art__note">ideas<br />en movimiento ↝</div>
+            <button type="button" className="Eco-Echo-Art__isotipo" onClick={() => setMenuEcoAbierto((open) => !open)} aria-expanded={menuEcoAbierto} aria-label="Abrir opciones de Eco">
+              <img src="/isotipoblancosimple-removebg-preview.png" alt="Abrir Eco" />
+              <span>eco</span>
+            </button>
+            <div className="Eco-Echo-Art__instruction" aria-hidden="true">
+              <strong>Haz clic en el isotipo</strong>
+              <span>para abrir las funciones</span>
+            </div>
+            <button type="button" className="Eco-Echo-Art__option Eco-Echo-Art__option--chats" onClick={() => elegirSeccionEco('chats')}><b>◌</b><span>Chats</span><small>conversa</small></button>
+            <button type="button" className="Eco-Echo-Art__option Eco-Echo-Art__option--search" onClick={() => elegirSeccionEco('busqueda')}><b>⌕</b><span>Búsqueda</span><small>descubre</small></button>
+            <button type="button" className="Eco-Echo-Art__option Eco-Echo-Art__option--progress" onClick={() => elegirSeccionEco('progreso')}><b>✦</b><span>Progreso</span><small>revela</small></button>
+          </div>
+        </div>
+        <div className="Eco-Launchpad__footer">
+          <span>EL ÁGORA DE LO ANÓNIMO</span>
+          <span className="Eco-Launchpad__line" />
+          <span>Desliza para entrar</span>
+        </div>
+      </section>}
 
       {/* PESTAÑAS PARA MÓVILES Y PANTALLAS PEQUEÑAS */}
       <div className="Eco-Nav-Movil-Tabs">
@@ -638,7 +637,12 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
       </div>
 
       {/* LAYOUT DE 3 COLUMNAS QUE SE ADAPTA EXACTAMENTE A LA PANTALLA */}
-      <main className="Eco-Main-3Col">
+      <main className="Eco-Main-3Col" ref={ecoInterfaceRef}>
+        {seccionEco && (
+          <button type="button" className="Eco-Back-To-Launchpad" onClick={volverAlSelectorEco} aria-label="Volver al selector de Eco" title="Volver arriba">
+            ↑ <span>Elegir otra sección</span>
+          </button>
+        )}
         {/* =================================================================
             COLUMNA 1: LISTA DE CHATS ENTRE USUARIOS
             ================================================================= */}
@@ -658,9 +662,21 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
               <span>+ Nuevo Eco</span>
             </button>
           </div>
+          {seccionEco === 'busqueda' && (
+            <label className="Eco-Busqueda">
+              <span aria-hidden="true">⌕</span>
+              <input
+                type="search"
+                value={busquedaEco}
+                onChange={(event) => setBusquedaEco(event.target.value)}
+                placeholder="Busca un alias o interés..."
+                aria-label="Buscar ecos"
+              />
+            </label>
+          )}
 
           <div className="Eco-Chats__lista">
-            {chats.map((chat) => {
+            {chatsVisibles.map((chat) => {
               const esActivo = chat.id === chatActivoId;
               const estaRevelado = chat.resonancia >= 100;
               return (
@@ -691,6 +707,9 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
                 </button>
               );
             })}
+            {seccionEco === 'busqueda' && chatsVisibles.length === 0 && (
+              <p className="Eco-Busqueda__empty">No encontramos un eco con esa pista.</p>
+            )}
           </div>
         </aside>
 
@@ -862,6 +881,17 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
                 <span className="Eco-Espejo__status">
                   {nivel4 ? 'Identidad Revelada' : 'En incógnito'}
                 </span>
+                <div className="Eco-Espejo__acciones">
+                  {nivel4 ? (
+                    <button type="button" className="Eco-Btn-Primario" onClick={() => setMostrarTeofania(true)}>
+                      Ver perfil revelado
+                    </button>
+                  ) : (
+                    <button type="button" className="Eco-Btn-Secundario" onClick={() => setVistaMovil('sala')}>
+                      Seguir conversando
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Medidor de Resonancia */}
@@ -1010,82 +1040,7 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
         </aside>
       </main>
 
-      {/* =================================================================
-          MODAL DE BIENVENIDA Y ELECCIÓN DE GÉNERO (PRIMERA VEZ)
-          ================================================================= */}
-      {mostrarModalGenero && (
-        <div className="Eco-Modal-Onboarding">
-          <div className="Eco-Modal-Onboarding__box">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-400/40 mx-auto flex items-center justify-center text-2xl mb-3">
-              🏛️
-            </div>
-            <h3 className="font-serif text-xl font-bold text-emerald-400 mb-1">
-              Bienvenido al Eco
-            </h3>
-            <p className="text-xs text-stone-300 leading-relaxed mb-4">
-              Antes de ingresar a las sombras del Olimpo, indícanos cómo resuena tu espíritu para conferirte una identidad incógnita inspirada en la historia, la mitología, el arte y la arquitectura.
-            </p>
-
-            <div className="Eco-Genero-Opciones">
-              <button
-                type="button"
-                className={`Eco-Genero-Card ${generoSeleccionado === 'femenino' ? 'Seleccionado' : ''}`}
-                onClick={() => setGeneroSeleccionado('femenino')}
-              >
-                <span className="text-2xl">🌿</span>
-                <span className="font-bold text-xs">Femenino</span>
-                <span className="text-[10px] text-stone-400">Diosas, Filósofas, Pintoras y Arquitectas</span>
-              </button>
-
-              <button
-                type="button"
-                className={`Eco-Genero-Card ${generoSeleccionado === 'masculino' ? 'Seleccionado' : ''}`}
-                onClick={() => setGeneroSeleccionado('masculino')}
-              >
-                <span className="text-2xl">⚡</span>
-                <span className="font-bold text-xs">Masculino</span>
-                <span className="text-[10px] text-stone-400">Dioses, Filósofos, Pintores y Arquitectos</span>
-              </button>
-
-              <button
-                type="button"
-                className={`Eco-Genero-Card ${generoSeleccionado === 'neutro' ? 'Seleccionado' : ''}`}
-                onClick={() => setGeneroSeleccionado('neutro')}
-              >
-                <span className="text-2xl">✨</span>
-                <span className="font-bold text-xs">Universal</span>
-                <span className="text-[10px] text-stone-400">Mitos, Cosmos y Esencias del Ágora</span>
-              </button>
-            </div>
-
-            <div className="flex gap-2 justify-center">
-              {miIdentidad && (
-                <button
-                  type="button"
-                  className="Eco-Btn-Secundario"
-                  onClick={() => setMostrarModalGenero(false)}
-                >
-                  Conservar actual
-                </button>
-              )}
-              <label className="Eco-Confirmacion-Formal">
-                <input type="checkbox" checked={aceptoGenero} onChange={(event) => setAceptoGenero(event.target.checked)} />
-                <span>Confirmo que el género indicado es real y acepto convivir con honestidad en Eco.</span>
-              </label>
-              <button
-                type="button"
-                className="Eco-Btn-Primario"
-                disabled={!aceptoGenero}
-                onClick={confirmarGeneroIdentidad}
-              >
-                {miIdentidad ? 'Regenerar Identidad' : 'Asignar Mi Identidad Incógnita'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!cargandoEco && ecoProfile && !mostrarModalGenero && !interesesEcoValidos(interesesSeleccionados) && (
+      {!cargandoEco && ecoProfile && !interesesEcoValidos(interesesSeleccionados) && (
         <div className="Eco-Modal-Backdrop">
           <section className="Eco-Modal-Card" role="dialog" aria-modal="true" aria-labelledby="eco-intereses-title">
             <h3 id="eco-intereses-title">Encuentra tu resonancia</h3>
@@ -1118,10 +1073,10 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
         </div>
       )}
 
-      <div className="Eco-Banner-Verificacion">
+      {!seccionEco && <div className="Eco-Banner-Verificacion">
         <div className="Eco-Banner-Verificacion__info"><span>Verificación de edad pendiente: tienes 24 horas para adjuntar tu documento de identidad.</span><strong className="Eco-Banner-Verificacion__timer">{String(Math.floor(tiempoEdad / 3600000)).padStart(2, '0')}:{String(Math.floor((tiempoEdad % 3600000) / 60000)).padStart(2, '0')}:{String(Math.floor((tiempoEdad % 60000) / 1000)).padStart(2, '0')}</strong></div>
         <button type="button" className="Eco-Btn-VerificarAhora" onClick={() => setMostrarDocumento(true)}>Verificar ahora</button>
-      </div>
+      </div>}
 
       {ecoError && <div className="Eco-Toast-Error" role="status">{ecoError}</div>}
       {mostrarDocumento && <div className="Eco-Modal-Backdrop"><section className="Eco-Modal-Card" role="dialog" aria-modal="true"><h3>Documento de identidad</h3><p>La imagen se prepara para el endpoint seguro de moderación. No compartas documentos por el chat.</p><label className="Eco-Dropzone-Doc"><input type="file" accept="image/*" hidden onChange={manejarDocumento} />{documentoEdad ? <img src={documentoEdad.preview} alt="Vista previa del documento" /> : <><span className="text-2xl">▣</span><span>Seleccionar fotografía</span></>}</label><div className="flex justify-center gap-2"><button type="button" className="Eco-Btn-Secundario" onClick={() => setMostrarDocumento(false)}>Cerrar</button><button type="button" className="Eco-Btn-Primario" disabled={!documentoEdad} onClick={enviarDocumentoEdad}>Enviar a moderación</button></div></section></div>}
