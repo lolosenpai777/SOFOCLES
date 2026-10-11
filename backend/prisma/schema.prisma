@@ -53,9 +53,24 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   linkedAccounts LinkedAccount[]
   ecoProfile EcoProfile?
+  identityVerification IdentityVerification?
 
   @@index([createdAt])
   @@map("users")
+}
+
+model IdentityVerification {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique @map("user_id")
+  status         String   @default("PENDING")
+  provider       String?
+  verifiedAt     DateTime? @map("verified_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("identity_verifications")
 }
 
 model LinkedAccount {

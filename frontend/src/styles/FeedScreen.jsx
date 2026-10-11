@@ -12,6 +12,30 @@ import { formatDateWithRelative } from "../utils/formatDate";
 import "./NavegacionCelular.css";
 import Nav from "../components/NavegacionCelular.jsx";
 
+const FEED_RECOMMENDATIONS = [
+  {
+    eyebrow: "PARA DESPERTAR LA CURIOSIDAD",
+    title: "Una buena pregunta cambia la plaza.",
+    text: "Explora otras miradas y deja que una conversación te lleve a un lugar inesperado.",
+    mark: "¿",
+    accent: "emerald",
+  },
+  {
+    eyebrow: "RITUAL DE HOY",
+    title: "Escribe antes de tenerlo todo claro.",
+    text: "Las ideas también nacen como fragmentos. Comparte el primero y deja que crezca.",
+    mark: "✦",
+    accent: "gold",
+  },
+  {
+    eyebrow: "ENCUENTRA TU ECO",
+    title: "La diferencia también conecta.",
+    text: "Sigue una conversación, descubre un perfil y encuentra afinidad donde no la esperabas.",
+    mark: "↝",
+    accent: "cyan",
+  },
+];
+
 function PostImageCarousel({ post, alt }) {
   const images = Array.isArray(post.imageUrls) && post.imageUrls.length ? post.imageUrls : (post.imageUrl ? [post.imageUrl] : [])
   const [index, setIndex] = useState(0)
@@ -84,6 +108,8 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
   const [postAEliminar, setPostAEliminar] = useState(null);
   const [filtroFeed, setFiltroFeed] = useState("todos"); // 'todos' o 'seguidos'
   const [perfilSeleccionado, setPerfilSeleccionado] = useState(null);
+  const [recomendacionActiva, setRecomendacionActiva] = useState(0);
+  const [pausarRecomendaciones, setPausarRecomendaciones] = useState(false);
 
   // Estado para el modal de detalle del post
   const [postDetalle, setPostDetalle] = useState(null);
@@ -837,11 +863,27 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
     ? formatearHashtag(filtroFeed)
     : "";
 
+  useEffect(() => {
+    if (pausarRecomendaciones) return undefined;
+    const interval = window.setInterval(() => {
+      setRecomendacionActiva((current) => (current + 1) % FEED_RECOMMENDATIONS.length);
+    }, 6500);
+    return () => window.clearInterval(interval);
+  }, [pausarRecomendaciones]);
+
   return (
     <div className={`Olimpo-Contenedor${modoOscuro ? " modo-oscuro" : ""}`}>
       <div className="Aura-Apolo-Cyan" />
       <div className="Aura-Afrodita-Magenta" />
       <div className="Red-Geometrica" />
+      <div className="Feed-Ambience" aria-hidden="true">
+        <span className="Feed-Ambience__bubble Feed-Ambience__bubble--one" />
+        <span className="Feed-Ambience__bubble Feed-Ambience__bubble--two" />
+        <span className="Feed-Ambience__bubble Feed-Ambience__bubble--three" />
+        <span className="Feed-Ambience__spark Feed-Ambience__spark--one">✦</span>
+        <span className="Feed-Ambience__spark Feed-Ambience__spark--two">·</span>
+        <span className="Feed-Ambience__spark Feed-Ambience__spark--three">✧</span>
+      </div>
       
       <div className="Banner-Contenedor-Wrapper">
         <div className="Banner-Olimpo__mark">
@@ -1034,24 +1076,81 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
       )}
 
       <main className="Cuerpo-Feed">
+        <section className="Feed-Intro" aria-labelledby="feed-intro-title">
+          <div className="Feed-Intro__glow" aria-hidden="true" />
+          <div className="Feed-Intro__copy">
+            <span className="Feed-Intro__eyebrow">SÓFOCLES / PLAZA ABIERTA <b>✦</b></span>
+            <h1 id="feed-intro-title">Ideas que encuentran <em>eco.</em></h1>
+            <p>Un espacio para pensar en voz alta, descubrir nuevas miradas y dejar una pregunta sobre la mesa.</p>
+          </div>
+          <div className="Feed-Intro__details" aria-hidden="true">
+            <span className="Feed-Intro__orb Feed-Intro__orb--large">✺</span>
+            <span className="Feed-Intro__orb Feed-Intro__orb--small">·</span>
+            <span className="Feed-Intro__line" />
+            <span className="Feed-Intro__note">piensa<br />comparte<br />conecta</span>
+          </div>
+        </section>
+
+        <section
+          className="Feed-Recommendations"
+          aria-label="Recomendaciones de Sófocles"
+          onMouseEnter={() => setPausarRecomendaciones(true)}
+          onMouseLeave={() => setPausarRecomendaciones(false)}
+          onFocus={() => setPausarRecomendaciones(true)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setPausarRecomendaciones(false);
+          }}
+        >
+          <div className="Feed-Recommendations__heading">
+            <span>UN MOMENTO PARA QUEDARTE PENSANDO</span>
+            <div className="Feed-Recommendations__dots">
+              {FEED_RECOMMENDATIONS.map((item, index) => (
+                <button
+                  key={item.title}
+                  type="button"
+                  className={index === recomendacionActiva ? "is-active" : ""}
+                  onClick={() => setRecomendacionActiva(index)}
+                  aria-label={`Ver recomendación ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="Feed-Recommendations__viewport">
+            <div
+              className="Feed-Recommendations__track"
+              style={{ transform: `translateX(-${recomendacionActiva * 100}%)` }}
+            >
+              {FEED_RECOMMENDATIONS.map((recommendation) => (
+                <article key={recommendation.title} className={`Feed-Recommendation Feed-Recommendation--${recommendation.accent}`}>
+                  <div className="Feed-Recommendation__mark" aria-hidden="true">{recommendation.mark}</div>
+                  <div>
+                    <span className="Feed-Recommendation__eyebrow">{recommendation.eyebrow}</span>
+                    <h2>{recommendation.title}</h2>
+                    <p>{recommendation.text}</p>
+                  </div>
+                  <span className="Feed-Recommendation__ornament" aria-hidden="true">✺</span>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section className="Columna-Editor mb-4">
   <FluidGlassCard as="div" className="Card-Formulario-Feed overflow-hidden" mode="cube" thickness={5} chromaticAberration={0.1}>
-    {/* Botón superior limpio */}
     <button
       type="button"
-      className="w-full flex items-center justify-between p-4 transition-colors group cursor-pointer"
+      className={`Feed-Composer-Trigger ${editorAbierto ? "is-open" : ""}`}
       onClick={() => setEditorAbierto((prev) => !prev)}
     >
-      <div className="flex items-center gap-3">
-        <h2 className="Titulo-Seccion text-lg font-bold tracking-wide m-0 text-stone-100 group-hover:text-emerald-400 transition-colors">
-          ¿Qué idea ronda tu mente hoy?
-        </h2>
-        <img 
-          src="/pen-square-svgrepo-com.svg" 
-          alt="Escribir" 
-          className="w-5 h-5 object-contain opacity-80 group-hover:opacity-100 transition-opacity" 
-        />
+      <div className="Feed-Composer-Trigger__icon">
+        <img src="/isotipoblancosimple-removebg-preview.png" alt="" />
       </div>
+      <div className="Feed-Composer-Trigger__copy">
+        <span className="Feed-Composer-Trigger__eyebrow">DEJA UNA HUELLA EN EL ÁGORA <b>✦</b></span>
+        <h2>¿Qué idea ronda tu mente hoy?</h2>
+        <p>Comparte una intuición, una pregunta o una mirada distinta.</p>
+      </div>
+      <span className="Feed-Composer-Trigger__action">{editorAbierto ? "Cerrar" : "Escribir"} <b>{editorAbierto ? "↑" : "↗"}</b></span>
     </button>
 
     {/* Formulario desplegable */}

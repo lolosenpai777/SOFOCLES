@@ -75,6 +75,15 @@ function cropImageToDataUrl(file, aspectRatio) {
   })
 }
 
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen'))
+    reader.onload = () => resolve(reader.result)
+    reader.readAsDataURL(file)
+  })
+}
+
 function useCountUp(target, duration = 360) {
   const [value, setValue] = useState(0)
 
@@ -124,6 +133,11 @@ export default function ProfilePage({ currentUser, onFollow, following = [] }) {
   const [moderationMessage, setModerationMessage] = useState('')
   const [savedPosts, setSavedPosts] = useState([])
   const [linkErrors, setLinkErrors] = useState({ twitter: '', instagram: '' })
+  const [verificationDocument, setVerificationDocument] = useState(null)
+  const [verificationSelfie, setVerificationSelfie] = useState(null)
+  const [verificationConsent, setVerificationConsent] = useState(false)
+  const [verificationLoading, setVerificationLoading] = useState(false)
+  const [verificationMessage, setVerificationMessage] = useState('')
 
   useEffect(() => {
     let active = true
@@ -231,6 +245,7 @@ export default function ProfilePage({ currentUser, onFollow, following = [] }) {
       twitter: validatePlatformLink(nextTwitterUrl, 'twitter'),
       instagram: validatePlatformLink(nextInstagramUrl, 'instagram'),
     }
+
     setLinkErrors(nextLinkErrors)
     if (nextLinkErrors.twitter || nextLinkErrors.instagram) return
     try {
@@ -273,6 +288,37 @@ export default function ProfilePage({ currentUser, onFollow, following = [] }) {
       console.error(saveError)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const verifyIdentity = async () => {
+    if (!verificationDocument || !verificationSelfie || !verificationConsent) {
+      setVerificationMessage('Selecciona el documento, toma una selfie y acepta el tratamiento temporal.')
+      return
+    }
+    try {
+      setVerificationLoading(true)
+      setVerificationMessage('')
+      const [documentImage, selfieImage] = await Promise.all([
+        fileToDataUrl(verificationDocument),
+        fileToDataUrl(verificationSelfie),
+      ])
+      const { data } = await clienteAxios.post('/users/identity-verification', {
+        documentImage,
+        selfieImage,
+        consent: true,
+      }, { timeout: 45000 })
+      setProfile((current) => ({ ...current, isVerified: data.verified }))
+      setVerificationMessage(data.verified
+        ? 'Identidad verificada. Las imágenes fueron procesadas temporalmente y no se guardaron.'
+        : `No pudimos verificarte${data.reason ? `: ${data.reason}` : '.'}`)
+      setVerificationDocument(null)
+      setVerificationSelfie(null)
+      setVerificationConsent(false)
+    } catch (verificationError) {
+      setVerificationMessage(verificationError.response?.data?.error || 'No se pudo completar la verificación. Inténtalo de nuevo.')
+    } finally {
+      setVerificationLoading(false)
     }
   }
 
@@ -366,6 +412,22 @@ export default function ProfilePage({ currentUser, onFollow, following = [] }) {
                 <button key={color} type="button" className={accentColor === color ? 'is-selected' : ''} style={{ backgroundColor: color }} onClick={() => setAccentColor(color)} aria-label={`Elegir ${color}`} />
               ))}
             </div>
+            <section className="ProfilePage__verification" aria-labelledby="profile-verification-title">
+              <h2 id="profile-verification-title">Verificar identidad</h2>
+              <p>Usaremos temporalmente un documento de identidad y una selfie para comprobar que pertenecen a la misma persona. No guardamos las imágenes ni extraemos datos personales. Esto no sustituye una verificación legal.</p>
+              <label className="ProfilePage__field-label" htmlFor="profile-document">Documento de identidad</label>
+              <input id="profile-document" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setVerificationDocument(event.target.files?.[0] || null)} />
+              <label className="ProfilePage__field-label" htmlFor="profile-selfie">Selfie en tiempo real</label>
+              <input id="profile-selfie" type="file" accept="image/png,image/jpeg,image/webp" capture="user" onChange={(event) => setVerificationSelfie(event.target.files?.[0] || null)} />
+              <label className="ProfilePage__consent">
+                <input type="checkbox" checked={verificationConsent} onChange={(event) => setVerificationConsent(event.target.checked)} />
+                <span>Acepto el procesamiento temporal de estas imágenes para esta comprobación.</span>
+              </label>
+              <button type="button" className="Btn-Secundario" onClick={verifyIdentity} disabled={verificationLoading}>
+                {verificationLoading ? 'Comprobando...' : profile.isVerified ? 'Volver a verificar' : 'Verificar ahora'}
+              </button>
+              {verificationMessage && <p className="ProfilePage__verification-message" role="status">{verificationMessage}</p>}
+            </section>
             <button type="button" className="Btn-Primario" onClick={saveProfile} disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</button>
           </div>
         ) : null}

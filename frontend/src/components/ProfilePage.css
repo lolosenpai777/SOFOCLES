@@ -544,6 +544,20 @@
 }
 .ProfilePage__foreign-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .ProfilePage__notice { color: var(--jade); font-size: 12px; }
+.ProfilePage__verification {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(62, 207, 142, .3);
+  border-radius: 16px;
+  background: rgba(62, 207, 142, .07);
+}
+.ProfilePage__verification h2 { margin: 0; color: var(--marble); font-size: 1rem; }
+.ProfilePage__verification p { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.45; }
+.ProfilePage__consent { display: flex; align-items: flex-start; gap: .55rem; color: var(--marble); font-size: .8rem; line-height: 1.35; }
+.ProfilePage__consent input { width: auto; margin-top: .15rem; }
+.ProfilePage__verification-message { color: var(--jade) !important; }
 .ProfilePage__pinned-badge {
   display: inline-flex;
   align-items: center;

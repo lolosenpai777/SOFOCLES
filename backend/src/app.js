@@ -13,6 +13,7 @@ import { configurePassport, oauthSessionKey, secureCookie } from './config/passp
 export function buildApp() {
   const fastify = Fastify({
     logger: true,
+    bodyLimit: 25 * 1024 * 1024,
   })
   // @fastify/jwt already reserves request.user; keep Passport's transient
   // OAuth result in a separate property.

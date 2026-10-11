@@ -2493,6 +2493,198 @@ html:not(.theme-dark) .Eco-Reporte-Form textarea {
   }
 }
 
+/* ==========================================================================
+   CHAT — BURBUJAS DE CONTORNO Y FONDO ESMERILADO
+   ========================================================================== */
+
+.Eco-Contenedor--chats .Eco-Chat-Card,
+.Eco-Contenedor--busqueda .Eco-Chat-Card,
+.Eco-Contenedor--progreso .Eco-Chat-Card {
+  isolation: isolate;
+}
+
+.Eco-Contenedor--chats .Eco-Chat-Card--monocromo,
+.Eco-Contenedor--busqueda .Eco-Chat-Card--monocromo,
+.Eco-Contenedor--progreso .Eco-Chat-Card--monocromo {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 1.5rem !important;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(62, 207, 142, 0.14), transparent 28%),
+    radial-gradient(circle at 8% 84%, rgba(201, 162, 75, 0.1), transparent 30%),
+    linear-gradient(145deg, rgba(26, 49, 49, 0.78), rgba(8, 20, 25, 0.88)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 70px rgba(62, 207, 142, 0.035),
+    0 24px 60px rgba(0, 0, 0, 0.28) !important;
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+}
+
+.Eco-Contenedor--chats .Eco-Chat-Card--monocromo::before,
+.Eco-Contenedor--busqueda .Eco-Chat-Card--monocromo::before,
+.Eco-Contenedor--progreso .Eco-Chat-Card--monocromo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.36;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), transparent 75%);
+}
+
+.Eco-Contenedor--chats .Eco-Chat__header,
+.Eco-Contenedor--busqueda .Eco-Chat__header,
+.Eco-Contenedor--progreso .Eco-Chat__header {
+  position: relative;
+  z-index: 1;
+  padding: 0.85rem 1rem;
+  background: rgba(8, 20, 25, 0.3) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.13) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.Eco-Contenedor--chats .Eco-Mensajes-Scroll,
+.Eco-Contenedor--busqueda .Eco-Mensajes-Scroll,
+.Eco-Contenedor--progreso .Eco-Mensajes-Scroll {
+  position: relative;
+  z-index: 1;
+  padding: 1.2rem clamp(0.8rem, 3vw, 1.5rem);
+  gap: 0.85rem;
+  scrollbar-color: rgba(201, 162, 75, 0.45) transparent;
+}
+
+.Eco-Contenedor--chats .Eco-Mensaje-Fila,
+.Eco-Contenedor--busqueda .Eco-Mensaje-Fila,
+.Eco-Contenedor--progreso .Eco-Mensaje-Fila {
+  max-width: min(82%, 39rem);
+}
+
+.Eco-Contenedor--chats .Eco-Mensaje-Avatar,
+.Eco-Contenedor--busqueda .Eco-Mensaje-Avatar,
+.Eco-Contenedor--progreso .Eco-Mensaje-Avatar {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.2);
+}
+
+.Eco-Contenedor--chats .Eco-Burbuja,
+.Eco-Contenedor--busqueda .Eco-Burbuja,
+.Eco-Contenedor--progreso .Eco-Burbuja {
+  padding: 0.72rem 0.9rem 0.55rem;
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.055) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+  color: #f6faf8 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 25px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+}
+
+.Eco-Contenedor--chats .Eco-Mensaje-Fila--propia .Eco-Burbuja,
+.Eco-Contenedor--busqueda .Eco-Mensaje-Fila--propia .Eco-Burbuja,
+.Eco-Contenedor--progreso .Eco-Mensaje-Fila--propia .Eco-Burbuja {
+  background: rgba(62, 207, 142, 0.12) !important;
+  border-color: rgba(137, 239, 187, 0.9) !important;
+  border-bottom-right-radius: 0.28rem;
+}
+
+.Eco-Contenedor--chats .Eco-Mensaje-Fila--ajena .Eco-Burbuja,
+.Eco-Contenedor--busqueda .Eco-Mensaje-Fila--ajena .Eco-Burbuja,
+.Eco-Contenedor--progreso .Eco-Mensaje-Fila--ajena .Eco-Burbuja {
+  background: rgba(255, 255, 255, 0.045) !important;
+  border-bottom-left-radius: 0.28rem;
+}
+
+.Eco-Contenedor--chats .Eco-Burbuja__meta,
+.Eco-Contenedor--busqueda .Eco-Burbuja__meta,
+.Eco-Contenedor--progreso .Eco-Burbuja__meta {
+  color: rgba(226, 237, 233, 0.7);
+}
+
+.Eco-Contenedor--chats .Eco-Input-Area--estatico,
+.Eco-Contenedor--busqueda .Eco-Input-Area--estatico,
+.Eco-Contenedor--progreso .Eco-Input-Area--estatico {
+  position: relative;
+  z-index: 1;
+  margin: 0.55rem 0.7rem 0.7rem;
+  width: auto;
+  padding: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.15rem;
+  background: rgba(8, 20, 25, 0.34) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.Eco-Contenedor--chats .Eco-Input-Text--mono,
+.Eco-Contenedor--busqueda .Eco-Input-Text--mono,
+.Eco-Contenedor--progreso .Eco-Input-Text--mono {
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.34) !important;
+  border-radius: 0.85rem;
+  color: #f6faf8 !important;
+}
+
+.Eco-Contenedor--chats .Eco-Input-Text--mono::placeholder,
+.Eco-Contenedor--busqueda .Eco-Input-Text--mono::placeholder,
+.Eco-Contenedor--progreso .Eco-Input-Text--mono::placeholder {
+  color: rgba(226, 237, 233, 0.58);
+}
+
+.Eco-Contenedor--chats .Eco-Btn-Enviar--mono,
+.Eco-Contenedor--busqueda .Eco-Btn-Enviar--mono,
+.Eco-Contenedor--progreso .Eco-Btn-Enviar--mono {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 0.85rem;
+  background: rgba(62, 207, 142, 0.12);
+  color: #eafff3;
+}
+
+html:not(.theme-dark) .Eco-Contenedor--chats .Eco-Chat-Card--monocromo,
+html:not(.theme-dark) .Eco-Contenedor--busqueda .Eco-Chat-Card--monocromo,
+html:not(.theme-dark) .Eco-Contenedor--progreso .Eco-Chat-Card--monocromo {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(62, 207, 142, 0.13), transparent 28%),
+    radial-gradient(circle at 8% 84%, rgba(201, 162, 75, 0.1), transparent 30%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(235, 244, 240, 0.86)) !important;
+  border-color: rgba(36, 75, 64, 0.22) !important;
+}
+
+html:not(.theme-dark) .Eco-Contenedor--chats .Eco-Burbuja,
+html:not(.theme-dark) .Eco-Contenedor--busqueda .Eco-Burbuja,
+html:not(.theme-dark) .Eco-Contenedor--progreso .Eco-Burbuja {
+  background: rgba(255, 255, 255, 0.42) !important;
+  border-color: rgba(36, 53, 47, 0.52) !important;
+  color: #1a2e2b !important;
+}
+
+html:not(.theme-dark) .Eco-Contenedor--chats .Eco-Mensaje-Fila--propia .Eco-Burbuja,
+html:not(.theme-dark) .Eco-Contenedor--busqueda .Eco-Mensaje-Fila--propia .Eco-Burbuja,
+html:not(.theme-dark) .Eco-Contenedor--progreso .Eco-Mensaje-Fila--propia .Eco-Burbuja {
+  background: rgba(62, 207, 142, 0.16) !important;
+  border-color: rgba(28, 126, 83, 0.7) !important;
+}
+
+html:not(.theme-dark) .Eco-Contenedor--chats .Eco-Input-Area--estatico,
+html:not(.theme-dark) .Eco-Contenedor--busqueda .Eco-Input-Area--estatico,
+html:not(.theme-dark) .Eco-Contenedor--progreso .Eco-Input-Area--estatico {
+  background: rgba(255, 255, 255, 0.48) !important;
+  border-color: rgba(36, 75, 64, 0.25);
+}
+
 /* Eco dark theme: keep every workspace in the same forest/jade palette. */
 .Eco-Contenedor {
   --eco-bg: #071d1b;
