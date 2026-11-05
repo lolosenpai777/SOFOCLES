@@ -978,7 +978,7 @@ body {
   background-position: 50% 50%, 50% 50%;
   opacity: .48;
   filter: blur(12px);
-  will-change: background-position;
+  will-change: auto;
 }
 
 .AuroraBackground--radial .AuroraBackground__aceternity-layer {
@@ -992,12 +992,6 @@ body {
     background-image:
       repeating-linear-gradient(100deg, rgba(244, 241, 232, .9) 0%, rgba(244, 241, 232, .9) 7%, transparent 10%, transparent 12%, rgba(244, 241, 232, .9) 16%),
       repeating-linear-gradient(100deg, #25845f 8%, #3ECF8E 19%, rgba(20, 150, 103, .8) 30%, rgba(201, 162, 75, .24) 42%, #25845f 55%);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .AuroraBackground__aceternity-layer {
-    animation: aurora 60s linear infinite;
   }
 }
 

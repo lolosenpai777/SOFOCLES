@@ -1750,6 +1750,23 @@ html.theme-dark .Noti-Empty {
   letter-spacing: -0.025em;
 }
 
+.Lista-Posts .Card-Post {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 32rem;
+  transform: none;
+  transform-style: flat;
+  perspective: none;
+  will-change: auto;
+}
+
+.Lista-Posts .Card-Post:hover {
+  transform: translateY(-2px);
+}
+
+.Lista-Posts .Card-Post .fluid-glass__specular {
+  display: none;
+}
+
 .Olimpo-Contenedor.modo-oscuro .Lista-Posts .Card-Post:first-child .Imagen-Post {
   border-color: rgba(255, 255, 255, 0.12);
 }
@@ -1799,6 +1816,7 @@ html.theme-dark .Noti-Empty {
   overflow: hidden;
   pointer-events: none;
   opacity: 0.9;
+  display: none;
 }
 
 .Feed-Ambience__bubble {
@@ -1808,7 +1826,7 @@ html.theme-dark .Noti-Empty {
   border-radius: 50%;
   background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.2), rgba(62, 207, 142, 0.04) 42%, transparent 72%);
   box-shadow: inset 0 1px 8px rgba(255, 255, 255, 0.16), 0 0 28px rgba(62, 207, 142, 0.08);
-  animation: feedBubbleFloat 18s ease-in-out infinite;
+  animation: none;
 }
 
 .Feed-Ambience__bubble--one {
@@ -1843,7 +1861,7 @@ html.theme-dark .Noti-Empty {
   font-family: Georgia, serif;
   font-size: 1.25rem;
   text-shadow: 0 0 16px rgba(201, 162, 75, 0.8);
-  animation: feedSparkle 5s ease-in-out infinite;
+  animation: none;
 }
 
 .Feed-Ambience__spark--one { top: 30%; right: 10%; }
@@ -1869,7 +1887,7 @@ html.theme-dark .Noti-Empty {
   opacity: 0.45;
   pointer-events: none;
   z-index: 0;
-  will-change: transform, opacity;
+  will-change: auto;
 }
 
 .Olimpo-Contenedor::before {
@@ -1878,7 +1896,7 @@ html.theme-dark .Noti-Empty {
   top: -10vw;
   left: -10vw;
   background: radial-gradient(circle, rgba(16, 185, 129, 0.45) 0%, rgba(20, 184, 166, 0.2) 60%, transparent 80%);
-  animation: polvoFlotante1 18s ease-in-out infinite alternate;
+  animation: none;
 }
 
 .Olimpo-Contenedor::after {
@@ -1887,7 +1905,12 @@ html.theme-dark .Noti-Empty {
   bottom: -15vw;
   right: -10vw;
   background: radial-gradient(circle, rgba(6, 182, 212, 0.35) 0%, rgba(16, 185, 129, 0.15) 55%, transparent 75%);
-  animation: polvoFlotante2 22s ease-in-out infinite alternate;
+  animation: none;
+}
+
+.Olimpo-Contenedor .Lista-Posts .Card-Post {
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
 }
 
 @keyframes polvoFlotante1 {

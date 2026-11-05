@@ -48,6 +48,22 @@ function adaptarConversacionEco(conversation, profileId) {
   };
 }
 
+function EcoAgeCountdown({ deadline }) {
+  const [remaining, setRemaining] = useState(() => Math.max(0, deadline - Date.now()))
+
+  useEffect(() => {
+    const update = () => setRemaining(Math.max(0, deadline - Date.now()))
+    update()
+    const timer = window.setInterval(update, 1000)
+    return () => window.clearInterval(timer)
+  }, [deadline])
+
+  const hours = String(Math.floor(remaining / 3600000)).padStart(2, '0')
+  const minutes = String(Math.floor((remaining % 3600000) / 60000)).padStart(2, '0')
+  const seconds = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0')
+  return <strong className="Eco-Banner-Verificacion__timer">{hours}:{minutes}:{seconds}</strong>
+}
+
 export default function EcoPage({ currentUser, onBackToFeed }) {
   // Sincronización del tema oscuro/claro
   const [modoOscuro, setModoOscuro] = useState(() => {
@@ -77,7 +93,6 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
   const [fechaLimiteEdad, setFechaLimiteEdad] = useState(() => {
     return Date.now() + 86400000;
   });
-  const [tiempoEdad, setTiempoEdad] = useState(() => Math.max(0, fechaLimiteEdad - Date.now()));
   const [documentoEdad, setDocumentoEdad] = useState(null);
   const [mostrarDocumento, setMostrarDocumento] = useState(false);
   const [respuestaActiva, setRespuestaActiva] = useState(null);
@@ -113,6 +128,7 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
   // Input y estado de envío
   const [inputTexto, setInputTexto] = useState('');
   const scrollRef = useRef(null);
+  const conversacionesSnapshot = useRef('');
   const ecoInterfaceRef = useRef(null);
   const [seccionEco, setSeccionEco] = useState(null);
   const [menuEcoAbierto, setMenuEcoAbierto] = useState(false);
@@ -129,11 +145,6 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
     setSeccionEco(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setTiempoEdad(Math.max(0, fechaLimiteEdad - Date.now())), 1000);
-    return () => window.clearInterval(timer);
-  }, [fechaLimiteEdad]);
 
   useEffect(() => {
     if (!currentUser) {
@@ -157,11 +168,10 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
           setChatActivoId(null);
           return;
         }
-        setEcoProfile(data.profile);
+        setEcoProfile((current) => JSON.stringify(current) === JSON.stringify(data.profile) ? current : data.profile);
         setMiIdentidad({ alias: data.profile.alias, mascara: data.profile.mascara, genero: data.profile.genderDeclared });
         setInteresesSeleccionados(data.profile.interests || []);
         setFechaLimiteEdad(new Date(data.profile.ageVerificationDeadline).getTime());
-        setTiempoEdad(Math.max(0, new Date(data.profile.ageVerificationDeadline).getTime() - Date.now()));
       })
       .catch((error) => {
         if (error.response?.status !== 404) setEcoError(error.response?.data?.error || 'No se pudo cargar el perfil Eco.');
@@ -177,16 +187,23 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
       try {
         const { data } = await clienteAxios.get('/eco/verification/status');
         if (!activo || !data.profile) return;
-        setEcoProfile(data.profile);
+        setEcoProfile((current) => JSON.stringify(current) === JSON.stringify(data.profile) ? current : data.profile);
         const deadline = new Date(data.profile.ageVerificationDeadline).getTime();
         setFechaLimiteEdad(deadline);
-        setTiempoEdad(Math.max(0, deadline - Date.now()));
       } catch (error) {
         if (activo && error.response?.status !== 401) setEcoError(error.response?.data?.error || 'No se pudo actualizar el estado de verificación.');
       }
     };
-    const interval = window.setInterval(consultarEstado, 15000);
-    return () => { activo = false; window.clearInterval(interval); };
+    const consultarSiVisible = () => {
+      if (document.visibilityState === 'visible') consultarEstado();
+    };
+    const interval = window.setInterval(consultarSiVisible, 30000);
+    document.addEventListener('visibilitychange', consultarSiVisible);
+    return () => {
+      activo = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', consultarSiVisible);
+    };
   }, [ecoProfile?.id]);
 
   useEffect(() => {
@@ -196,11 +213,16 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
       return undefined;
     }
     let activo = true;
+    conversacionesSnapshot.current = '';
     const cargarConversaciones = async () => {
       try {
         const { data } = await clienteAxios.get('/eco/chats');
         if (!activo) return;
-        const conversations = (data.conversations || []).map((conversation) => adaptarConversacionEco(conversation, ecoProfile.id));
+        const serverConversations = data.conversations || [];
+        const snapshot = JSON.stringify(serverConversations);
+        if (snapshot === conversacionesSnapshot.current) return;
+        conversacionesSnapshot.current = snapshot;
+        const conversations = serverConversations.map((conversation) => adaptarConversacionEco(conversation, ecoProfile.id));
         setChats(conversations);
         setChatActivoId((idActual) => conversations.some((chat) => chat.id === idActual) ? idActual : conversations[0]?.id || null);
       } catch (error) {
@@ -215,9 +237,17 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
         }
       }
     };
-    cargarConversaciones();
-    const interval = window.setInterval(cargarConversaciones, 4000);
-    return () => { activo = false; window.clearInterval(interval); };
+    const cargarSiVisible = () => {
+      if (document.visibilityState === 'visible') cargarConversaciones();
+    };
+    cargarSiVisible();
+    const interval = window.setInterval(cargarSiVisible, 8000);
+    document.addEventListener('visibilitychange', cargarSiVisible);
+    return () => {
+      activo = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', cargarSiVisible);
+    };
   }, [ecoProfile?.id, ecoProfile?.canChat, ecoProfile?.interests?.length]);
 
   // Auto-scroll en el chat activo
@@ -240,7 +270,6 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
       setChats([]);
       setChatActivoId(null);
       setFechaLimiteEdad(new Date(data.profile.ageVerificationDeadline).getTime());
-      setTiempoEdad(Math.max(0, new Date(data.profile.ageVerificationDeadline).getTime() - Date.now()));
     } catch (error) {
       setEcoError(error.response?.data?.error || 'No se pudo crear tu perfil Eco.');
     } finally {
@@ -973,7 +1002,7 @@ export default function EcoPage({ currentUser, onBackToFeed }) {
       {!seccionEco && ecoProfile && ecoProfile.ageStatus !== 'VERIFIED' && <div className="Eco-Banner-Verificacion">
         <div className="Eco-Banner-Verificacion__info">
           <span>{ecoProfile.ageStatus === 'SUBMITTED' ? 'Documento recibido; está pendiente de revisión.' : ecoProfile.ageStatus === 'EXPIRED' ? 'El plazo de verificación venció. Completa la revisión para volver a chatear.' : ecoProfile.ageStatus === 'REJECTED' ? 'El documento no fue aceptado. Envía una imagen nueva para revisión.' : 'Tienes 24 horas desde que creaste tu perfil para enviar tu documento de identidad.'}</span>
-          {ecoProfile.ageStatus !== 'SUBMITTED' && <strong className="Eco-Banner-Verificacion__timer">{String(Math.floor(tiempoEdad / 3600000)).padStart(2, '0')}:{String(Math.floor((tiempoEdad % 3600000) / 60000)).padStart(2, '0')}:{String(Math.floor((tiempoEdad % 60000) / 1000)).padStart(2, '0')}</strong>}
+          {ecoProfile.ageStatus !== 'SUBMITTED' && <EcoAgeCountdown deadline={fechaLimiteEdad} />}
         </div>
         {ecoProfile.ageStatus !== 'SUBMITTED' && <button type="button" className="Eco-Btn-VerificarAhora" onClick={() => setMostrarDocumento(true)}>{ecoProfile.ageStatus === 'EXPIRED' || ecoProfile.ageStatus === 'REJECTED' ? 'Enviar documento' : 'Verificar ahora'}</button>}
       </div>}

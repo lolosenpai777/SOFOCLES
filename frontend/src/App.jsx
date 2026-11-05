@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom'
 import clienteAxios from './api/clienteAxios'
-import FeedScreen from './styles/FeedScreen.jsx'
-import AdminReports from './components/AdminReports.jsx'
-import AdminUsersModeration from './components/AdminUsersModeration.jsx'
+const FeedScreen = lazy(() => import('./styles/FeedScreen.jsx'))
+const AdminReports = lazy(() => import('./components/AdminReports.jsx'))
+const AdminUsersModeration = lazy(() => import('./components/AdminUsersModeration.jsx'))
 import AdminRoute from './components/AdminRoute.jsx'
 import UsernameSetupModal from './components/UsernameSetupModal.jsx'
-import ProfilePage from './components/ProfilePage.jsx'
-import PostPage from './components/PostPage.jsx'
-import EcoPage from './components/EcoPage.jsx'
+const ProfilePage = lazy(() => import('./components/ProfilePage.jsx'))
+const PostPage = lazy(() => import('./components/PostPage.jsx'))
+const EcoPage = lazy(() => import('./components/EcoPage.jsx'))
 import NotFoundPage from './components/NotFoundPage.jsx'
 import { formatDateWithRelative } from './utils/formatDate'
 import * as Dialog from '@radix-ui/react-dialog'
@@ -584,6 +584,7 @@ function App() {
 
   return (
     <>
+      <Suspense fallback={<div className="Olimpo-Contenedor min-h-screen flex items-center justify-center"><span className="text-sm">Cargando pantalla…</span></div>}>
       <Routes>
         {/* Public utility routes */}
         <Route path="/oauth/callback" element={oauthCallbackElement} />
@@ -617,6 +618,7 @@ function App() {
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      </Suspense>
 
       {/* ── Modals (always rendered, controlled by state) ──────────── */}
 

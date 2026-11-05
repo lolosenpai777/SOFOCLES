@@ -41,7 +41,7 @@ function PostImageCarousel({ post, alt }) {
   const [index, setIndex] = useState(0)
   if (!images.length) return null
   return <div className="post-image-carousel">
-    <img src={images[index]} alt={alt} className="post-image-carousel__image" />
+    <img src={images[index]} alt={alt} className="post-image-carousel__image" loading="lazy" decoding="async" />
     {images.length > 1 && <div className="post-image-carousel__controls"><button type="button" onClick={() => setIndex((current) => (current - 1 + images.length) % images.length)} aria-label="Imagen anterior">‹</button><span>{index + 1}/{images.length}</span><button type="button" onClick={() => setIndex((current) => (current + 1) % images.length)} aria-label="Imagen siguiente">›</button></div>}
   </div>
 }
@@ -52,9 +52,65 @@ function QuotedPostEmbed({ post, depth = 0 }) {
   return <div className="post-quote-card">
     <div className="post-quote-card__author"><AvatarDisplay avatarUrl={post.author?.avatarUrl} username={post.author?.username || 'Usuario'} size="sm" /><strong>@{post.author?.username || 'usuario'} <UserBadges user={post.author} /></strong></div>
     {post.content && <p>{post.content}</p>}
-    {images[0] && <img src={images[0]} alt="Imagen de la publicación citada" />}
+    {images[0] && <img src={images[0]} alt="Imagen de la publicación citada" loading="lazy" decoding="async" />}
     {depth === 0 && post.quotedPost && <QuotedPostEmbed post={post.quotedPost} depth={1} />}
   </div>
+}
+
+function FeedRecommendations() {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+
+  useEffect(() => {
+    if (paused) return undefined
+    const interval = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % FEED_RECOMMENDATIONS.length)
+    }, 6500)
+    return () => window.clearInterval(interval)
+  }, [paused])
+
+  return (
+    <section
+      className="Feed-Recommendations"
+      aria-label="Recomendaciones de Sófocles"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false)
+      }}
+    >
+      <div className="Feed-Recommendations__heading">
+        <span>UN MOMENTO PARA QUEDARTE PENSANDO</span>
+        <div className="Feed-Recommendations__dots">
+          {FEED_RECOMMENDATIONS.map((item, index) => (
+            <button
+              key={item.title}
+              type="button"
+              className={index === activeIndex ? "is-active" : ""}
+              onClick={() => setActiveIndex(index)}
+              aria-label={`Ver recomendación ${index + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="Feed-Recommendations__viewport">
+        <div className="Feed-Recommendations__track" style={{ transform: `translateX(-${activeIndex * 100}%)` }}>
+          {FEED_RECOMMENDATIONS.map((recommendation) => (
+            <article key={recommendation.title} className={`Feed-Recommendation Feed-Recommendation--${recommendation.accent}`}>
+              <div className="Feed-Recommendation__mark" aria-hidden="true">{recommendation.mark}</div>
+              <div>
+                <span className="Feed-Recommendation__eyebrow">{recommendation.eyebrow}</span>
+                <h2>{recommendation.title}</h2>
+                <p>{recommendation.text}</p>
+              </div>
+              <span className="Feed-Recommendation__ornament" aria-hidden="true">✺</span>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 
@@ -108,8 +164,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
   const [postAEliminar, setPostAEliminar] = useState(null);
   const [filtroFeed, setFiltroFeed] = useState("todos"); // 'todos' o 'seguidos'
   const [perfilSeleccionado, setPerfilSeleccionado] = useState(null);
-  const [recomendacionActiva, setRecomendacionActiva] = useState(0);
-  const [pausarRecomendaciones, setPausarRecomendaciones] = useState(false);
 
   // Estado para el modal de detalle del post
   const [postDetalle, setPostDetalle] = useState(null);
@@ -863,14 +917,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
     ? formatearHashtag(filtroFeed)
     : "";
 
-  useEffect(() => {
-    if (pausarRecomendaciones) return undefined;
-    const interval = window.setInterval(() => {
-      setRecomendacionActiva((current) => (current + 1) % FEED_RECOMMENDATIONS.length);
-    }, 6500);
-    return () => window.clearInterval(interval);
-  }, [pausarRecomendaciones]);
-
   return (
     <div className={`Olimpo-Contenedor${modoOscuro ? " modo-oscuro" : ""}`}>
       <div className="Aura-Apolo-Cyan" />
@@ -1091,49 +1137,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
           </div>
         </section>
 
-        <section
-          className="Feed-Recommendations"
-          aria-label="Recomendaciones de Sófocles"
-          onMouseEnter={() => setPausarRecomendaciones(true)}
-          onMouseLeave={() => setPausarRecomendaciones(false)}
-          onFocus={() => setPausarRecomendaciones(true)}
-          onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) setPausarRecomendaciones(false);
-          }}
-        >
-          <div className="Feed-Recommendations__heading">
-            <span>UN MOMENTO PARA QUEDARTE PENSANDO</span>
-            <div className="Feed-Recommendations__dots">
-              {FEED_RECOMMENDATIONS.map((item, index) => (
-                <button
-                  key={item.title}
-                  type="button"
-                  className={index === recomendacionActiva ? "is-active" : ""}
-                  onClick={() => setRecomendacionActiva(index)}
-                  aria-label={`Ver recomendación ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="Feed-Recommendations__viewport">
-            <div
-              className="Feed-Recommendations__track"
-              style={{ transform: `translateX(-${recomendacionActiva * 100}%)` }}
-            >
-              {FEED_RECOMMENDATIONS.map((recommendation) => (
-                <article key={recommendation.title} className={`Feed-Recommendation Feed-Recommendation--${recommendation.accent}`}>
-                  <div className="Feed-Recommendation__mark" aria-hidden="true">{recommendation.mark}</div>
-                  <div>
-                    <span className="Feed-Recommendation__eyebrow">{recommendation.eyebrow}</span>
-                    <h2>{recommendation.title}</h2>
-                    <p>{recommendation.text}</p>
-                  </div>
-                  <span className="Feed-Recommendation__ornament" aria-hidden="true">✺</span>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+        <FeedRecommendations />
 
         <section className="Columna-Editor mb-4">
   <FluidGlassCard as="div" className="Card-Formulario-Feed overflow-hidden" mode="cube" thickness={5} chromaticAberration={0.1}>
@@ -1488,7 +1492,7 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
                 const loSigo = siguiendo.includes(autorId);
 
                 return (
-                  <FluidGlassCard as="article" key={pId} className="Card-Post Modal-Animacion" mode="cube" thickness={5} chromaticAberration={0.1}>
+                  <FluidGlassCard as="article" key={pId} className="Card-Post Modal-Animacion" mode="cube" thickness={5} chromaticAberration={0.1} interactive={false}>
                     <header className="Header-Post">
                       <div className="Acciones-Post flex items-center w-full">
                         <button
@@ -1546,14 +1550,6 @@ function FeedScreen({ usuarioAutenticado, cerrarSesion, onOpenAdminReports, onOp
                             <button key={tag} type="button" onClick={() => manejarFiltroHashtag(tag)}>#{tag}</button>
                           ))}
                         </div>
-                      )}
-
-                      {post.imageUrl && (
-                        <img
-                          src={post.imageUrl}
-                          alt={`Imagen de la publicación de ${authorName}`}
-                          className="Imagen-Post"
-                        />
                       )}
 
                       <PostImageCarousel post={post} alt={`Imagen de la publicación de ${authorName}`} />

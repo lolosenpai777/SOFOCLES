@@ -63,9 +63,9 @@ export default function FluidGlassCard({
     <Component
       ref={cardRef}
       className={`fluid-glass-card fluid-glass-card--${mode} ${isHovered ? 'fluid-glass--hovered' : ''} ${className}`}
-      onPointerMove={handlePointerMove}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
+      onPointerMove={interactive ? handlePointerMove : undefined}
+      onPointerEnter={interactive ? handlePointerEnter : undefined}
+      onPointerLeave={interactive ? handlePointerLeave : undefined}
       style={{
         '--glass-thickness': `${thickness}px`,
         '--chromatic-aberration': chromaticAberration,
