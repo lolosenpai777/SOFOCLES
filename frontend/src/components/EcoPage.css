@@ -1386,6 +1386,71 @@ html:not(.theme-dark) .Eco-Ficha__contenido {
   position: relative;
 }
 
+.Eco-Moderacion-Modal {
+  max-width: 880px;
+  text-align: left;
+}
+
+.Eco-Moderacion-Contenido {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.3fr);
+  gap: 1rem;
+  min-height: 280px;
+}
+
+.Eco-Moderacion-Cola {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.Eco-Moderacion-Item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.Eco-Moderacion-Item.Activo {
+  border-color: #3ecf8e;
+  background: rgba(62, 207, 142, 0.12);
+}
+
+.Eco-Moderacion-Item span {
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+
+.Eco-Moderacion-Documento {
+  display: grid;
+  min-height: 280px;
+  place-items: center;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.Eco-Moderacion-Documento img {
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+}
+
+@media (max-width: 620px) {
+  .Eco-Moderacion-Contenido { grid-template-columns: 1fr; }
+  .Eco-Moderacion-Cola { max-height: 150px; }
+}
+
 html:not(.theme-dark) .Eco-Modal-Card {
   background: #ffffff;
   border-color: #cbd5e1;

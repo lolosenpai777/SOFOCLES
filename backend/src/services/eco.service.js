@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma.js'
-import { storePrivateImage } from './storage.service.js'
+import { readPrivateImage, storePrivateImage } from './storage.service.js'
+import { createReport } from './moderation.service.js'
 
 const MIN_INTERESTS = 6
 const VALID_INTERESTS = new Set([
@@ -36,7 +37,7 @@ function normalizeInterests(interests) {
 
 function publicProfile(profile) {
   if (!profile) return null
-  const expired = profile.ageStatus === 'PENDING' && profile.ageVerificationDeadline <= new Date()
+  const expired = profile.ageStatus !== 'VERIFIED' && profile.ageStatus !== 'EXPIRED' && profile.ageVerificationDeadline <= new Date()
   return {
     id: profile.id,
     alias: profile.alias,
@@ -47,13 +48,13 @@ function publicProfile(profile) {
     ageVerificationDeadline: profile.ageVerificationDeadline,
     interests: profile.interests,
     tourCompleted: profile.tourCompleted,
-    canChat: !expired,
+    canChat: !expired && profile.ageStatus !== 'EXPIRED',
   }
 }
 
 async function getProfileByUserId(userId) {
   const profile = await prisma.ecoProfile.findUnique({ where: { userId: Number(userId) } })
-  if (profile?.ageStatus === 'PENDING' && profile.ageVerificationDeadline <= new Date()) {
+  if (profile && profile.ageStatus !== 'VERIFIED' && profile.ageStatus !== 'EXPIRED' && profile.ageVerificationDeadline <= new Date()) {
     return prisma.ecoProfile.update({ where: { id: profile.id }, data: { ageStatus: 'EXPIRED' } })
   }
   return profile
@@ -121,10 +122,57 @@ export async function reviewEcoAgeDocument(userId, status) {
   return publicProfile(updated)
 }
 
+export async function listEcoAgeDocumentsForReview() {
+  const profiles = await prisma.ecoProfile.findMany({
+    where: { ageDocumentUrl: { not: null }, ageStatus: { in: ['SUBMITTED', 'EXPIRED', 'REJECTED'] } },
+    select: { userId: true, alias: true, ageStatus: true, ageVerificationDeadline: true, updatedAt: true },
+    orderBy: { updatedAt: 'asc' },
+  })
+  return profiles.map((profile) => ({
+    userId: profile.userId,
+    alias: profile.alias,
+    ageStatus: profile.ageStatus,
+    ageVerificationDeadline: profile.ageVerificationDeadline,
+    updatedAt: profile.updatedAt,
+  }))
+}
+
+export async function getEcoAgeDocumentForReview(userId) {
+  const profile = await prisma.ecoProfile.findUnique({
+    where: { userId: Number(userId) },
+    select: { ageDocumentUrl: true },
+  })
+  if (!profile?.ageDocumentUrl) throw ecoError('No existe un documento enviado', 404)
+  return readPrivateImage(profile.ageDocumentUrl)
+}
+
+export async function reportEcoConversation(userId, conversationId, { category, details }) {
+  const profile = await prisma.ecoProfile.findUnique({ where: { userId: Number(userId) }, select: { id: true } })
+  if (!profile) throw ecoError('Debes configurar tu perfil Eco antes de reportar', 403)
+  const conversation = await prisma.ecoConversation.findUnique({
+    where: { id: conversationId },
+    include: { participants: { include: { profile: { select: { id: true, userId: true } } } } },
+  })
+  if (!conversation || !conversation.participants.some((item) => item.profileId === profile.id)) {
+    throw ecoError('Conversación no encontrada', 404)
+  }
+  const target = conversation.participants.find((item) => item.profileId !== profile.id)?.profile
+  if (!target) throw ecoError('No hay otro participante para reportar', 400)
+  return createReport(userId, { userId: target.userId, category, details })
+}
+
 export async function matchEcoConversation(userId) {
   const ownProfile = await assertEcoChatAccess(userId)
+  const now = new Date()
   const candidates = await prisma.ecoProfile.findMany({
-    where: { id: { not: ownProfile.id }, ageStatus: { in: ['PENDING', 'SUBMITTED', 'VERIFIED'] }, interests: { isEmpty: false } },
+    where: {
+      id: { not: ownProfile.id },
+      interests: { isEmpty: false },
+      OR: [
+        { ageStatus: 'VERIFIED' },
+        { ageStatus: { in: ['PENDING', 'SUBMITTED', 'REJECTED'] }, ageVerificationDeadline: { gt: now } },
+      ],
+    },
   })
   if (!candidates.length) throw ecoError('Todavía no hay perfiles compatibles disponibles', 404)
   const ownInterests = new Set(ownProfile.interests)
@@ -135,7 +183,20 @@ export async function matchEcoConversation(userId) {
       return { profile, score: union ? Math.round((common / union) * 100) : 0 }
     })
     .sort((left, right) => right.score - left.score)[0]
-  const existing = await prisma.ecoConversation.findFirst({ where: { participants: { every: { profileId: { in: [ownProfile.id, candidate.profile.id] } } }, status: 'ACTIVE' } })
+  const existing = await prisma.ecoConversation.findFirst({
+    where: {
+      status: 'ACTIVE',
+      participants: {
+        some: { profileId: ownProfile.id },
+        every: { profileId: { in: [ownProfile.id, candidate.profile.id] } },
+      },
+      AND: [{ participants: { some: { profileId: candidate.profile.id } } }],
+    },
+    include: {
+      participants: { include: { profile: { select: { id: true, alias: true, mascara: true, interests: true } } } },
+      messages: { take: 50, orderBy: { createdAt: 'asc' }, include: { reactions: true, quotedMessage: { select: { id: true, content: true, authorProfileId: true } } } },
+    },
+  })
   if (existing) return existing
   return prisma.ecoConversation.create({
     data: {
@@ -172,18 +233,31 @@ export async function createEcoMessage(userId, conversationId, body) {
   if (!participant) throw ecoError('No tienes acceso a esta conversación', 403)
   const content = String(body.content ?? '').trim()
   if (!content && !body.attachmentUrl) throw ecoError('El mensaje debe tener texto o un adjunto')
-  const message = await prisma.ecoMessage.create({
-    data: {
-      conversationId,
-      authorProfileId: profile.id,
-      content,
-      attachmentUrl: body.attachmentUrl || null,
-      quotedMessageId: body.quotedMessageId || null,
-    },
-    include: { reactions: true, quotedMessage: { select: { id: true, content: true } } },
+  if (body.quotedMessageId) {
+    const quotedMessage = await prisma.ecoMessage.findFirst({
+      where: { id: body.quotedMessageId, conversationId },
+      select: { id: true },
+    })
+    if (!quotedMessage) throw ecoError('El mensaje citado no pertenece a esta conversación')
+  }
+  return prisma.$transaction(async (tx) => {
+    const conversation = await tx.ecoConversation.findUnique({ where: { id: conversationId }, select: { resonance: true } })
+    const message = await tx.ecoMessage.create({
+      data: {
+        conversationId,
+        authorProfileId: profile.id,
+        content,
+        attachmentUrl: body.attachmentUrl || null,
+        quotedMessageId: body.quotedMessageId || null,
+      },
+      include: { reactions: true, quotedMessage: { select: { id: true, content: true, authorProfileId: true } } },
+    })
+    await tx.ecoConversation.update({
+      where: { id: conversationId },
+      data: { resonance: Math.min(100, (conversation?.resonance ?? 0) + 20), updatedAt: new Date() },
+    })
+    return message
   })
-  await prisma.ecoConversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } })
-  return message
 }
 
 export async function toggleEcoReaction(userId, messageId, emoji) {

@@ -2,8 +2,11 @@ import { z } from 'zod'
 import {
   createEcoProfileHandler,
   ecoAgeDocumentHandler,
+  ecoAgeDocumentForReviewHandler,
+  ecoAgeDocumentsForReviewHandler,
   ecoConversationsHandler,
   ecoAgeReviewHandler,
+  ecoConversationReportHandler,
   ecoInterestsHandler,
   ecoMatchHandler,
   ecoMessageHandler,
@@ -14,6 +17,7 @@ import {
 import { requireAuth } from '../middlewares/auth.middleware.js'
 import { requireModeratorJunior } from '../middlewares/moderator.middleware.js'
 import { validateBody, validateParams } from '../middlewares/validate-schema.middleware.js'
+import { reportCategories } from '../schemas/moderation.schema.js'
 
 const profileSchema = z.object({
   genderDeclared: z.enum(['femenino', 'masculino', 'neutro']),
@@ -31,6 +35,7 @@ const conversationParams = z.object({ id: z.string().uuid() })
 const messageParams = z.object({ id: z.string().uuid() })
 const userParams = z.object({ userId: z.coerce.number().int().positive() })
 const ageReviewSchema = z.object({ status: z.enum(['VERIFIED', 'REJECTED']) })
+const reportSchema = z.object({ category: z.enum(reportCategories), details: z.string().trim().max(1000).optional() })
 
 const auth = { preHandler: [requireAuth] }
 
@@ -41,9 +46,12 @@ export async function ecoRoutes(fastify) {
   fastify.post('/eco/profile/tour', auth, ecoTourHandler)
   fastify.get('/eco/verification/status', auth, ecoProfileHandler)
   fastify.post('/eco/verification/document', { ...auth, preValidation: validateBody(documentSchema) }, ecoAgeDocumentHandler)
+  fastify.get('/eco/admin/age-documents', { preHandler: [requireAuth, requireModeratorJunior] }, ecoAgeDocumentsForReviewHandler)
+  fastify.get('/eco/admin/profiles/:userId/age-document', { preHandler: [requireAuth, requireModeratorJunior], preValidation: validateParams(userParams) }, ecoAgeDocumentForReviewHandler)
   fastify.patch('/eco/admin/profiles/:userId/age-status', { preHandler: [requireAuth, requireModeratorJunior], preValidation: [validateParams(userParams), validateBody(ageReviewSchema)] }, ecoAgeReviewHandler)
   fastify.get('/eco/chats', auth, ecoConversationsHandler)
   fastify.post('/eco/chats/match', auth, ecoMatchHandler)
+  fastify.post('/eco/chats/:id/report', { ...auth, preValidation: [validateParams(conversationParams), validateBody(reportSchema)] }, ecoConversationReportHandler)
   fastify.post('/eco/chats/:id/messages', { ...auth, preValidation: [validateParams(conversationParams), validateBody(messageSchema)] }, ecoMessageHandler)
   fastify.post('/eco/messages/:id/reactions', { ...auth, preValidation: [validateParams(messageParams), validateBody(reactionSchema)] }, ecoReactionHandler)
 }

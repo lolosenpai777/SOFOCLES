@@ -43,6 +43,7 @@ test('single post route returns and updates a post for its author', async () => 
     },
   })
 
+  await app.ready()
   const token = app.jwt.sign({ sub: String(user.id), id: user.id, username: user.username })
 
   try {

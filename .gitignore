@@ -7,4 +7,5 @@ dist/
 backup_post_social_auth.sql
 backend/.env
 backend/.env.docker-oauth
+backend/private-uploads/
 frontend/.env

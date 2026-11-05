@@ -3,8 +3,11 @@ import {
   createEcoMessage,
   createEcoProfile,
   getEcoProfile,
+  getEcoAgeDocumentForReview,
+  listEcoAgeDocumentsForReview,
   listEcoConversations,
   matchEcoConversation,
+  reportEcoConversation,
   reviewEcoAgeDocument,
   saveEcoInterests,
   submitAgeDocument,
@@ -35,6 +38,20 @@ export async function ecoAgeDocumentHandler(request) {
 
 export async function ecoAgeReviewHandler(request) {
   return { profile: await reviewEcoAgeDocument(request.params.userId, request.body.status) }
+}
+
+export async function ecoAgeDocumentsForReviewHandler() {
+  return { documents: await listEcoAgeDocumentsForReview() }
+}
+
+export async function ecoAgeDocumentForReviewHandler(request, reply) {
+  const image = await getEcoAgeDocumentForReview(request.params.userId)
+  return reply.type('image/webp').header('Cache-Control', 'no-store').send(image)
+}
+
+export async function ecoConversationReportHandler(request, reply) {
+  const report = await reportEcoConversation(request.userId, request.params.id, request.body)
+  return reply.code(201).send({ report })
 }
 
 export async function ecoConversationsHandler(request) {

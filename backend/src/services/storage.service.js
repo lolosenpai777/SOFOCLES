@@ -56,3 +56,17 @@ export async function storePrivateImage(imageData, kind = 'private') {
   await fs.writeFile(path.join(dir, fileName), buffer, { flag: 'wx', mode: 0o600 })
   return `private://${fileName}`
 }
+
+export async function readPrivateImage(privateUrl) {
+  const fileName = String(privateUrl ?? '').replace(/^private:\/\//, '')
+  if (!/^[a-z0-9-]+\.webp$/i.test(fileName)) {
+    throw Object.assign(new Error('Documento privado no encontrado'), { statusCode: 404 })
+  }
+  const dir = path.join(process.cwd(), 'private-uploads')
+  try {
+    return await fs.readFile(path.join(dir, fileName))
+  } catch (error) {
+    if (error.code === 'ENOENT') throw Object.assign(new Error('Documento privado no encontrado'), { statusCode: 404 })
+    throw error
+  }
+}

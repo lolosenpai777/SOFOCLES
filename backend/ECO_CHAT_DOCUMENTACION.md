@@ -4,7 +4,7 @@
 
 Eco se gestiona como un perfil secundario 1:1 vinculado a la cuenta autenticada de Sófocles. No es una cuenta anónima separada: el usuario inicia sesión con su cuenta principal y el backend crea un único `EcoProfile` asociado a `User`.
 
-Actualmente están implementados el perfil Eco, la declaración formal de género, el plazo server-side de 24 horas, la recepción privada del documento, intereses con mínimo de seis, finalización del tour, conversaciones, mensajes, citas, adjuntos y reacciones. El frontend usa el backend como fuente de verdad; `localStorage` solo conserva preferencias visuales y no concede acceso.
+Actualmente están implementados el perfil Eco, la declaración formal de género, el plazo server-side de 24 horas, la recepción privada y revisión moderada del documento, intereses con mínimo de seis, finalización del tour, conversaciones, mensajes, citas, adjuntos, reacciones y reportes integrados con la moderación de Sófocles. El frontend usa el backend como fuente de verdad; `localStorage` no concede acceso.
 
 El documento queda en `backend/private-uploads` con permisos de archivo restringidos y nunca se sirve desde `/uploads`. La revisión del documento y la transición de `SUBMITTED` a `VERIFIED` deben ejecutarse mediante un panel de moderación seguro antes de considerarlo aprobado. Mientras el estado sea `PENDING` o `SUBMITTED`, el usuario puede utilizar Eco dentro del plazo; al expirar pasa a `EXPIRED` y el servidor bloquea el chat.
 
@@ -13,11 +13,11 @@ El documento queda en `backend/private-uploads` con permisos de archivo restring
 **Eco** es un subsistema de chat en incógnito dialéctico dentro del ecosistema de **Sófocles**. Su objetivo es permitir intercambios filosóficos, artísticos y humanos libres de sesgos o prejuicios de apariencia, garantizando al mismo tiempo un entorno seguro, verificado y respetuoso.
 
 El sistema opera bajo los siguientes principios fundamentales:
-1. **Identidad en las Sombras**: Los usuarios conversan bajo alias alegóricos generados a partir de su género verificado (dioses/diosas de la mitología griega, filósofos/filósofas, pintores/pintoras clásicos —excluyendo a Frida Kahlo— y arquitectos legendarios).
+1. **Identidad en las Sombras**: Los usuarios conversan bajo alias alegóricos generados a partir de su género declarado. El documento se usa para verificar edad, no para afirmar o verificar el género declarado.
 2. **Prevención de Engaños y Autenticidad de Género**: Para evitar la suplantación y la manipulación entre usuarios, el acceso a Eco requiere un registro formal con confirmación estricta de género.
 3. **Verificación de Edad en 24 Horas**: Todo participante debe remitir una fotografía legible de su documento oficial de identidad (DNI, cédula o pasaporte). Se otorga un margen de cortesía de **24 horas** con notificación activa; tras dicho lapso, la cuenta queda en pausa hasta completar la verificación.
 4. **Algoritmo de Compatibilidad por Intereses**: Selección obligatoria de al menos **6 intereses temáticos** para calcular el índice de afinidad dialéctica antes de iniciar conversaciones.
-5. **Revelación Progresiva (Resonancia)**: La identidad real y los rasgos del perfil solo se revelan gradualmente a medida que se intercambian reflexiones de valor (25%, 50%, 75%, 100% / Teofanía).
+5. **Resonancia**: La resonancia del chat avanza desde el servidor con los mensajes y desbloquea datos de afinidad. La identidad real permanece privada; Eco no la revela automáticamente.
 6. **Chat Monocromático Libre de Distracciones**: Interfaz limpia, sobria, sin animaciones ni saturación de color para proteger la concentración y el descanso visual.
 
 ---
@@ -113,34 +113,8 @@ model EcoReaccion {
 }
 ```
 
-### 2.5 Reporte de Conducta en Eco (`EcoReporte`)
-```prisma
-model EcoReporte {
-  id          Int             @id @default(autoincrement())
-  denuncianteId Int           @map("denunciante_id")
-  denunciadoId  Int           @map("denunciado_id")
-  motivo      EcoMotivoReporte
-  descripcion String?         @db.Text
-  mensajeId   String?         @map("mensaje_id")
-  estado      String          @default("PENDIENTE") // PENDIENTE | REVISADO | SANCIONADO | DESCARTADO
-  createdAt   DateTime        @default(now()) @map("created_at")
-
-  denunciante EcoProfile      @relation("ReportesHechos", fields: [denuncianteId], references: [id])
-  denunciado  EcoProfile      @relation("ReportesRecibidos", fields: [denunciadoId], references: [id])
-
-  @@map("eco_reportes")
-}
-
-enum EcoMotivoReporte {
-  ACOSO
-  SUPLANTACION_GENERO
-  CONTENIDO_EXPLICITO
-  DISCURSO_ODIO
-  SPAM
-}
-```
-
----
+### 2.5 Reporte de conducta
+Los reportes de Eco se almacenan en el modelo general de moderación de Sófocles. El cliente envía el UUID de la conversación; el servidor verifica la participación y resuelve internamente al usuario reportado. No existe una tabla `EcoReporte` separada.
 
 ## 3. Endpoints del API de Eco
 
@@ -149,6 +123,8 @@ enum EcoMotivoReporte {
 - `POST /api/eco/profile`: Crea el perfil vinculado y exige `genderConfirmed: true`.
 - `POST /api/eco/verification/document`: Recibe la imagen como data URL validada y la almacena de forma privada.
 - `GET /api/eco/verification/status`: Estado del plazo de 24 horas y aprobación del documento.
+- `GET /api/eco/admin/age-documents`: Cola de documentos pendientes de revisión; requiere moderador.
+- `GET /api/eco/admin/profiles/:userId/age-document`: Sirve el documento privado sin URL pública; requiere moderador y usa `Cache-Control: no-store`.
 - `PATCH /api/eco/admin/profiles/:userId/age-status`: Acción de moderador junior para marcar `VERIFIED` o `REJECTED`.
 
 ### 3.2 Intereses y Onboarding
@@ -158,15 +134,16 @@ enum EcoMotivoReporte {
 ### 3.3 Mensajería y Matching
 - `GET /api/eco/chats`: Listado de conversaciones activas con sus resonancias e interlocutores.
 - `POST /api/eco/chats/match`: Algoritmo de emparejamiento basado en intersección de intereses (`intereses_usuario_A ∩ intereses_usuario_B`).
+- `POST /api/eco/chats/:id/report`: Reporta al otro participante de una conversación; el servidor resuelve su cuenta sin revelar su identificador al cliente.
 - `POST /api/eco/chats/:id/messages`: Envío autenticado con soporte para texto, `attachmentUrl` y `quotedMessageId`.
 - `POST /api/eco/messages/:id/reactions`: Añadir o retirar una reacción con emoji.
 
 ### 3.4 Moderación y Reportes
-- `POST /api/eco/reports`: Creación de reporte formal hacia el panel de moderación de Sófocles, con escalamiento automático si se detecta suplantación de género o acoso reincidente.
+- `POST /api/eco/chats/:id/report`: Envía un reporte al sistema general de moderación de Sófocles. El servidor verifica que quien reporta participe en la conversación y resuelve internamente la cuenta del otro participante.
 
 ---
 
 ## 4. Política de Moderación y Prevención de Fraude de Género
 Para preservar la confianza en el sistema:
-1. Las identidades son asignadas exclusivamente por el sistema a partir del género legal verificado mediante el documento.
-2. Si un usuario es reportado y se constata discordancia premeditada entre su documento y su género declarado con intenciones de engaño o acoso, la cuenta es suspendida permanentemente de Eco y del Olimpo.
+1. El servidor asigna alias y máscara a partir de la declaración de género confirmada por el usuario; la revisión del documento verifica la edad y no debe usarse para inferir el género.
+2. Los reportes se revisan mediante el sistema general de moderación. Una decisión de suspensión se toma con las acciones autorizadas del equipo, no automáticamente por el reporte.
